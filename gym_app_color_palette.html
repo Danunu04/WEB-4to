@@ -1,0 +1,170 @@
+
+<h2 class="sr-only">Color palette for gym app inspired by the uploaded moodboard images</h2>
+
+<style>
+  .palette-wrap { padding: 1.5rem 0; font-family: var(--font-sans); }
+  .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); margin: 0 0 10px; }
+  .swatch-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .swatch { flex: 1; min-width: 72px; border-radius: 12px; overflow: hidden; border: 0.5px solid var(--color-border-tertiary); }
+  .swatch-color { height: 72px; width: 100%; }
+  .swatch-info { padding: 8px 10px; background: var(--color-background-primary); }
+  .swatch-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 2px; }
+  .swatch-hex { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); margin: 0; }
+  .swatch-use { font-size: 10px; color: var(--color-text-tertiary); margin: 3px 0 0; }
+  .divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 4px 0 20px; }
+  .combo-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .combo-chip { display: flex; align-items: center; gap: 8px; background: var(--color-background-secondary); border-radius: 20px; padding: 6px 12px 6px 6px; border: 0.5px solid var(--color-border-tertiary); }
+  .chip-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+  .chip-label { font-size: 12px; color: var(--color-text-secondary); }
+</style>
+
+<div class="palette-wrap">
+  <p class="section-label">Primary</p>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F4736B;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Coral Burn</p>
+        <p class="swatch-hex">#F4736B</p>
+        <p class="swatch-use">CTAs · alerts · PR badges</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#2D8C7C;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Teal Strength</p>
+        <p class="swatch-hex">#2D8C7C</p>
+        <p class="swatch-use">Progress · goals · navbars</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F5C842;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Energy Yellow</p>
+        <p class="swatch-hex">#F5C842</p>
+        <p class="swatch-use">Streaks · stars · rewards</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-label">Accent</p>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F5874F;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Warm Orange</p>
+        <p class="swatch-hex">#F5874F</p>
+        <p class="swatch-use">Calories · cardio stats</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#9B8EC4;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Recovery Lavender</p>
+        <p class="swatch-hex">#9B8EC4</p>
+        <p class="swatch-use">Rest days · sleep data</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#7EC8C8;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Aqua Light</p>
+        <p class="swatch-hex">#7EC8C8</p>
+        <p class="swatch-use">Charts · hydration</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-label">Neutrals & backgrounds</p>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#FFF8F0;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Warm Cream</p>
+        <p class="swatch-hex">#FFF8F0</p>
+        <p class="swatch-use">App background</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F0EDE8;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Soft Sand</p>
+        <p class="swatch-hex">#F0EDE8</p>
+        <p class="swatch-use">Card surfaces</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#2C2A26;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Charcoal</p>
+        <p class="swatch-hex">#2C2A26</p>
+        <p class="swatch-use">Headings · body text</p>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#888780;"></div>
+      <div class="swatch-info">
+        <p class="swatch-name">Stone Gray</p>
+        <p class="swatch-hex">#888780</p>
+        <p class="swatch-use">Secondary labels</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <p class="section-label">Soft tints — card fills</p>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#FAEAE9;"></div>
+      <div class="swatch-info"><p class="swatch-name">Coral 50</p><p class="swatch-hex">#FAEAE9</p></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#E1F5EE;"></div>
+      <div class="swatch-info"><p class="swatch-name">Teal 50</p><p class="swatch-hex">#E1F5EE</p></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#FEF8E7;"></div>
+      <div class="swatch-info"><p class="swatch-name">Yellow 50</p><p class="swatch-hex">#FEF8E7</p></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#EEEDFE;"></div>
+      <div class="swatch-info"><p class="swatch-name">Lavender 50</p><p class="swatch-hex">#EEEDFE</p></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#FAECE7;"></div>
+      <div class="swatch-info"><p class="swatch-name">Orange 50</p><p class="swatch-hex">#FAECE7</p></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <p class="section-label">Suggested pairings</p>
+  <div class="combo-row">
+    <div class="combo-chip">
+      <div class="chip-dot" style="background:#F4736B;"></div>
+      <div class="chip-dot" style="background:#FFF8F0; border: 0.5px solid #ddd;"></div>
+      <span class="chip-label">Hero cards</span>
+    </div>
+    <div class="combo-chip">
+      <div class="chip-dot" style="background:#2D8C7C;"></div>
+      <div class="chip-dot" style="background:#E1F5EE;"></div>
+      <span class="chip-label">Progress bars</span>
+    </div>
+    <div class="combo-chip">
+      <div class="chip-dot" style="background:#F5C842;"></div>
+      <div class="chip-dot" style="background:#2C2A26;"></div>
+      <span class="chip-label">Streak badge</span>
+    </div>
+    <div class="combo-chip">
+      <div class="chip-dot" style="background:#9B8EC4;"></div>
+      <div class="chip-dot" style="background:#EEEDFE;"></div>
+      <span class="chip-label">Rest day card</span>
+    </div>
+    <div class="combo-chip">
+      <div class="chip-dot" style="background:#F5874F;"></div>
+      <div class="chip-dot" style="background:#FAECE7;"></div>
+      <span class="chip-label">Calorie stats</span>
+    </div>
+  </div>
+</div>

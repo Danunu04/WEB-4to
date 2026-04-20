@@ -1,0 +1,55 @@
+body {
+    background-color: #FAECE7;
+}
+.ContAmarillo {
+    display: flex;
+    justify-content: center;
+    top: 4rem;
+    background: rgba(249, 199, 79, 0.6);
+    border-radius: 0.9375rem;
+    padding: 1.25rem;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0.25rem 1.875rem rgba(0, 0, 0, 0.1);
+    height: 30rem;
+    width: 50%;
+    margin: 4rem auto; 
+}
+
+.titulo {
+    font-family: 'Cherry Bomb One', cursive !important;
+    color: #F4736B;
+    text-shadow: 0.15rem 0.15rem 1rem rgba(255, 255, 255, 0.8);
+}
+
+.btnForm {
+    margin-top: 1.5rem;
+    width: 100%;
+    background-color: #F4736B;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btnFormLogIn {
+    margin-top: 1.5rem;
+    width: 10%;
+    position: fixed;
+    right: 0.125rem;
+    top: 0.125rem;
+    background-color: #F4736B;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.formulario {
+    text-align: center;
+    
+    margin-top: 3.5rem;
+}

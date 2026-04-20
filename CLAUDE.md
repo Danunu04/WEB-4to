@@ -50,6 +50,20 @@ Gym-APP/
 └── ScriptCreacion.sql   # Database schema
 ```
 
+## CSS Guidelines
+
+**Always use `rem` units for responsive design.** Never use `px` for spacing, sizing, or borders.
+
+- Base: `1rem = 16px` (browser default)
+- Use `rem` for: `padding`, `margin`, `border-radius`, `border-width`, `font-size`, `box-shadow`, `text-shadow`
+- Conversion examples:
+  - `10px = 0.625rem`
+  - `15px = 0.9375rem`
+  - `20px = 1.25rem`
+  - `30px = 1.875rem`
+
+This ensures the UI scales properly with user's font size settings and is fully responsive.
+
 ## Notes
 
 - The project is currently in early development with minimal source files

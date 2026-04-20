@@ -1,17 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace gymAppV2
 {
-    public partial class _Default : Page
+    public partial class Default : Page  // ← sacás el guión bajo
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            Console.WriteLine("Hello World");
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            // lógica del botón Log In
+        }
+
+        protected void Ingresar(object sender, EventArgs e)
+        {
+            // lógica del botón A entrenar!
         }
     }
 }

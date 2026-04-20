@@ -7,11 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GymApp
+namespace gymAppV2
 {
 
 
-    public partial class Inicio
+    public partial class Default
     {
 
         /// <summary>

@@ -211,7 +211,7 @@ CREATE TABLE RutinaEjercicio (
     series              INT             NOT NULL,
     repeticiones        INT             NOT NULL,
     pesoLevantado       DECIMAL(6,2)   NOT NULL,    -- kg levantados en cada serie
-    porcentaje1RM       DECIMAL(5,2)   NULL,         -- % del 1RM calculado automáticamente
+    porcentaje1RM       DECIMAL(5,2)   NULL,         -- % del 1RM calculado automáticamente por trigger
     descansoSegundos    INT             NULL,         -- descanso entre series en segundos
     dvv                 VARCHAR(50)     NOT NULL,
     dvh                 VARCHAR(50)     NOT NULL,
@@ -222,7 +222,8 @@ CREATE TABLE RutinaEjercicio (
     CONSTRAINT CK_RutinaEjercicio_Repeticiones CHECK (repeticiones > 0),
     CONSTRAINT CK_RutinaEjercicio_Peso CHECK (pesoLevantado >= 0),
     CONSTRAINT CK_RutinaEjercicio_Porcentaje CHECK (porcentaje1RM IS NULL OR (porcentaje1RM > 0 AND porcentaje1RM <= 100)),
-    CONSTRAINT CK_RutinaEjercicio_Descanso CHECK (descansoSegundos IS NULL OR descansoSegundos > 0)
+    CONSTRAINT CK_RutinaEjercicio_Descanso CHECK (descansoSegundos IS NULL OR descansoSegundos > 0),
+    volumen AS (series * repeticiones * pesoLevantado)  -- columna calculada: volumen = series × reps × peso
 );
 
 -- =============================================
@@ -302,3 +303,123 @@ CREATE INDEX IX_PesoHistorial_Fecha ON PesoHistorial(fecha);
 GO
 
 PRINT 'GymApp - Base de datos creada exitosamente.';
+
+-- =============================================
+-- FUNCIONES ESCALARES
+-- =============================================
+
+-- Fórmula de Epley: 1RM = peso × (1 + repeticiones / 30)
+-- Calcula la repetición máxima estimada a partir del peso levantado y las repeticiones realizadas.
+CREATE FUNCTION fn_Calcular1RM(
+    @peso       DECIMAL(6,2),
+    @repeticiones INT
+)
+RETURNS DECIMAL(6,2)
+AS
+BEGIN
+    DECLARE @rm DECIMAL(6,2);
+
+    IF @repeticiones = 1
+        SET @rm = @peso;
+    ELSE IF @repeticiones > 1 AND @repeticiones <= 30
+        SET @rm = ROUND(@peso * (1.0 + CAST(@repeticiones AS DECIMAL(6,2)) / 30.0), 2);
+    ELSE
+        SET @rm = NULL;
+
+    RETURN @rm;
+END;
+GO
+
+-- Obtiene el 1RM registrado más reciente para un alumno y ejercicio.
+-- Si no existe registro, devuelve NULL (se puede usar COALESCE con fn_Calcular1RM como fallback).
+CREATE FUNCTION fn_Obtener1RMAlumno(
+    @dni           INT,
+    @codEjercicio  INT
+)
+RETURNS DECIMAL(6,2)
+AS
+BEGIN
+    DECLARE @pesoRM DECIMAL(6,2);
+
+    SELECT TOP 1 @pesoRM = pesoRM
+    FROM AlumnoRM
+    WHERE dni = @dni AND codEjercicio = @codEjercicio
+    ORDER BY fechaRM DESC;
+
+    RETURN @pesoRM;
+END;
+GO
+
+-- =============================================
+-- TRIGGERS
+-- =============================================
+
+-- Calcula porcentaje1RM automáticamente al insertar o actualizar una RutinaEjercicio.
+-- Busca el 1RM registrado del alumno (vía Rutinas → dniAlumno) y el ejercicio.
+-- Si no hay 1RM registrado, estima usando la fórmula de Epley con los datos de la serie.
+CREATE TRIGGER trg_RutinaEjercicio_Porcentaje1RM
+ON RutinaEjercicio
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Solo procesar si pesoLevantado o codEjercicio cambiaron
+    IF UPDATE(pesoLevantado) OR UPDATE(codEjercicio)
+    BEGIN
+        UPDATE re
+        SET re.porcentaje1RM = CASE
+            WHEN rm.rm1RM IS NOT NULL AND rm.rm1RM > 0
+                THEN ROUND((i.pesoLevantado / rm.rm1RM) * 100, 2)
+            ELSE
+                -- Sin 1RM registrado: estimar con Epley y calcular % sobre ese estimado
+                -- Si el alumno hizo X reps con Y kg, su 1RM estimado = Y*(1+X/30)
+                -- El porcentaje de ese 1RM estimado es: Y / [Y*(1+X/30)] * 100
+                -- Simplificado: 100 / (1 + X/30)
+                ROUND(100.0 / (1.0 + CAST(r.repeticiones AS DECIMAL(6,2)) / 30.0), 2)
+        END
+        FROM RutinaEjercicio re
+        INNER JOIN inserted i ON re.codRutinaEjercicio = i.codRutinaEjercicio
+        INNER JOIN Rutinas r ON i.codRutina = r.codRutina
+        CROSS APPLY (
+            SELECT dbo.fn_Obtener1RMAlumno(r.dniAlumno, i.codEjercicio) AS rm1RM
+        ) AS rm
+        WHERE i.pesoLevantado > 0;
+    END
+END;
+GO
+
+-- Actualiza Alumnos.peso con el último registro de PesoHistorial
+-- cada vez que se inserta un nuevo peso.
+CREATE TRIGGER trg_PesoHistorial_ActualizarPesoAlumno
+ON PesoHistorial
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE a
+    SET a.peso = i.peso
+    FROM Alumnos a
+    INNER JOIN inserted i ON a.dni = i.dni;
+END;
+GO
+
+-- Actualiza AlumnoRM: al registrar un nuevo 1RM, recalcula el porcentaje1RM
+-- de todas las RutinaEjercicio del alumno para ese ejercicio.
+CREATE TRIGGER trg_AlumnoRM_RecalcularPorcentaje
+ON AlumnoRM
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE re
+    SET re.porcentaje1RM = ROUND((re.pesoLevantado / i.pesoRM) * 100, 2)
+    FROM RutinaEjercicio re
+    INNER JOIN Rutinas r ON re.codRutina = r.codRutina
+    INNER JOIN inserted i ON r.dniAlumno = i.dni AND re.codEjercicio = i.codEjercicio
+    WHERE re.pesoLevantado > 0
+      AND i.pesoRM > 0;
+END;
+GO

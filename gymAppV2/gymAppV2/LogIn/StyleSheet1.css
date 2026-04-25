@@ -1,27 +1,32 @@
-body {
+﻿body {
     background-color: #FAECE7;
 }
-.ContAmarillo {
+.BloqueRosa {
     display: flex;
     justify-content: center;
     top: 4rem;
-    background: rgba(249, 199, 79, 0.6);
+    background: rgba(255, 115, 107, 0.48);
     border-radius: 0.9375rem;
     padding: 1.25rem;
     border: 0.0625rem solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 0.25rem 1.875rem rgba(0, 0, 0, 0.1);
     height: 30rem;
     width: 50%;
-    margin: 4rem auto; 
+    margin: 4rem auto;
+}
+
+.formulario {
+    text-align: center;
+    margin-top: 3.5rem;
 }
 
 .titulo {
     font-family: 'Cherry Bomb One', cursive !important;
-    color: #F4736B;
-    text-shadow: 0.15rem 0.15rem 1rem rgba(255, 255, 255, 0.8);
+    color: #FAECE7;
+    text-shadow: 0.15rem 0.15rem 1rem rgba(255, 115, 107, 0.2);
 }
 
-.btnForm {
+.btnFormLogIn {
     margin-top: 3rem;
     width: 100%;
     background-color: rgba(255, 115, 107, 0.8);
@@ -34,26 +39,7 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.btnFormLogIn {
-    margin-top: 1.5rem;
-    width: 10%;
-    position: fixed;
-    right: 0.125rem;
-    top: 0.125rem;
-    background-color: #F4736B;
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-.formulario {
-    text-align: center;
-    
-    margin-top: 3.5rem;
-}
-
-.btnForm:hover {
-    background-color: darkred;
+.btnFormLogIn:hover {
+    background-color: darkred !important;
+    transform: scale(1.02);
 }

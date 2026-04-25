@@ -26,8 +26,7 @@
                            class="form-control form-control-lg mt-5"
                            placeholder="Ingresa tu dni" />
 
-                    <input class="btnForm" type="submit" value="A entrenar!"
-                           runat="server" onserverclick="Ingresar" />
+                     <asp:Button ID="Button2" CssClass="btnForm" runat="server" Text="Iniciar sesion" />
                 </div>
             </div>
 

@@ -111,11 +111,13 @@ CREATE TABLE Alumnos (
     apellido        VARCHAR(100)    NOT NULL,
     telefono        INT             NULL,
     fechaNacimiento DATE            NOT NULL,
+    peso            DECIMAL(5,2)    NULL,
     usr             VARCHAR(50)     NOT NULL,
     dvv             VARCHAR(50)     NOT NULL,
     dvh             VARCHAR(50)     NOT NULL,
     CONSTRAINT PK_Alumnos PRIMARY KEY (dni),
-    CONSTRAINT FK_Alumnos_Usuario FOREIGN KEY (usr) REFERENCES USUARIOS(usr)
+    CONSTRAINT FK_Alumnos_Usuario FOREIGN KEY (usr) REFERENCES USUARIOS(usr),
+    CONSTRAINT CK_Alumnos_Peso CHECK (peso IS NULL OR (peso > 0 AND peso < 500))
 );
 
 CREATE TABLE Entrenadores (
@@ -185,6 +187,79 @@ CREATE TABLE Rutinas (
 );
 
 -- =============================================
+-- EJERCICIOS DE FUERZA
+-- =============================================
+
+CREATE TABLE Ejercicio (
+    codEjercicio    INT             NOT NULL IDENTITY(1,1),
+    nombre          VARCHAR(100)    NOT NULL,
+    grupoMuscular   VARCHAR(100)    NOT NULL,
+    descripcion     VARCHAR(500)    NULL,
+    dvv             VARCHAR(50)     NOT NULL,
+    dvh             VARCHAR(50)     NOT NULL,
+    CONSTRAINT PK_Ejercicio PRIMARY KEY (codEjercicio)
+);
+
+-- =============================================
+-- DETALLE DE EJERCICIOS POR RUTINA
+-- =============================================
+
+CREATE TABLE RutinaEjercicio (
+    codRutinaEjercicio  INT             NOT NULL IDENTITY(1,1),
+    codRutina           INT             NOT NULL,
+    codEjercicio        INT             NOT NULL,
+    series              INT             NOT NULL,
+    repeticiones        INT             NOT NULL,
+    pesoLevantado       DECIMAL(6,2)   NOT NULL,    -- kg levantados en cada serie
+    porcentaje1RM       DECIMAL(5,2)   NULL,         -- % del 1RM calculado automáticamente
+    descansoSegundos    INT             NULL,         -- descanso entre series en segundos
+    dvv                 VARCHAR(50)     NOT NULL,
+    dvh                 VARCHAR(50)     NOT NULL,
+    CONSTRAINT PK_RutinaEjercicio PRIMARY KEY (codRutinaEjercicio),
+    CONSTRAINT FK_RutinaEjercicio_Rutina FOREIGN KEY (codRutina) REFERENCES Rutinas(codRutina),
+    CONSTRAINT FK_RutinaEjercicio_Ejercicio FOREIGN KEY (codEjercicio) REFERENCES Ejercicio(codEjercicio),
+    CONSTRAINT CK_RutinaEjercicio_Series CHECK (series > 0),
+    CONSTRAINT CK_RutinaEjercicio_Repeticiones CHECK (repeticiones > 0),
+    CONSTRAINT CK_RutinaEjercicio_Peso CHECK (pesoLevantado >= 0),
+    CONSTRAINT CK_RutinaEjercicio_Porcentaje CHECK (porcentaje1RM IS NULL OR (porcentaje1RM > 0 AND porcentaje1RM <= 100)),
+    CONSTRAINT CK_RutinaEjercicio_Descanso CHECK (descansoSegundos IS NULL OR descansoSegundos > 0)
+);
+
+-- =============================================
+-- REGISTRO DE 1RM (REPETICION MÁXIMA) POR ALUMNO
+-- =============================================
+
+CREATE TABLE AlumnoRM (
+    codRM           INT             NOT NULL IDENTITY(1,1),
+    dni             INT             NOT NULL,
+    codEjercicio    INT             NOT NULL,
+    pesoRM          DECIMAL(6,2)    NOT NULL,         -- peso máximo levantado para 1 rep
+    fechaRM         DATE            NOT NULL,         -- fecha en que se registró el 1RM
+    dvv             VARCHAR(50)     NOT NULL,
+    dvh             VARCHAR(50)     NOT NULL,
+    CONSTRAINT PK_AlumnoRM PRIMARY KEY (codRM),
+    CONSTRAINT FK_AlumnoRM_Alumno FOREIGN KEY (dni) REFERENCES Alumnos(dni),
+    CONSTRAINT FK_AlumnoRM_Ejercicio FOREIGN KEY (codEjercicio) REFERENCES Ejercicio(codEjercicio),
+    CONSTRAINT CK_AlumnoRM_Peso CHECK (pesoRM > 0)
+);
+
+-- =============================================
+-- HISTORIAL DE PESO DEL ALUMNO
+-- =============================================
+
+CREATE TABLE PesoHistorial (
+    codPeso         INT             NOT NULL IDENTITY(1,1),
+    dni             INT             NOT NULL,
+    peso            DECIMAL(5,2)    NOT NULL,
+    fecha           DATE            NOT NULL,
+    dvv             VARCHAR(50)     NOT NULL,
+    dvh             VARCHAR(50)     NOT NULL,
+    CONSTRAINT PK_PesoHistorial PRIMARY KEY (codPeso),
+    CONSTRAINT FK_PesoHistorial_Alumno FOREIGN KEY (dni) REFERENCES Alumnos(dni),
+    CONSTRAINT CK_PesoHistorial_Peso CHECK (peso > 0 AND peso < 500)
+);
+
+-- =============================================
 -- BITÁCORA / EVENTO
 -- =============================================
 
@@ -216,6 +291,13 @@ CREATE INDEX IX_Rutinas_dniAlumno ON Rutinas(dniAlumno);
 CREATE INDEX IX_Rutinas_dniEntrenador ON Rutinas(dniEntrenador);
 CREATE INDEX IX_Evento_usr ON Evento(usr);
 CREATE INDEX IX_Evento_fecha ON Evento(fecha);
+CREATE INDEX IX_RutinaEjercicio_Rutina ON RutinaEjercicio(codRutina);
+CREATE INDEX IX_RutinaEjercicio_Ejercicio ON RutinaEjercicio(codEjercicio);
+CREATE INDEX IX_AlumnoRM_Alumno ON AlumnoRM(dni);
+CREATE INDEX IX_AlumnoRM_Ejercicio ON AlumnoRM(codEjercicio);
+CREATE INDEX IX_AlumnoRM_AlumnoEjercicio ON AlumnoRM(dni, codEjercicio);
+CREATE INDEX IX_PesoHistorial_Alumno ON PesoHistorial(dni);
+CREATE INDEX IX_PesoHistorial_Fecha ON PesoHistorial(fecha);
 
 GO
 

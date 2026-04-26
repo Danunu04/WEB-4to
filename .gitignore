@@ -52,3 +52,20 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+
+# Backups
+*.bak
+backups/
+
+# Certificates
+*.cer
+*.pfx
+
+# Superpowers
+.superpowers/
+docs/superpowers/

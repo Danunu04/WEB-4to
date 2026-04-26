@@ -1,0 +1,208 @@
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: #FAECE7;
+}
+
+
+.sidebar {
+    width: 15rem;
+    min-height: 100vh;
+    background: rgba(255, 115, 107, 0.48);
+    border-radius: 0 0.9375rem 0.9375rem 0;
+    box-shadow: 0.25rem 0 1.875rem rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 4rem;
+}
+
+
+.sidebar-brand {
+    font-family: 'Cherry Bomb One', cursive;
+    color: #FAECE7;
+    text-shadow: 0.15rem 0.15rem 1rem rgba(255, 255, 255, 0.5);
+    font-size: 1.3rem;
+    padding: 1.25rem 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-brand {
+    text-align: center;
+    padding: 1.25rem 0.5rem;
+}
+
+/* ===== Toggle Button ===== */
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: #FAECE7;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin: 0 0.5rem 0.5rem auto;
+    border-radius: 0.3125rem;
+    transition: background-color 0.2s ease;
+    display: block;
+}
+
+.sidebar-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    margin: 0 auto 0.5rem auto;
+}
+
+/* ===== Menu Items ===== */
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+}
+
+.sidebar-menu li {
+    margin: 0;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #FAECE7;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    border-radius: 0.3125rem;
+    margin: 0.125rem 0.5rem;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.sidebar-menu a i {
+    font-size: 1.25rem;
+    min-width: 1.25rem;
+    text-align: center;
+    margin-right: 0.75rem;
+}
+
+.sidebar.collapsed .sidebar-menu a {
+    justify-content: center;
+    padding: 0.75rem 0;
+    margin: 0.125rem 0.25rem;
+}
+
+.sidebar.collapsed .sidebar-menu a i {
+    margin-right: 0;
+}
+
+.sidebar.collapsed .sidebar-menu a .menu-text {
+    display: none;
+}
+
+/* ===== Divider ===== */
+.sidebar-divider {
+    border-top: 0.0625rem solid rgba(255, 255, 255, 0.3);
+    margin: 0.5rem 1rem;
+}
+
+.sidebar.collapsed .sidebar-divider {
+    margin: 0.5rem 0.25rem;
+}
+
+/* ===== Logout Item ===== */
+.sidebar-logout {
+    margin-top: auto;
+    padding-bottom: 0.5rem;
+}
+
+/* ===== Main Content ===== */
+.main-content {
+    margin-left: 15rem;
+    flex: 1;
+    padding: 1.25rem;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 4rem;
+}
+
+/* ===== Mobile Overlay ===== */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* ===== Mobile Toggle (visible only on small screens) ===== */
+.mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 0.625rem;
+    left: 0.625rem;
+    z-index: 998;
+    background-color: #F4736B;
+    color: white;
+    border: none;
+    border-radius: 0.3125rem;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+/* ===== Responsive ===== */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 15rem;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .sidebar.collapsed {
+        width: 15rem;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.collapsed.mobile-open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .mobile-toggle {
+        display: block;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+}

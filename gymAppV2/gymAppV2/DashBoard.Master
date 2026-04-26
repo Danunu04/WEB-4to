@@ -1,0 +1,119 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="DashBoard.Master.cs" Inherits="gymAppV2.DashBoardMaster" %>
+
+<!DOCTYPE html>
+<html lang="es">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%: Page.Title %> - GymApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
+    <link href="~/Content/dashboard.css" rel="stylesheet" />
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <button class="mobile-toggle" type="button" id="mobileToggle" aria-label="Abrir menú">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <div class="dashboard-wrapper">
+            <nav class="sidebar" id="sidebar" runat="server">
+                <div class="sidebar-brand">Sportio</div>
+                <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Colapsar menú">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="~/DashBoard" runat="server">
+                            <i class="bi bi-house"></i>
+                            <span class="menu-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="~/Alumnos" runat="server">
+                            <i class="bi bi-person"></i>
+                            <span class="menu-text">Alumnos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="~/Entrenadores" runat="server">
+                            <i class="bi bi-star"></i>
+                            <span class="menu-text">Entrenadores</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="~/Actividades" runat="server">
+                            <i class="bi bi-calendar-event"></i>
+                            <span class="menu-text">Actividades</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="~/Rutinas" runat="server">
+                            <i class="bi bi-list-check"></i>
+                            <span class="menu-text">Rutinas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="~/Permisos" runat="server">
+                            <i class="bi bi-shield-lock"></i>
+                            <span class="menu-text">Permisos</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-divider"></div>
+                <ul class="sidebar-menu sidebar-logout">
+                    <li>
+                        <asp:LinkButton ID="lnkLogout" runat="server" OnClick="LnkLogout_Click">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span class="menu-text">Cerrar sesión</span>
+                        </asp:LinkButton>
+                    </li>
+                </ul>
+            </nav>
+            <main class="main-content">
+                <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+            </main>
+        </div>
+    </form>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            var sidebar = document.getElementById('sidebar');
+            var toggle = document.getElementById('sidebarToggle');
+            var mobileToggle = document.getElementById('mobileToggle');
+            var overlay = document.getElementById('sidebarOverlay');
+
+            function applyState(collapsed) {
+                if (collapsed) {
+                    sidebar.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                }
+                localStorage.setItem('sidebarCollapsed', collapsed);
+            }
+
+            var saved = localStorage.getItem('sidebarCollapsed');
+            if (saved === 'true') {
+                sidebar.classList.add('collapsed');
+            }
+
+            toggle.addEventListener('click', function () {
+                var isCollapsed = sidebar.classList.contains('collapsed');
+                applyState(!isCollapsed);
+            });
+
+            mobileToggle.addEventListener('click', function () {
+                sidebar.classList.add('mobile-open');
+                overlay.classList.add('active');
+            });
+
+            overlay.addEventListener('click', function () {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+            });
+        })();
+    </script>
+</body>
+</html>

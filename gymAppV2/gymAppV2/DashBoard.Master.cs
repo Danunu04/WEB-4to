@@ -1,4 +1,5 @@
 using System;
+using Servicios.Singleton;
 
 namespace gymAppV2
 {
@@ -6,12 +7,16 @@ namespace gymAppV2
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (!Singleton.Instancia.IsLogged())
+            {
+                Response.Redirect("~/LogIn/LogIn.aspx");
+            }
         }
 
         protected void LnkLogout_Click(object sender, EventArgs e)
         {
+            Singleton.Instancia.LogOut();
             System.Web.Security.FormsAuthentication.SignOut();
-            Session.Abandon();
             Response.Redirect("~/Inicio/Default.aspx");
         }
     }

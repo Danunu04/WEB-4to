@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DAL
+namespace Servicios.Singleton
 {
-    public class Class1
+    public enum ResultadosLogIn
     {
+        InvalidUsername,
+        InvalidPassword,
+        ValidUser
     }
 }

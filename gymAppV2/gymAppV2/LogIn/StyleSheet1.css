@@ -18,6 +18,8 @@
 .formulario {
     text-align: center;
     margin-top: 3.5rem;
+    width: 100%;
+    padding: 0 1.25rem;
 }
 
 .titulo {
@@ -26,8 +28,43 @@
     text-shadow: 0.15rem 0.15rem 1rem rgba(255, 115, 107, 0.2);
 }
 
+.formulario input[type="text"],
+.formulario input[type="password"],
+.formulario input.form-control {
+    width: 100%;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 0.0625rem solid rgba(255, 115, 107, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.625rem 0.9375rem;
+    font-size: 1rem;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.formulario input::placeholder {
+    color: rgba(255, 115, 107, 0.6);
+    opacity: 1;
+}
+
+.formulario input:focus {
+    outline: none;
+    border-color: rgba(255, 115, 107, 0.8);
+    box-shadow: 0 0 0.5rem rgba(255, 115, 107, 0.3);
+}
+
+.lblMensaje {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: #fff;
+    background-color: rgba(180, 40, 40, 0.7);
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+}
+
 .btnFormLogIn {
-    margin-top: 3rem;
+    margin-top: 2rem;
     width: 100%;
     background-color: rgba(255, 115, 107, 0.8);
     color: white;

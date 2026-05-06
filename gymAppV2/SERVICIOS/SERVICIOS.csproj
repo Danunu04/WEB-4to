@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,10 +42,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Singleton\Singleton.cs" />
+    <Compile Include="Singleton\SesionUsuario.cs" />
+    <Compile Include="Singleton\ResultadosLogIn.cs" />
+    <Compile Include="Singleton\ExcepcionesLogIn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BE\BE.csproj">
+      <Project>{4bfead7d-e7e5-4068-bf50-d45a3c02b956}</Project>
+      <Name>BE</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MPP\MPP.csproj">
       <Project>{9fda2267-4381-487c-96f4-b455e3244c7c}</Project>
       <Name>MPP</Name>

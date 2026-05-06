@@ -11,7 +11,11 @@ namespace gymAppV2.DashBoard
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            HtmlLink cssLink = new HtmlLink();
+            cssLink.Href = ResolveUrl("~/Content/dashboard.css");
+            cssLink.Attributes["rel"] = "stylesheet";
+            cssLink.Attributes["type"] = "text/css";
+            Page.Header.Controls.Add(cssLink);
         }
     }
 }

@@ -52,7 +52,7 @@ namespace BLL
         public string GenerarPreguntaSeguridad(string usuario, int anioNacimiento)
         {
             // Generate security question based on birth year
-            return $"¿En qué año naciste? (Respuesta esperada: {anioNacimiento})";
+            return $"¿En qué año naciste?";
         }
     }
 }

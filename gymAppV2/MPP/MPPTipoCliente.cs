@@ -25,8 +25,8 @@ namespace MPP
                     SELECT COUNT(DISTINCT a.dni) as TotalAlumnos,
                            SUM(CASE WHEN a.dni = u.dniUsuario THEN 1 ELSE 0 END) as DNICoincidente
                     FROM [GymApp].[dbo].[Alumnos] a
-                    CROSS JOIN [GymApp].[dbo].[USUARIOS] u
-                    WHERE u.usr = @Usuario AND a.usr = u.usr";
+                    INNER JOIN [GymApp].[dbo].[USUARIOS] u ON a.usr = u.usr
+                    WHERE u.usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -38,8 +38,8 @@ namespace MPP
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
-                    int totalAlumnos = Convert.ToInt32(row["TotalAlumnos"]);
-                    int dniCoincidente = Convert.ToInt32(row["DNICoincidente"]);
+                    int totalAlumnos = row["TotalAlumnos"] != DBNull.Value ? Convert.ToInt32(row["TotalAlumnos"]) : 0;
+                    int dniCoincidente = row["DNICoincidente"] != DBNull.Value ? Convert.ToInt32(row["DNICoincidente"]) : 0;
 
                     // Alumno: single alumno with matching DNI
                     if (totalAlumnos == 1 && dniCoincidente == 1)

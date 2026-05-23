@@ -52,8 +52,8 @@ namespace MPP
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
                         Convert.ToBoolean(row["activo"]),
                         row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
-                        row["dvv"]?.ToString(),
-                        row["dvh"]?.ToString()
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : null,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : null
                     ));
                 }
 
@@ -102,8 +102,8 @@ namespace MPP
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
                         Convert.ToBoolean(row["activo"]),
                         row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
-                        row["dvv"]?.ToString(),
-                        row["dvh"]?.ToString()
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : null,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : null
                     );
                 }
 
@@ -148,6 +148,8 @@ namespace MPP
         {
             try
             {
+                // Note: Using direct SqlConnection for transaction support
+                // because DalGeneral doesn't provide transaction capability
                 string connectionString = ConfigurationManager.ConnectionStrings["GymAppConnection"].ConnectionString;
 
                 using (SqlConnection connection = new SqlConnection(connectionString))
@@ -193,10 +195,10 @@ namespace MPP
 
                             transaction.Commit();
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             transaction.Rollback();
-                            throw new Exception("Error al eliminar entrenador: " + ex.Message, ex);
+                            throw;
                         }
                     }
                 }

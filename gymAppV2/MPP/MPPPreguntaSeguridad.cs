@@ -40,8 +40,8 @@ namespace MPP
                         row["pregunta"] != DBNull.Value ? row["pregunta"].ToString() : string.Empty,
                         row["respuesta"] != DBNull.Value ? row["respuesta"].ToString() : string.Empty,
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
-                        row["dvv"]?.ToString(),
-                        row["dvh"]?.ToString()
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
                     );
                 }
 

@@ -2,16 +2,33 @@ using System;
 using System.Collections.Generic;
 using BE;
 using MPP;
+using Servicios.Singleton;
 
 namespace BLL
 {
     public class BLLAlumno
     {
         private MPPAlumno mppAlumno;
+        private BLLEvento bllEvento;
 
         public BLLAlumno()
         {
             mppAlumno = new MPPAlumno();
+            bllEvento = new BLLEvento();
+        }
+
+        private void RegistrarEvento(string tipo, string accion)
+        {
+            try
+            {
+                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarEvento(tipo, usr, accion);
+            }
+            catch
+            {
+                // No impedir la operación principal si falla el log
+            }
         }
 
         public void CrearAlumno(Alumno alumno)
@@ -24,6 +41,7 @@ namespace BLL
                 }
 
                 mppAlumno.CrearAlumno(alumno);
+                RegistrarEvento("alta_alumno", $"Alumno DNI {alumno.DNI} creado");
             }
             catch (Exception ex)
             {
@@ -48,6 +66,7 @@ namespace BLL
             try
             {
                 mppAlumno.ActualizarAlumno(alumno);
+                RegistrarEvento("modificacion_alumno", $"Alumno DNI {alumno.DNI} modificado");
             }
             catch (Exception ex)
             {
@@ -89,6 +108,7 @@ namespace BLL
                 }
 
                 mppAlumno.EliminarAlumno(dni);
+                RegistrarEvento("baja_alumno", $"Alumno DNI {dni} eliminado (con rutinas asociadas)");
             }
             catch (Exception ex)
             {
@@ -138,6 +158,7 @@ namespace BLL
                 }
 
                 mppAlumno.AsociarUsuario(dni, usuario);
+                RegistrarEvento("asociar_usuario", $"Usuario '{usuario}' asociado a alumno DNI {dni}");
             }
             catch (Exception ex)
             {
@@ -161,6 +182,7 @@ namespace BLL
                 }
 
                 mppAlumno.AsociarUsuario(dni, null);
+                RegistrarEvento("desasociar_usuario", $"Usuario desasociado de alumno DNI {dni}");
             }
             catch (Exception ex)
             {

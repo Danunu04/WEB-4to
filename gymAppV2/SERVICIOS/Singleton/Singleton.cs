@@ -5,22 +5,31 @@ namespace Servicios.Singleton
 {
     public class Singleton
     {
-        private static SesionUsuario _instancia;
-        private static readonly object _lock = new object();
+        private const string SESSION_KEY = "SesionUsuario_Instancia";
 
         public static SesionUsuario Instancia
         {
             get
             {
-                if (HttpContext.Current.Session == null)
-                    return null;
-
-                lock (_lock)
+                try
                 {
-                    if (_instancia == null)
-                    { _instancia = new SesionUsuario(); }
+                    if (HttpContext.Current?.Session == null)
+                        return null;
+
+                    if (HttpContext.Current.Session[SESSION_KEY] == null)
+                        HttpContext.Current.Session[SESSION_KEY] = new SesionUsuario();
+
+                    return (SesionUsuario)HttpContext.Current.Session[SESSION_KEY];
                 }
-                return _instancia;
+                catch (HttpException ex)
+                {
+                    // Session puede haber expirado o no estar disponible
+                    throw new Exception("Error al acceder a la sesión HTTP: " + ex.Message, ex);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error inesperado al obtener instancia de sesión: " + ex.Message, ex);
+                }
             }
         }
     }

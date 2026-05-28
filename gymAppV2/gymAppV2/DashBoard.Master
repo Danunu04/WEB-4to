@@ -1,8 +1,9 @@
-<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="DashBoard.Master.cs" Inherits="gymAppV2.DashBoardMaster" %>
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="DashBoard.Master.cs" Inherits="gymAppV2.DashBoardMaster" %>
 
 <!DOCTYPE html>
 <html lang="es">
 <head runat="server">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%: Page.Title %> - GymApp</title>
@@ -11,7 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Fraunces:opsz,wght@9..144,400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/Content/dashboard.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet" type="text/css" />
     <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
 </head>
 <body>
@@ -29,40 +31,52 @@
                     </button>
                 </div>
                 <ul class="sidebar-menu">
-                    <li>
-                        <a href="~/DashBoard" runat="server">
+                    <li id="liDashboard" runat="server">
+                        <a href="/DashBoard/WebForm1.aspx">
                             <i class="bi bi-house"></i>
                             <span class="menu-text">Dashboard</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="~/Alumnos" runat="server">
+                    <li id="liUsuarios" runat="server">
+                        <a href="/Usuarios/UsuariosModulo.aspx">
+                            <i class="bi bi-people"></i>
+                            <span class="menu-text">Usuarios</span>
+                        </a>
+                    </li>
+                    <li id="liAlumnos" runat="server">
+                        <a href="/Alumnos/Alumnos.aspx">
                             <i class="bi bi-person"></i>
                             <span class="menu-text">Alumnos</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="~/Entrenadores" runat="server">
+                    <li id="liEntrenadores" runat="server">
+                        <a href="/Entrenadores">
                             <i class="bi bi-star"></i>
                             <span class="menu-text">Entrenadores</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="~/Actividades" runat="server">
+                    <li id="liActividades" runat="server">
+                        <a href="/Actividades/actividades.aspx">
                             <i class="bi bi-calendar-event"></i>
                             <span class="menu-text">Actividades</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="~/Rutinas" runat="server">
+                    <li id="liRutinas" runat="server">
+                        <a href="/Rutinas">
                             <i class="bi bi-list-check"></i>
                             <span class="menu-text">Rutinas</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="~/Permisos" runat="server">
+                    <li id="liPermisos" runat="server">
+                        <a href="/Permisos">
                             <i class="bi bi-shield-lock"></i>
                             <span class="menu-text">Permisos</span>
+                        </a>
+                    </li>
+                    <li id="liBitacora" runat="server">
+                        <a href="/Bitacora/Bitacora.aspx">
+                            <i class="bi bi-journal"></i>
+                            <span class="menu-text">Bitácora</span>
                         </a>
                     </li>
                 </ul>
@@ -80,6 +94,21 @@
                 <asp:ContentPlaceHolder ID="MainContent" runat="server" />
             </main>
         </div>
+
+        <!-- Toast Notifications Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- 404 Modal -->
+        <div class="modal-404-overlay" id="modal404">
+            <div class="modal-404">
+                <div class="modal-404-icon">
+                    <i class="bi bi-emoji-dizzy"></i>
+                </div>
+                <h2 class="modal-404-title">¡Ups!</h2>
+                <p class="modal-404-text">Esta funcionalidad no está disponible todavía</p>
+                <button class="modal-404-close" type="button" id="close404">Entendido</button>
+            </div>
+        </div>
     </form>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -88,6 +117,8 @@
             var toggle = document.getElementById('sidebarToggle');
             var mobileToggle = document.getElementById('mobileToggle');
             var overlay = document.getElementById('sidebarOverlay');
+            var modal404 = document.getElementById('modal404');
+            var close404 = document.getElementById('close404');
 
             function applyState(collapsed) {
                 if (collapsed) {
@@ -98,26 +129,141 @@
                 localStorage.setItem('sidebarCollapsed', collapsed);
             }
 
+            function closeMobileSidebar() {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+                if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                    sidebar.classList.add('collapsed');
+                }
+            }
+
             var saved = localStorage.getItem('sidebarCollapsed');
             if (saved === 'true') {
                 sidebar.classList.add('collapsed');
             }
 
             toggle.addEventListener('click', function () {
-                var isCollapsed = sidebar.classList.contains('collapsed');
-                applyState(!isCollapsed);
+                if (window.innerWidth <= 768) {
+                    closeMobileSidebar();
+                } else {
+                    var isCollapsed = sidebar.classList.contains('collapsed');
+                    applyState(!isCollapsed);
+                }
             });
 
             mobileToggle.addEventListener('click', function () {
-                sidebar.classList.add('mobile-open');
-                overlay.classList.add('active');
+                if (sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                } else {
+                    sidebar.classList.add('mobile-open');
+                    sidebar.classList.remove('collapsed');
+                    overlay.classList.add('active');
+                }
             });
 
             overlay.addEventListener('click', function () {
-                sidebar.classList.remove('mobile-open');
-                overlay.classList.remove('active');
+                closeMobileSidebar();
             });
+
+            close404.addEventListener('click', function () {
+                modal404.classList.remove('active');
+            });
+
+            modal404.addEventListener('click', function (e) {
+                if (e.target === modal404) {
+                    modal404.classList.remove('active');
+                }
+            });
+
+            // Toast notification functions
+            window.showToast = function(message, type) {
+                var container = document.getElementById('toastContainer');
+                if (!container) return;
+
+                var icons = {
+                    success: '<i class="bi bi-check-circle-fill"></i>',
+                    error: '<i class="bi bi-exclamation-circle-fill"></i>',
+                    warning: '<i class="bi bi-exclamation-triangle-fill"></i>',
+                    info: '<i class="bi bi-info-circle-fill"></i>'
+                };
+
+                var titles = {
+                    success: '¡Éxito!',
+                    error: 'Error',
+                    warning: 'Advertencia',
+                    info: 'Información'
+                };
+
+                var toast = document.createElement('div');
+                toast.className = 'toast toast-' + type;
+                toast.innerHTML =
+                    '<div class="toast-icon">' + icons[type] + '</div>' +
+                    '<div class="toast-content">' +
+                        '<div class="toast-title">' + titles[type] + '</div>' +
+                        '<div class="toast-message">' + message + '</div>' +
+                    '</div>' +
+                    '<button class="toast-close" onclick="this.parentElement.remove()">' +
+                        '<i class="bi bi-x"></i>' +
+                    '</button>';
+
+                container.appendChild(toast);
+
+                // Trigger animation
+                setTimeout(function() { toast.classList.add('show'); }, 10);
+
+                // Auto-remove after 4 seconds
+                setTimeout(function() {
+                    toast.classList.add('hiding');
+                    setTimeout(function() { toast.remove(); }, 300);
+                }, 4000);
+            };
+
+            var sidebarMenu = sidebar.querySelector('.sidebar-menu:not(.sidebar-logout)');
+
+            // Highlight active menu item based on current page
+            if (sidebarMenu) {
+                var currentPath = window.location.pathname;
+                var menuItems = sidebarMenu.querySelectorAll('li');
+                menuItems.forEach(function (li) {
+                    li.classList.remove('active');
+                    var link = li.querySelector('a');
+                    if (link && link.getAttribute('href')) {
+                        var href = link.getAttribute('href').replace('~/', '');
+                        if (currentPath.includes(href)) {
+                            li.classList.add('active');
+                        }
+                    }
+                });
+            }
+            if (sidebarMenu) {
+                var links = sidebarMenu.querySelectorAll('a');
+                links.forEach(function (link) {
+                    link.addEventListener('click', function (e) {
+                        var href = link.getAttribute('href');
+                        var currentPath = window.location.pathname;
+
+                        // Verificar si es una página permitida (Dashboard, Bitacora, Usuarios, Alumnos)
+                        if (href.includes('DashBoard') || href.includes('Bitacora') || href.includes('Usuarios') || href.includes('Alumnos')) {
+                            // Si estamos en móvil, cerrar el sidebar
+                            if (sidebar.classList.contains('mobile-open')) {
+                                closeMobileSidebar();
+                            }
+                            // Si estamos en la misma página, recargar
+                            if (currentPath.includes(href.replace('~/', ''))) {
+                                e.preventDefault();
+                                window.location.reload();
+                            }
+                            return;
+                        }
+                        e.preventDefault();
+                        modal404.classList.add('active');
+                        if (sidebar.classList.contains('mobile-open')) {
+                            closeMobileSidebar();
+                        }
+                    });
+                });
+            }
         })();
-    </script>
+</script>
 </body>
 </html>

@@ -4,7 +4,7 @@ using System.Web.UI.WebControls;
 
 namespace gymAppV2
 {
-    public partial class Default : Page  // ← sacás el guión bajo
+    public partial class Default : Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -12,12 +12,38 @@ namespace gymAppV2
 
         protected void Button1_Click(object sender, EventArgs e)
         {
-            // lógica del botón Log In
+            Response.Redirect("~/LogIn/LogIn.aspx");
         }
 
-        protected void Ingresar(object sender, EventArgs e)
+        protected void Button2_Click(object sender, EventArgs e)
         {
-            // lógica del botón A entrenar!
+            string dni = txtDni.Value.Trim();
+            if (string.IsNullOrEmpty(dni))
+            {
+                MostrarError("Por favor ingresa tu DNI");
+                return;
+            }
+            MostrarExito("DNI ingresado: " + dni);
+        }
+
+        private void MostrarError(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
+        }
+
+        private void MostrarExito(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
+        }
+
+        private void MostrarAdvertencia(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
+        }
+
+        private void MostrarInfo(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "info", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'info');", true);
         }
     }
 }

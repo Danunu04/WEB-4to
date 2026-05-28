@@ -10,6 +10,7 @@ namespace Servicios.Singleton
     {
         InvalidUsername,
         InvalidPassword,
+        AccountLocked,
         ValidUser
     }
 }

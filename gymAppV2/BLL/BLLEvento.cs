@@ -28,16 +28,33 @@ namespace BLL
             mppEvento = new MPPEvento();
         }
 
-        public int RegistrarEvento(string tipo, string usuario, string accion)
+        public int RegistrarEvento(string tipo, string usuario, string accion, int criticidad = 1)
         {
             try
             {
+                // Validar que la criticidad esté entre 1 y 4
+                if (criticidad < 1 || criticidad > 4)
+                {
+                    throw new Exception("La criticidad debe estar entre 1 (Info) y 4 (Crítico)");
+                }
+
+                // Validar que el usuario corresponda al de la sesión activa
+                var usuarioSesion = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as BE.Usuario;
+                string usuarioEsperado = usuarioSesion?.USUARIO_Usuario ?? "sistema";
+
+                // Permitir "sistema" para eventos automáticos, pero validar que coincida en otros casos
+                if (usuario != "sistema" && usuario != usuarioEsperado)
+                {
+                    throw new Exception($"El usuario '{usuario}' no corresponde al usuario de la sesión activa ('{usuarioEsperado}')");
+                }
+
                 Evento evento = new Evento
                 {
                     EVENTO_Tipo = tipo,
                     EVENTO_Usuario = usuario,
                     EVENTO_Accion = accion,
-                    EVENTO_Timestamp = DateTime.Now
+                    EVENTO_Timestamp = DateTime.Now,
+                    EVENTO_DVH = criticidad // Usamos el campo DVH para almacenar la criticidad
                 };
 
                 return mppEvento.RegistrarEvento(evento);
@@ -102,9 +119,11 @@ namespace BLL
             return RegistrarEvento(EVENTO_CAMBIO_DATOS_USUARIO, usuario, $"Cambio de datos - Usuario: {usuario}, Campo: {campo}");
         }
 
-        public int RegistrarModificacionPrecio(string usuario, string actividad, decimal precioAnterior, decimal precioNuevo)
+        public int RegistrarModificacionPrecio(string usuario, string actividad, decimal precioAnterior, decimal precioNuevo, int criticidad = 2)
         {
-            return RegistrarEvento(EVENTO_MODIFICACION_PRECIO, usuario, $"Modificación de precio - Actividad: {actividad}, Anterior: ${precioAnterior}, Nuevo: ${precioNuevo}");
+            return RegistrarEvento(EVENTO_MODIFICACION_PRECIO, usuario,
+                $"Modificación de precio - Actividad: {actividad}, Anterior: ${precioAnterior}, Nuevo: ${precioNuevo}",
+                criticidad);
         }
 
         public int RegistrarAltaAlumno(string usuario, int dniAlumno)

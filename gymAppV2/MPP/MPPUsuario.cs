@@ -516,5 +516,28 @@ namespace MPP
                 throw new Exception("Error al listar usuarios clientes sin alumno: " + ex.Message, ex);
             }
         }
+
+        public void ActualizarEstado(string usuario, bool activo)
+        {
+            try
+            {
+                string consulta = @"
+                    UPDATE [GymApp].[dbo].[USUARIOS]
+                    SET activo = @Activo
+                    WHERE usr = @Usuario";
+
+                ArrayList parametros = new ArrayList
+                {
+                    new SqlParameter("@Usuario", usuario),
+                    new SqlParameter("@Activo", activo)
+                };
+
+                dal._686DPEscribir(consulta, parametros);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al actualizar estado del usuario: " + ex.Message, ex);
+            }
+        }
     }
 }

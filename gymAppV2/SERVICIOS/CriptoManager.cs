@@ -15,34 +15,60 @@ namespace SERVICIOS
         string iv = "1234567890123";
         public string _686DPGetSHA256(string ste)
         {
-            SHA256 sha256 = SHA256.Create();
-            ASCIIEncoding encoding = new ASCIIEncoding();
-            byte[] stream = null;
-            StringBuilder sb = new StringBuilder();
-            stream = sha256.ComputeHash(encoding.GetBytes(ste));
-            for (int i = 0; i < stream.Length; i++) sb.AppendFormat("{0:x2}", stream[i]);
-            return sb.ToString();
+            try
+            {
+                SHA256 sha256 = SHA256.Create();
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                byte[] stream = null;
+                StringBuilder sb = new StringBuilder();
+                stream = sha256.ComputeHash(encoding.GetBytes(ste));
+                for (int i = 0; i < stream.Length; i++) sb.AppendFormat("{0:x2}", stream[i]);
+                return sb.ToString();
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new Exception("El texto a encriptar no puede ser nulo: " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al generar hash SHA256: " + ex.Message, ex);
+            }
         }
         public string _686DPGetAES256(string plainText)
         {
-            using (AesCryptoServiceProvider aesAlg = new AesCryptoServiceProvider())
+            try
             {
-                aesAlg.Key = _686DPGenerateKey(key);
-                aesAlg.IV = _686DPGenerateIV(iv);
-
-                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-
-                using (MemoryStream msEncrypt = new MemoryStream())
+                using (AesCryptoServiceProvider aesAlg = new AesCryptoServiceProvider())
                 {
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    aesAlg.Key = _686DPGenerateKey(key);
+                    aesAlg.IV = _686DPGenerateIV(iv);
+
+                    ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                    using (MemoryStream msEncrypt = new MemoryStream())
                     {
-                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
                         {
-                            swEncrypt.Write(plainText);
+                            using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                            {
+                                swEncrypt.Write(plainText);
+                            }
                         }
+                        return Convert.ToBase64String(msEncrypt.ToArray());
                     }
-                    return Convert.ToBase64String(msEncrypt.ToArray());
                 }
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new Exception("El texto a encriptar no puede ser nulo: " + ex.Message, ex);
+            }
+            catch (CryptographicException ex)
+            {
+                throw new Exception("Error criptográfico al encriptar con AES: " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al encriptar con AES256: " + ex.Message, ex);
             }
         }
 
@@ -63,24 +89,43 @@ namespace SERVICIOS
 
         public object _686DPGetAESDecrypt(string dniAES)
         {
-            using (AesCryptoServiceProvider aesAlg = new AesCryptoServiceProvider())
+            try
             {
-                aesAlg.Key = _686DPGenerateKey(key);
-                aesAlg.IV = _686DPGenerateIV(iv);
-
-                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-
-                byte[] cipherBytes = Convert.FromBase64String(dniAES);
-                using (MemoryStream msDecrypt = new MemoryStream(cipherBytes))
+                using (AesCryptoServiceProvider aesAlg = new AesCryptoServiceProvider())
                 {
-                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    aesAlg.Key = _686DPGenerateKey(key);
+                    aesAlg.IV = _686DPGenerateIV(iv);
+
+                    ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                    byte[] cipherBytes = Convert.FromBase64String(dniAES);
+                    using (MemoryStream msDecrypt = new MemoryStream(cipherBytes))
                     {
-                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                         {
-                            return srDecrypt.ReadToEnd();
+                            using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                            {
+                                return srDecrypt.ReadToEnd();
+                            }
                         }
                     }
                 }
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new Exception("El texto encriptado no puede ser nulo: " + ex.Message, ex);
+            }
+            catch (FormatException ex)
+            {
+                throw new Exception("El formato del texto encriptado no es válido (no es Base64 correcto): " + ex.Message, ex);
+            }
+            catch (CryptographicException ex)
+            {
+                throw new Exception("Error criptográfico al desencriptar con AES: " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al desencriptar con AES256: " + ex.Message, ex);
             }
         }
     }

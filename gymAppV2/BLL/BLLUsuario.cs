@@ -14,6 +14,7 @@ namespace BLL
         private CriptoManager criptoManager;
         private BLLEntrenador bllEntrenador;
         private BLLAlumno bllAlumno;
+        private BLLEvento bllEvento;
 
         public BLLUsuario()
         {
@@ -21,6 +22,21 @@ namespace BLL
             criptoManager = new CriptoManager();
             bllEntrenador = new BLLEntrenador();
             bllAlumno = new BLLAlumno();
+            bllEvento = new BLLEvento();
+        }
+
+        private void RegistrarEvento(string tipo, string accion)
+        {
+            try
+            {
+                var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarEvento(tipo, usr, accion);
+            }
+            catch
+            {
+                // No impedir la operación principal si falla el log
+            }
         }
 
         public bool ValidarLogin(string usuario, string contrasena)
@@ -28,6 +44,7 @@ namespace BLL
             bool ok = false;
             try
             {
+                // Validar campos no vacíos
                 if (string.IsNullOrEmpty(usuario) || string.IsNullOrEmpty(contrasena))
                 {
                     throw new ExcepcionesLogIn(ResultadosLogIn.InvalidUsername);
@@ -45,9 +62,10 @@ namespace BLL
                     throw new Exception("El usuario está desactivado o no esta registrado");
                 }
 
+                // Si cuenta bloqueada → lanzar excepción específica para redirigir a preguntas de seguridad
                 if (mppUsuario.UsuarioEstaBloqueado(usuario))
                 {
-                    throw new Exception("El usuario está bloqueado por demasiados intentos fallidos");
+                    throw new ExcepcionesLogIn(ResultadosLogIn.AccountLocked);
                 }
 
                 string contrasenaHash = criptoManager._686DPGetSHA256(contrasena);
@@ -56,10 +74,14 @@ namespace BLL
                 if (contrasenaHash == contrasenaBD)
                 {
                     ok = true;
+                    // Login exitoso: reestablecer intentos
+                    ReestablecerIntentos(usuario);
                     return ok;
                 }
                 else
                 {
+                    // Contraseña incorrecta: registrar intento fallido
+                    RegistrarIntentoFallido(usuario);
                     return ok;
                 }
             }
@@ -78,6 +100,13 @@ namespace BLL
             try
             {
                 mppUsuario.AgregarIntento(usuario);
+
+                // Verificar si se bloquea por llegar a 3 intentos
+                int intentos = mppUsuario.ObtenerIntentos(usuario);
+                if (intentos >= 3)
+                {
+                    RegistrarEvento("bloqueo_usuario", $"Usuario '{usuario}' bloqueado por exceso de intentos fallidos");
+                }
             }
             catch (Exception ex)
             {
@@ -102,7 +131,16 @@ namespace BLL
         {
             try
             {
+                // Verificar si estaba bloqueado antes de reestablecer
+                bool estabaBloqueado = mppUsuario.UsuarioEstaBloqueado(usuario);
+
                 mppUsuario.ReestablecerIntentos(usuario);
+
+                // Registrar evento de desbloqueo si corresponde
+                if (estabaBloqueado)
+                {
+                    RegistrarEvento("desbloqueo_usuario", $"Usuario '{usuario}' desbloqueado");
+                }
             }
             catch (Exception ex)
             {
@@ -212,6 +250,8 @@ namespace BLL
                 mppUsuario.GuardarContrasenaEnHistorial(usuario, nuevaContrasenaHash);
                 mppUsuario.ActualizarContrasena(usuario, nuevaContrasenaHash);
                 mppUsuario.ReestablecerIntentos(usuario);
+
+                RegistrarEvento("cambio_contrasena", $"Contraseña cambiada para usuario '{usuario}'");
             }
             catch (Exception ex)
             {
@@ -244,18 +284,29 @@ namespace BLL
             }
         }
 
-        public void CrearUsuario(string usuario, string contrasena, int rol, Entrenador datosEntrenador = null, int? dniAlumno = null)
+        public void CrearUsuario(string usuario, string contrasena, int rol, Entrenador datosEntrenador = null, int? dniAlumno = null, string confirmarContrasena = null)
         {
             try
             {
+                // Validar username no vacío
                 if (string.IsNullOrEmpty(usuario))
                 {
                     throw new Exception("El nombre de usuario no puede estar vacío");
                 }
 
+                // Validar username único (antes del INSERT para mensaje amigable)
                 if (mppUsuario.UsuarioExiste(usuario))
                 {
                     throw new Exception("El nombre de usuario ya existe. Por favor, elija otro.");
+                }
+
+                // Validar requisitos de contraseña
+                //ValidarRequisitosContrasena(contrasena);
+
+                // Validar confirmación de contraseña
+                if (!string.IsNullOrEmpty(confirmarContrasena) && contrasena != confirmarContrasena)
+                {
+                    throw new Exception("Las contraseñas no coinciden");
                 }
 
                 string contrasenaHash = criptoManager._686DPGetSHA256(contrasena);
@@ -297,10 +348,11 @@ namespace BLL
                     alumno.Usuario = usuario;
                     bllAlumno.ActualizarAlumno(alumno);
                 }
+
+                RegistrarEvento("alta_usuario", $"Usuario '{usuario}' creado con rol {rol}");
             }
             catch (Exception ex)
             {
-                
                 throw new Exception("Error al crear usuario: " + ex.Message, ex);
             }
         }
@@ -364,6 +416,8 @@ namespace BLL
                     alumno.Usuario = dto.Usuario;
                     bllAlumno.ActualizarAlumno(alumno);
                 }
+
+                RegistrarEvento("alta_usuario", $"Usuario '{dto.Usuario}' creado con rol {dto.Rol}");
             }
             catch (ArgumentException ex)
             {
@@ -427,6 +481,45 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception("Error al listar usuarios clientes disponibles: " + ex.Message, ex);
+            }
+        }
+
+        public void ActivarUsuario(string usuario)
+        {
+            try
+            {
+                mppUsuario.ActualizarEstado(usuario, true);
+                RegistrarEvento("activar_usuario", $"Usuario '{usuario}' activado");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al activar usuario: " + ex.Message, ex);
+            }
+        }
+
+        public void DesactivarUsuario(string usuario)
+        {
+            try
+            {
+                mppUsuario.ActualizarEstado(usuario, false);
+                RegistrarEvento("desactivar_usuario", $"Usuario '{usuario}' desactivado");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al desactivar usuario: " + ex.Message, ex);
+            }
+        }
+
+        public void DesbloquearUsuario(string usuario)
+        {
+            try
+            {
+                ReestablecerIntentos(usuario);
+                RegistrarEvento("desbloqueo_usuario", $"Usuario '{usuario}' desbloqueado");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al desbloquear usuario: " + ex.Message, ex);
             }
         }
     }

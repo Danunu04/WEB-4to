@@ -18,7 +18,7 @@ namespace BE
         {
         }
 
-        public Entrenador(int dni, string nombre, string apellido, DateTime fechaNacimiento, string usuario, bool activo, int alumnosCount, string dvv, string dvh)
+        public Entrenador(int dni, string nombre, string apellido, DateTime fechaNacimiento, string usuario, bool activo, int alumnosCount)
         {
             DNI = dni;
             Nombre = nombre;
@@ -27,8 +27,7 @@ namespace BE
             Usuario = usuario;
             Activo = activo;
             AlumnosCount = alumnosCount;
-            DVV = dvv;
-            DVH = dvh;
+            
         }
     }
 }

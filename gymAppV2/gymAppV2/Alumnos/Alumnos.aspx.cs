@@ -156,71 +156,29 @@ namespace gymAppV2.Alumnos
 
         protected void gvAlumnos_RowCommand(object sender, GridViewCommandEventArgs e)
         {
-            int index = Convert.ToInt32(e.CommandArgument);
-            int? dni = gvAlumnos.DataKeys[index]?.Value as int?;
-
-            if (!dni.HasValue)
-                return;
-
-            if (e.CommandName == "Modificar")
+            try
             {
-                try
+                // Selection via LinkButton click
+                if (e.CommandName == "Select")
                 {
-                    var alumno = bllAlumno.ObtenerAlumno(dni.Value);
-                    if (alumno == null)
+                    GridViewRow row = (GridViewRow)((LinkButton)e.CommandSource).NamingContainer;
+                    int? dni = gvAlumnos.DataKeys[row.RowIndex]?.Value as int?;
+
+                    if (dni.HasValue)
                     {
-                        MostrarError("El alumno no existe");
-                        return;
+                        DniSeleccionado = dni.Value;
+                        // Clear other selections
+                        foreach (GridViewRow r in gvAlumnos.Rows)
+                        {
+                            r.CssClass = "gridview-row";
+                        }
+                        row.CssClass = "selected-row";
                     }
-
-                    DniSeleccionado = dni.Value;
-                    EsModificacion = true;
-
-                    txtDNI.Text = alumno.DNI.ToString();
-                    txtDNI.Enabled = false; // No permitir cambiar DNI
-                    txtNombre.Text = alumno.Nombre;
-                    txtApellido.Text = alumno.Apellido;
-                    txtTelefono.Text = alumno.Telefono?.ToString() ?? "";
-                    txtFechaNacimiento.Text = alumno.FechaNacimiento.ToString("yyyy-MM-dd");
-                    txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
-                    chkActivo.Checked = alumno.Activo;
-
-                    CargarUsuariosDisponibles();
-
-                    // Seleccionar usuario si tiene
-                    if (!string.IsNullOrEmpty(alumno.Usuario))
-                    {
-                        ddlUsuarioAsociar.SelectedValue = alumno.Usuario;
-                    }
-
-                    lblFormTitle.Text = "Modificar Alumno";
-                    pnlFormulario.Visible = true;
-                }
-                catch (Exception ex)
-                {
-                    MostrarError("Error al cargar alumno: " + ex.Message);
                 }
             }
-            else if (e.CommandName == "Eliminar")
+            catch (Exception ex)
             {
-                try
-                {
-                    var alumno = bllAlumno.ObtenerAlumno(dni.Value);
-                    if (alumno == null)
-                    {
-                        MostrarError("El alumno no existe");
-                        return;
-                    }
-
-                    DniSeleccionado = dni.Value;
-                    lblAlumnoAEliminar.Text = $"{alumno.Apellido}, {alumno.Nombre} (DNI: {alumno.DNI})";
-                    hdnDniAEliminar.Value = dni.Value.ToString();
-                    pnlConfirmarEliminar.Visible = true;
-                }
-                catch (Exception ex)
-                {
-                    MostrarError("Error al preparar eliminación: " + ex.Message);
-                }
+                MostrarError("Error al seleccionar alumno: " + ex.Message);
             }
         }
 
@@ -254,43 +212,222 @@ namespace gymAppV2.Alumnos
 
         protected void btnExportar_Click(object sender, EventArgs e)
         {
-            MostrarExito("Funcionalidad de exportar en desarrollo");
+            try
+            {
+                MostrarAdvertencia("Funcionalidad de exportar en desarrollo");
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al exportar: " + ex.Message);
+            }
         }
 
         protected void btnActualizar_Click(object sender, EventArgs e)
         {
-            CargarAlumnos();
+            try
+            {
+                CargarAlumnos();
+                MostrarExito("Lista de alumnos actualizada");
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al actualizar lista: " + ex.Message);
+            }
         }
 
-        protected void btnNuevo_Click(object sender, EventArgs e)
+        protected void btnCrear_Click(object sender, EventArgs e)
         {
-            LimpiarFormulario();
-            lblFormTitle.Text = "Nuevo Alumno";
-            EsModificacion = false;
-            DniSeleccionado = null;
-            txtDNI.Enabled = true;
-            CargarUsuariosDisponibles();
-            pnlFormulario.Visible = true;
+            try
+            {
+                LimpiarFormulario();
+                lblFormTitle.Text = "Nuevo Alumno";
+                EsModificacion = false;
+                DniSeleccionado = null;
+                txtDNI.Enabled = true;
+                CargarUsuariosDisponibles();
+                pnlForm.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al preparar formulario: " + ex.Message);
+            }
+        }
+
+        protected void btnModificar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!DniSeleccionado.HasValue)
+                {
+                    MostrarError("Seleccione un alumno de la lista");
+                    return;
+                }
+
+                var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
+                if (alumno == null)
+                {
+                    MostrarError("El alumno no existe");
+                    return;
+                }
+
+                EsModificacion = true;
+
+                txtDNI.Text = alumno.DNI.ToString();
+                txtDNI.Enabled = false;
+                txtNombre.Text = alumno.Nombre;
+                txtApellido.Text = alumno.Apellido;
+                txtTelefono.Text = alumno.Telefono?.ToString() ?? "";
+                txtFechaNacimiento.Text = alumno.FechaNacimiento.ToString("yyyy-MM-dd");
+                txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
+                chkActivo.Checked = alumno.Activo;
+
+                CargarUsuariosDisponibles();
+
+                if (!string.IsNullOrEmpty(alumno.Usuario))
+                {
+                    ddlUsuarioAsociar.SelectedValue = alumno.Usuario;
+                }
+
+                lblFormTitle.Text = "Modificar Alumno";
+                pnlForm.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cargar alumno: " + ex.Message);
+            }
+        }
+
+        protected void btnEliminar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!DniSeleccionado.HasValue)
+                {
+                    MostrarError("Seleccione un alumno de la lista para eliminar");
+                    return;
+                }
+
+                var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
+                if (alumno == null)
+                {
+                    MostrarError("El alumno no existe");
+                    return;
+                }
+
+                lblAlumnoAEliminar.Text = $"{alumno.Apellido}, {alumno.Nombre} (DNI: {alumno.DNI})";
+                hdnDniAEliminar.Value = alumno.DNI.ToString();
+                pnlConfirmarEliminar.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al preparar eliminación: " + ex.Message);
+            }
+        }
+
+        protected void btnAsociarUsuario_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!DniSeleccionado.HasValue)
+                {
+                    MostrarError("Seleccione un alumno de la lista para asociar usuario");
+                    return;
+                }
+
+                var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
+                if (alumno == null)
+                {
+                    MostrarError("El alumno seleccionado no existe");
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(alumno.Usuario))
+                {
+                    MostrarAdvertencia($"El alumno ya tiene un usuario asociado: {alumno.Usuario}");
+                    return;
+                }
+
+                EsModificacion = true;
+                DniSeleccionado = alumno.DNI;
+
+                txtDNI.Text = alumno.DNI.ToString();
+                txtDNI.Enabled = false;
+                txtNombre.Text = alumno.Nombre;
+                txtApellido.Text = alumno.Apellido;
+                txtTelefono.Text = alumno.Telefono?.ToString() ?? "";
+                txtFechaNacimiento.Text = alumno.FechaNacimiento.ToString("yyyy-MM-dd");
+                txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
+                chkActivo.Checked = alumno.Activo;
+
+                CargarUsuariosDisponibles();
+                lblFormTitle.Text = "Asociar Usuario - " + alumno.Apellido + ", " + alumno.Nombre;
+                pnlForm.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al preparar asociación: " + ex.Message);
+            }
+        }
+
+        protected void btnCancelar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DniSeleccionado = null;
+                CargarAlumnos();
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cancelar: " + ex.Message);
+            }
         }
 
         protected void btnCloseForm_Click(object sender, EventArgs e)
         {
-            pnlFormulario.Visible = false;
+            try
+            {
+                pnlForm.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cerrar formulario: " + ex.Message);
+            }
         }
 
         protected void btnCancelarForm_Click(object sender, EventArgs e)
         {
-            pnlFormulario.Visible = false;
+            try
+            {
+                pnlForm.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cancelar: " + ex.Message);
+            }
         }
 
         protected void btnCloseConfirm_Click(object sender, EventArgs e)
         {
-            pnlConfirmarEliminar.Visible = false;
+            try
+            {
+                pnlConfirmarEliminar.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cerrar confirmación: " + ex.Message);
+            }
         }
 
         protected void btnCancelarEliminar_Click(object sender, EventArgs e)
         {
-            pnlConfirmarEliminar.Visible = false;
+            try
+            {
+                pnlConfirmarEliminar.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al cancelar eliminación: " + ex.Message);
+            }
         }
 
         protected void btnGuardar_Click(object sender, EventArgs e)
@@ -423,7 +560,7 @@ namespace gymAppV2.Alumnos
                     MostrarExito($"Alumno creado correctamente");
                 }
 
-                pnlFormulario.Visible = false;
+                pnlForm.Visible = false;
                 CargarAlumnos();
             }
             catch (Exception ex)
@@ -450,7 +587,7 @@ namespace gymAppV2.Alumnos
             }
             catch (Exception ex)
             {
-                MostrarError(ex.Message);
+                MostrarError("Error al eliminar alumno: " + ex.Message);
             }
         }
 
@@ -471,12 +608,22 @@ namespace gymAppV2.Alumnos
 
         private void MostrarError(string mensaje)
         {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"alert('{mensaje.Replace("'", "\\'")}')", true);
+            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
         }
 
         private void MostrarExito(string mensaje)
         {
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"alert('{mensaje.Replace("'", "\\'")}')", true);
+            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
+        }
+
+        private void MostrarAdvertencia(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
+        }
+
+        private void MostrarInfo(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "info", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'info');", true);
         }
 
         // ==================== MÉTODOS PARA EL GRIDVIEW ====================

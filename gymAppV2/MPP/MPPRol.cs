@@ -16,7 +16,7 @@ namespace MPP
             dal = new DalGeneral();
         }
 
-        public Rol ObtenerRol(string usuario)
+        public int ObtenerRol(string usuario)
         {
             try
             {
@@ -35,10 +35,10 @@ namespace MPP
                 if (resultado != null && resultado != DBNull.Value)
                 {
                     int rolValue = Convert.ToInt32(resultado);
-                    return (Rol)rolValue;
+                    return rolValue;
                 }
 
-                return Rol.Cliente; // Default role
+                return 1; // Default role
             }
             catch (Exception ex)
             {
@@ -46,7 +46,7 @@ namespace MPP
             }
         }
 
-        public void ActualizarRol(string usuario, Rol rol)
+        public void ActualizarRol(string usuario, int rol)
         {
             try
             {

@@ -179,7 +179,7 @@ namespace MPP
                         a.fechaNacimiento,
                         a.peso,
                         a.usr,
-                        ISNULL(u.USUARIO_Activo, 0) AS activo,
+                        ISNULL(u.activo, 0) AS activo,
                         CASE WHEN EXISTS (
                             SELECT 1 FROM [GymApp].[dbo].[Rutinas] r
                             WHERE r.dniAlumno = a.dni

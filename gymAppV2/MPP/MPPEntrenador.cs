@@ -51,9 +51,7 @@ namespace MPP
                         Convert.ToDateTime(row["fechaNacimiento"]),
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
                         Convert.ToBoolean(row["activo"]),
-                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : null,
-                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : null
+                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0
                     ));
                 }
 
@@ -62,6 +60,63 @@ namespace MPP
             catch (Exception ex)
             {
                 throw new Exception("Error al listar entrenadores: " + ex.Message, ex);
+            }
+        }
+
+        public void CrearEntrenador(Entrenador entrenador)
+        {
+            try
+            {
+                string consulta = @"
+                    INSERT INTO [GymApp].[dbo].[Entrenadores]
+                    (dni, nombre, apellido, fechaNacimiento, activo, usr, dvv, dvh)
+                    VALUES
+                    (@DNI, @Nombre, @Apellido, @FechaNacimiento, @Activo, @Usuario, '', '')";
+
+                ArrayList parametros = new ArrayList
+                {
+                    new SqlParameter("@DNI", entrenador.DNI),
+                    new SqlParameter("@Nombre", entrenador.Nombre),
+                    new SqlParameter("@Apellido", entrenador.Apellido),
+                    new SqlParameter("@FechaNacimiento", entrenador.FechaNacimiento),
+                    new SqlParameter("@Activo", entrenador.Activo),
+                    new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value)
+                };
+
+                dal._686DPEscribir(consulta, parametros);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al crear entrenador: " + ex.Message, ex);
+            }
+        }
+
+        public bool EntrenadorExiste(int dni)
+        {
+            try
+            {
+                string consulta = @"
+                    SELECT COUNT(*)
+                    FROM [GymApp].[dbo].[Entrenadores]
+                    WHERE dni = @DNI";
+
+                ArrayList parametros = new ArrayList
+                {
+                    new SqlParameter("@DNI", dni)
+                };
+
+                object resultado = dal._686DPEscalar(consulta, parametros);
+
+                if (resultado != null && resultado != DBNull.Value)
+                {
+                    return Convert.ToInt32(resultado) > 0;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al verificar si existe el entrenador: " + ex.Message, ex);
             }
         }
 
@@ -101,9 +156,7 @@ namespace MPP
                         Convert.ToDateTime(row["fechaNacimiento"]),
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
                         Convert.ToBoolean(row["activo"]),
-                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : null,
-                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : null
+                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0
                     );
                 }
 

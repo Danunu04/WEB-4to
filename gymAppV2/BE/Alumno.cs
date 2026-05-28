@@ -13,7 +13,7 @@ namespace BE
         public string Usuario { get; set; }
         public bool Activo { get; set; }
         public bool TieneRutinas { get; set; }
-        public TipoCliente TipoCliente { get; set; }
+        //public TipoCliente TipoCliente { get; set; }
         public string DVV { get; set; }
         public string DVH { get; set; }
 
@@ -21,7 +21,7 @@ namespace BE
         {
         }
 
-        public Alumno(int dni, string nombre, string apellido, long? telefono, DateTime fechaNacimiento, decimal? peso, string usuario, bool activo, bool tieneRutinas, TipoCliente tipoCliente, string dvv, string dvh)
+        public Alumno(int dni, string nombre, string apellido, long? telefono, DateTime fechaNacimiento, decimal? peso, string usuario, bool activo, bool tieneRutinas)
         {
             DNI = dni;
             Nombre = nombre;
@@ -32,9 +32,6 @@ namespace BE
             Usuario = usuario;
             Activo = activo;
             TieneRutinas = tieneRutinas;
-            TipoCliente = tipoCliente;
-            DVV = dvv;
-            DVH = dvh;
         }
     }
 }

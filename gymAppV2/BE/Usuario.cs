@@ -8,7 +8,7 @@ namespace BE
         public string USUARIO_Contras { get; set; }
         public bool USUARIO_Activo { get; set; }
         public int USUARIO_Intentos { get; set; }
-        public Rol USUARIO_Rol { get; set; }
+        public int USUARIO_Rol { get; set; }
         public string USUARIO_DVV { get; set; }
         public string USUARIO_DVH { get; set; }
 
@@ -16,7 +16,7 @@ namespace BE
         {
         }
 
-        public Usuario(string usuario, string contras, bool activo, int intentos, Rol rol, string dvv, string dvh)
+        public Usuario(string usuario, string contras, bool activo, int intentos, int rol, string dvv, string dvh)
         {
             USUARIO_Usuario = usuario;
             USUARIO_Contras = contras;

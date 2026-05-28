@@ -1,0 +1,278 @@
+# Sportio — Lógica de Negocio
+> Documento interno de referencia para el desarrollo de la plataforma web de gestión del gimnasio Sportio.
+
+---
+
+## 1. Descripción General
+
+**Sportio** es un gimnasio que ofrece múltiples disciplinas deportivas: gimnasio con entrenador personalizado, natación, pilates, danza, spinning, entre otras. Los alumnos pueden inscribirse en una o varias actividades.
+
+La plataforma centraliza la gestión de usuarios, pagos, rutinas, asistencia y clases, reemplazando el sistema manual actual (planillas físicas, comunicación por WhatsApp/Instagram/papel).
+
+---
+
+## 2. Actores del Sistema
+
+### 2.1 Roles y Jerarquía
+
+El sistema distingue **4 roles**, identificados internamente con un valor numérico en el campo `rol` del usuario. El control de acceso a módulos se implementará en el futuro mediante el patrón **Composite**; por ahora, se gestiona con esta variable numérica.
+
+| Valor | Rol              |
+|-------|------------------|
+| 1     | Administrador    |
+| 2     | Recepcionista    |
+| 3     | Entrenador       |
+| 4     | Cliente          |
+
+> **Nota:** Administrador y Recepcionista comparten las mismas vistas y permisos dentro de la plataforma. Sus diferencias de jerarquía son organizacionales, no funcionales en el sistema actual.
+
+---
+
+### 2.2 Tipos de Cliente
+
+El rol **Cliente** se subdivide en dos subtipos según la relación entre el usuario y los alumnos asociados:
+
+| Subtipo   | Definición |
+|-----------|------------|
+| **Alumno**   | El usuario tiene un único alumno asociado y su DNI coincide con el del alumno. |
+| **Familiar** | El usuario tiene uno o más alumnos asociados, pero al menos uno posee un DNI distinto al del usuario. |
+
+Un mismo usuario tipo Familiar puede gestionar los pagos y seguimiento de varios alumnos desde una única cuenta.
+
+---
+
+## 3. Módulos y Permisos por Perfil
+
+La navegación y el contenido de cada pantalla se adaptan dinámicamente según el `rol` del usuario autenticado.
+
+| Módulo                     | Admin / Recepcionista | Cliente (Alumno / Familiar) | Entrenador |
+|----------------------------|-----------------------|-----------------------------|------------|
+| **Dashboard**              | ✅ Completo            | ✅ Reducido                  | ✅ Reducido  |
+| **G. Alumnos**             | ✅ ABM completo        | ❌                           | ❌          |
+| **G. Usuarios**            | ✅ ABM completo        | ❌                           | ❌          |
+| **G. Entrenadores**        | ✅ ABM completo        | ❌                           | ❌          |
+| **Actividades / Calendario** | ✅ Todas las clases  | ✅ Solo sus clases            | ❌          |
+| **G. Rutinas**             | ✅ ABM completo        | ✅ Solo lectura               | ✅ ABM completo |
+| **G. Clases**              | ✅ CRUD completo       | ✅ Solo visualización         | ✅ Solo visualización |
+| **Crear Familia / Perfil** | ✅                     | ❌                           | ❌          |
+| **Bitácora**               | ✅                     | ❌                           | ❌          |
+| **Pagos**                  | ✅                     | ✅                           | ❌          |
+| **Perfil**                 | ❌                     | ✅ Ver y editar               | ❌          |
+| **Precios de Cuota**       | ✅ Ver y modificar     | ❌                           | ❌          |
+
+---
+
+## 4. Dashboard — Métricas por Perfil
+
+El módulo Dashboard muestra información diferenciada según el rol del usuario.
+
+### Admin / Recepcionista
+- Miembros activos
+- Clases dictadas en el mes
+- Ingreso total del mes
+- Tasa de retención
+
+### Cliente (Alumno / Familiar)
+- Días restantes del mes hasta el vencimiento
+- Fecha de vencimiento de la membresía
+- Días de rutina faltantes
+- Fecha de hoy
+
+### Entrenador
+- Total de alumnos asignados
+- Rutinas ya asignadas
+- Rutinas pendientes de asignar
+
+---
+
+## 5. Gestión de Membresía y Pagos
+
+### 5.1 Alta de Nuevo Alumno (Asociación)
+
+1. El usuario ingresa por primera vez y crea una cuenta con **nombre de usuario** y **contraseña**.
+2. El sistema solicita los datos personales del alumno:
+   - Nombre, Apellido, DNI, Teléfono, Fecha de nacimiento.
+3. El usuario confirma los datos ingresados.
+4. El sistema informa el monto del primer mes y solicita el pago para completar la asociación.
+5. El usuario realiza el pago a través de la plataforma (monto + medio de pago).
+6. El sistema registra al alumno como **miembro activo**, asignando:
+   - Estado del alumno
+   - Fecha de inicio
+   - Fecha de vencimiento del abono
+
+---
+
+### 5.2 Precios de Cuota Mensual
+
+| Modalidad          | Precio mensual |
+|--------------------|---------------|
+| 1 día por semana   | $25.000        |
+| 2 días por semana  | $29.000        |
+| 3 días por semana  | $33.000        |
+| Diario (todos los días) | $44.000   |
+
+> Los precios son configurables. Solo el **Administrador / Recepcionista** puede modificarlos desde el módulo de Pagos.
+
+#### Notificación de Cambio de Precio
+Cuando un administrador modifica algún precio, el sistema notifica a **todos los usuarios que no sean Entrenadores** mediante:
+- **Alerta interna** en la aplicación (banner / popup).
+- **Email** al correo registrado.
+
+---
+
+### 5.3 Renovación del Abono Mensual
+
+**Flujo para Cliente (Alumno / Familiar):**
+1. Accede al módulo de Pagos desde el menú.
+2. El sistema muestra la fecha de vencimiento del abono de cada alumno asociado. Si el abono está vencido, indica el monto a pagar.
+3. El usuario realiza el pago (monto + medio de pago + mes abonado).
+4. El sistema actualiza el estado del abono y la nueva fecha de vencimiento.
+
+**Flujo para Admin / Recepcionista:**
+1. Accede al módulo de Pagos.
+2. Usa el buscador para localizar a un alumno (por Nombre, Apellido o DNI) y verificar el estado de su abono.
+3. Registra o gestiona el pago correspondiente.
+
+---
+
+### 5.4 Lógica de Vencimiento de Membresía
+
+Una membresía se considera **vencida** cuando ocurre cualquiera de las dos condiciones siguientes (la que ocurra primero):
+
+1. **Se agotaron los días pagados:**
+   - 1 día/semana → 4 clases por mes
+   - 2 días/semana → 8 clases por mes
+   - 3 días/semana → 12 clases por mes
+   - Diario → clases ilimitadas durante 30 días
+2. **Transcurrieron 30 días** desde la fecha de inicio de la membresía.
+
+---
+
+## 6. Módulo de Inicio (Check-in)
+
+El módulo de **Inicio** permite registrar el ingreso de alumnos al gimnasio. Opera sobre el DNI del alumno.
+
+### Flujo de Check-in
+
+1. Se ingresa el DNI del alumno.
+2. El sistema valida si la membresía está activa:
+   - **✅ Membresía vigente:** Descuenta 1 día de los días restantes. Muestra mensaje de éxito y la pantalla vuelve a su estado inicial.
+   - **❌ Membresía vencida:** El sistema muestra un **error** y genera una **alerta automática al recepcionista** con los datos completos del alumno (nombre, apellido, DNI, estado del abono), indicando que el alumno intentó ingresar sin membresía al día.
+
+---
+
+## 7. Gestión de Rutinas
+
+| Actor                  | Capacidad |
+|------------------------|-----------|
+| **Entrenador**         | Crear, editar y eliminar rutinas. Asignar rutinas a sus alumnos. |
+| **Admin / Recepcionista** | Acceso completo a todas las rutinas (ABM). |
+| **Cliente**            | Solo puede **visualizar** las rutinas que le fueron asignadas. |
+
+Las rutinas reemplazan el sistema actual de comunicación informal (WhatsApp, Instagram, papel impreso), centralizando toda la información en la plataforma.
+
+---
+
+## 8. Gestión de Clases y Calendario
+
+- El módulo de **Clases** es gestionado únicamente por **Administrador / Recepcionista** (CRUD completo).
+- **Clientes** y **Entrenadores** solo pueden **visualizar** la información de clases.
+- Los Clientes ven únicamente las clases en las que están inscriptos.
+- El módulo de **Calendario / Actividades** muestra el horario de clases:
+  - Admin / Recepcionista: vista de todas las clases.
+  - Cliente: vista filtrada a sus clases.
+  - Entrenador: sin acceso a este módulo.
+
+---
+
+## 9. Perfil de Usuario (Cliente)
+
+El módulo **Perfil** es exclusivo para usuarios de tipo **Cliente** (Alumno o Familiar).
+
+- El cliente puede **ver y editar** sus propios datos personales.
+- Los cambios de datos de alumnos son gestionados por el Recepcionista / Administrador desde el módulo G. Alumnos.
+
+---
+
+## 10. Bitácora
+
+El módulo de **Bitácora** es exclusivo para **Administrador / Recepcionista**.
+
+Registra **toda acción que involucre a un usuario activo** dentro del sistema, incluyendo (pero no limitado a):
+- Ingresos registrados (check-in)
+- Pagos realizados
+- Cambios de datos de alumnos o usuarios
+- Modificaciones de precios
+- Altas y bajas de alumnos
+
+Permite trazabilidad completa de las operaciones del gimnasio.
+
+---
+
+## 11. Seguridad y Autenticación
+
+### 11.1 Creación de Usuario
+
+- El **nombre de usuario** debe ser único en el sistema (no se permiten duplicados).
+- La **contraseña** debe cumplir los siguientes requisitos mínimos:
+  - Al menos 6 caracteres
+  - Al menos una letra mayúscula
+  - Al menos un carácter especial
+
+---
+
+### 11.2 Intentos de Acceso y Bloqueo
+
+- El usuario tiene **3 intentos** para ingresar sus credenciales correctamente.
+- Al agotar los 3 intentos, la cuenta queda **bloqueada temporalmente**.
+- Para desbloquearla, el sistema presenta **preguntas de seguridad** basadas en los datos registrados:
+  - _"¿En qué año naciste?"_
+  - Si el usuario tiene más de un alumno asociado: se pregunta si conoce a una persona determinada (puede ser un alumno real u otro nombre aleatorio), para validar identidad.
+- Al responder correctamente, el sistema redirige al flujo de **cambio de contraseña**.
+
+---
+
+### 11.3 Cambio de Contraseña
+
+- El sistema verifica que la nueva contraseña **no haya sido utilizada previamente** por el usuario.
+- No se puede reutilizar una contraseña anterior.
+
+---
+
+### 11.4 Encriptación
+
+| Dato             | Tipo de encriptación | Motivo |
+|------------------|----------------------|--------|
+| Datos de alumnos | **Reversible**       | Son utilizados para generar las preguntas de seguridad y deben poder ser consultados internamente por el sistema. |
+| Contraseñas      | **Irreversible (SHA-256)** | No pueden ser recuperadas en texto plano bajo ninguna circunstancia. |
+
+---
+
+### 11.5 Patrones de Diseño de Seguridad
+
+| Patrón      | Aplicación |
+|-------------|------------|
+| **Singleton** | Garantiza una única instancia activa del sistema, evitando inconsistencias por sesiones duplicadas o accesos paralelos no controlados. |
+| **Composite** | *(Implementación futura)* Sistema de familias y permisos granular que permitirá activar/desactivar módulos según el nivel de acceso del usuario. Actualmente gestionado con la variable numérica `rol`. |
+
+---
+
+## 12. Fuera del Alcance (Versión Actual)
+
+Los siguientes módulos mencionados en la visión general del proyecto **no forman parte del alcance actual** de desarrollo:
+
+- Inscripción a competencias
+
+---
+
+## 13. Glosario
+
+| Término      | Definición |
+|--------------|------------|
+| **Alumno**   | Persona física que asiste al gimnasio. Puede estar asociada a uno o más usuarios. |
+| **Usuario**  | Cuenta de acceso a la plataforma. Puede ser un Alumno, Familiar, Entrenador, Recepcionista o Administrador. |
+| **Familiar** | Usuario tipo Cliente que gestiona alumnos con DNI distinto al propio. |
+| **Membresía**| Período de actividad pagada que habilita el acceso a los servicios del gimnasio. |
+| **Check-in** | Registro de ingreso de un alumno al gimnasio mediante su DNI. |
+| **Bitácora** | Registro histórico de todas las acciones que involucran a usuarios activos. |
+| **ABM**      | Alta, Baja y Modificación (operaciones CRUD sobre una entidad). |

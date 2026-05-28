@@ -43,8 +43,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="MPPAlumno.cs" />
     <Compile Include="MPPEvento.cs" />
     <Compile Include="MPPEntrenador.cs" />
+    <Compile Include="MPPPrecioModalidad.cs" />
+    <Compile Include="MPPRol.cs" />
     <Compile Include="MPPUsuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

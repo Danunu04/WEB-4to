@@ -2,7 +2,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Dashboard - Sportio</title>
-    <link href="<%= ResolveUrl("~/Content/dashboard.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=3") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
     <div class="animate-fade-in">
@@ -23,7 +23,7 @@
                         <i class="bi bi-arrow-up-short"></i>
                         12.5%
                     </div>
-        <div class="kpi-card-trend up">&nbsp;</div>
+                    <div class="kpi-card-trend up">&nbsp;</div>
                 </div>
                 <p class="kpi-card-label">Miembros Activos</p>
                 <p class="kpi-card-value tabular-nums">1,247</p>
@@ -72,107 +72,102 @@
             </div>
         </div>
 
-        <!-- Two Column Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Upcoming Classes -->
-            <div class="card">
-                <h3 class="card-title">Próximas Clases</h3>
-                <div class="space-y-3">
-                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-2 transition-colors">
-                        <div class="avatar bg-pink">Y</div>
-                        <div class="flex-1">
-                            <h4 class="font-medium">Yoga Flow</h4>
-                            <p class="text-sm text-muted">Ana García</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-medium font-mono tabular-nums">08:00</p>
-                            <p class="text-xs text-muted">60 min</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-2 transition-colors">
-                        <div class="avatar bg-lavender">C</div>
-                        <div class="flex-1">
-                            <h4 class="font-medium">CrossFit</h4>
-                            <p class="text-sm text-muted">Carlos Ruiz</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-medium font-mono tabular-nums">09:30</p>
-                            <p class="text-xs text-muted">45 min</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-2 transition-colors">
-                        <div class="avatar bg-mint">P</div>
-                        <div class="flex-1">
-                            <h4 class="font-medium">Pilates</h4>
-                            <p class="text-sm text-muted">María López</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-medium font-mono tabular-nums">11:00</p>
-                            <p class="text-xs text-muted">50 min</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-2 transition-colors">
-                        <div class="avatar bg-peach">H</div>
-                        <div class="flex-1">
-                            <h4 class="font-medium">HIIT</h4>
-                            <p class="text-sm text-muted">David Chen</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-medium font-mono tabular-nums">17:00</p>
-                            <p class="text-xs text-muted">30 min</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-2 transition-colors">
-                        <div class="avatar bg-sky">Z</div>
-                        <div class="flex-1">
-                            <h4 class="font-medium">Zumba</h4>
-                            <p class="text-sm text-muted">Sofía Martín</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-medium font-mono tabular-nums">19:00</p>
-                            <p class="text-xs text-muted">55 min</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Weekly Activity -->
-            <div class="card">
-                <h3 class="card-title">Actividad Semanal</h3>
-                <div class="flex items-end justify-between h-40 gap-2">
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 65%; background-color: var(--color-accent-pink); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">L</span>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 78%; background-color: var(--color-accent-lavender); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">M</span>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 52%; background-color: var(--color-accent-pink); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">X</span>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 89%; background-color: var(--color-accent-lavender); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">J</span>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 71%; background-color: var(--color-accent-pink); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">V</span>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 45%; background-color: var(--color-accent-lavender); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">S</span>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-t-lg" style="height: 62%; background-color: var(--color-accent-pink); opacity: 0.8;"></div>
-                        <span class="text-xs text-muted">D</span>
-                    </div>
-                </div>
+        <!-- Tabla única de Actividades Semanales -->
+        <div class="card">
+            <h3 class="card-title">Actividades de la Semana</h3>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Actividad</th>
+                            <th>Instructor</th>
+                            <th>Día</th>
+                            <th>Horario</th>
+                            <th>Duración</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar avatar-sm bg-pink">Y</div>
+                                    <span class="font-medium">Yoga Flow</span>
+                                </div>
+                            </td>
+                            <td>Ana García</td>
+                            <td>Lunes</td>
+                            <td class="font-mono tabular-nums">08:00</td>
+                            <td class="text-muted">60 min</td>
+                            <td><span class="badge badge-mint">Completada</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar avatar-sm bg-lavender">C</div>
+                                    <span class="font-medium">CrossFit Intensivo</span>
+                                </div>
+                            </td>
+                            <td>Carlos Ruiz</td>
+                            <td>Martes</td>
+                            <td class="font-mono tabular-nums">09:30</td>
+                            <td class="text-muted">45 min</td>
+                            <td><span class="badge badge-mint">Completada</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar avatar-sm bg-mint">P</div>
+                                    <span class="font-medium">Pilates Core</span>
+                                </div>
+                            </td>
+                            <td>María López</td>
+                            <td>Miércoles</td>
+                            <td class="font-mono tabular-nums">11:00</td>
+                            <td class="text-muted">50 min</td>
+                            <td><span class="badge badge-lavender">Pendiente</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar avatar-sm bg-peach">H</div>
+                                    <span class="font-medium">HIIT Cardio</span>
+                                </div>
+                            </td>
+                            <td>David Chen</td>
+                            <td>Jueves</td>
+                            <td class="font-mono tabular-nums">17:00</td>
+                            <td class="text-muted">30 min</td>
+                            <td><span class="badge badge-lavender">Pendiente</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar avatar-sm bg-sky">Z</div>
+                                    <span class="font-medium">Zumba Fitness</span>
+                                </div>
+                            </td>
+                            <td>Sofía Martín</td>
+                            <td>Viernes</td>
+                            <td class="font-mono tabular-nums">19:00</td>
+                            <td class="text-muted">55 min</td>
+                            <td><span class="badge badge-lavender">Pendiente</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar avatar-sm bg-pink">Y</div>
+                                    <span class="font-medium">Yoga Relax</span>
+                                </div>
+                            </td>
+                            <td>Ana García</td>
+                            <td>Sábado</td>
+                            <td class="font-mono tabular-nums">10:00</td>
+                            <td class="text-muted">45 min</td>
+                            <td><span class="badge badge-peach">Programada</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

@@ -1,136 +1,167 @@
 using System;
+using System.Threading;
 using System.Web.Security;
 using System.Web.UI;
 using Servicios.Singleton;
 using BE;
+using BLL;
+using SERVICIOS;
 
 namespace gymAppV2.LogIn
 {
     public partial class LogIn : System.Web.UI.Page
     {
-        // Propiedad que persiste el contador de intentos fallidos entre postbacks usando ViewState
-        private int Intentos
-        {
-            get { return ViewState["Intentos"] != null ? (int)ViewState["Intentos"] : 0; }
-            set { ViewState["Intentos"] = value; }
-        }
+        private BLLUsuario bllUsuario;
+        private BLLEvento bllEvento;
 
-        // Evento que se ejecuta al cargar la página
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Sin lógica inicial por ahora
+            if (!IsPostBack)
+            {
+                bllUsuario = new BLLUsuario();
+                bllEvento = new BLLEvento();
+
+                if (bllUsuario.UsuarioEstaLogueado())
+                {
+                    Response.Redirect("~/DashBoard/WebForm1.aspx");
+                }
+            }
         }
 
-        // Evento del botón de login - valida credenciales y maneja autenticación
         protected void btnLogIn_Click(object sender, EventArgs e)
         {
-            // Obtener y limpiar valores de los campos
             string usuario = txtUsuario.Text.Trim();
             string contrasena = txtContrasena.Text.Trim();
 
-            // Validar que ambos campos tengan datos
             if (string.IsNullOrEmpty(usuario) || string.IsNullOrEmpty(contrasena))
             {
-                lblMensaje.Text = "Complete usuario y contraseña.";
+                MostrarToast("Complete usuario y contrasena.", "warning");
                 return;
             }
 
-            // Incrementar contador de intentos
-            Intentos++;
-
             try
             {
-                // Validar credenciales contra la base de datos
-                BE.Usuario user = ValidarCredenciales(usuario, contrasena);
+                bllUsuario = new BLLUsuario();
+                bllEvento = new BLLEvento();
 
-                if (user != null)
+                bool resultado = bllUsuario.ValidarLogin(usuario, contrasena);
+
+                if (resultado)
                 {
-                    // Verificar si ya hay una sesión activa
-                    if (Singleton.Instancia != null && Singleton.Instancia.IsLogged())
+                    Usuario userBD = bllUsuario.ObtenerUsuario(usuario);
+
+                    if (bllUsuario.UsuarioEstaLogueado())
                     {
-                        lblMensaje.Text = "Sesion activa.";
+                        MostrarToast("Ya hay una sesion activa.", "warning");
                         return;
                     }
 
-                    // Login exitoso - resetear contador de intentos
-                    Intentos = 0;
+                    bllUsuario.ReestablecerIntentos(usuario);
+                    bllUsuario.LogearUsuario(userBD);
 
-                    // Guardar usuario en el singleton para acceso global
-                    Singleton.Instancia.LogIn(user);
+                    FormsAuthentication.SetAuthCookie(userBD.USUARIO_Usuario, false);
 
-                    // Crear cookie de autenticación de ASP.NET
-                    FormsAuthentication.SetAuthCookie(user.USUARIO_Nombre, false);
+                    bllEvento.RegistrarEvento("login", userBD.USUARIO_Usuario, "Inicio de sesión exitoso");
 
-                    // Redirigir al dashboard
-                    Response.Redirect("~/DashBoard/WebForm1.aspx");
-                }
-                else
-                {
-                    // Login fallido - verificar si se alcanzó el límite de intentos
-                    if (Intentos >= 3)
-                    {
-                        lblMensaje.Text = "Demasiados intentos. Intente más tarde.";
-                        btnLogIn.Enabled = false;
-                    }
-                    else
-                    {
-                        lblMensaje.Text = string.Format("Usuario o contraseña incorrectos. Intento {0} de 3.", Intentos);
-                    }
+                    // Mostrar toast de exito y redirigir desde el cliente
+                    RedirigirConToast("Inicio de sesion exitoso!", "~/DashBoard/WebForm1.aspx");
                 }
             }
             catch (ExcepcionesLogIn ex)
             {
-                // Manejar excepciones específicas de login con mensajes personalizados
-                switch (ex.Result)
+                bllUsuario.RegistrarIntentoFallido(usuario);
+                int intentosRestantes = bllUsuario.ObtenerIntentosRestantes(usuario);
+
+                if (intentosRestantes <= 0)
                 {
-                    case ResultadosLogIn.InvalidUsername:
-                        lblMensaje.Text = "Usuario no encontrado.";
-                        break;
-                    case ResultadosLogIn.InvalidPassword:
-                        lblMensaje.Text = string.Format("Contraseña incorrecta. Intento {0} de 3.", Intentos);
-                        break;
-                    default:
-                        lblMensaje.Text = "Error de autenticación.";
-                        break;
+                    MostrarToast("El usuario ha sido bloqueado por demasiados intentos fallidos.", "error");
+                    btnLogIn.Enabled = false;
                 }
+                else
+                {
+                    string mensaje = "";
+                    switch (ex.Result)
+                    {
+                        case ResultadosLogIn.InvalidUsername:
+                            mensaje = "Usuario no encontrado. Intentos restantes: " + intentosRestantes;
+                            break;
+                        case ResultadosLogIn.InvalidPassword:
+                            mensaje = "Contrasena incorrecta. Intentos restantes: " + intentosRestantes;
+                            break;
+                        default:
+                            mensaje = "Error de autenticacion. Intentos restantes: " + intentosRestantes;
+                            break;
+                    }
+                    MostrarToast(mensaje, "error");
+                }
+
+                bllEvento.RegistrarEvento("error", usuario, $"Intento fallido de login - {ex.Result}");
             }
-            catch (Exception)
+            catch (ThreadAbortException)
             {
-                // Manejar errores generales (ej. conexión a BD)
-                lblMensaje.Text = "Error al conectar con el servidor.";
+                // ThreadAbortException es esperado al usar Response.Redirect
+                // No hacer nada, dejar que el proceso continúe
+            }
+            catch (Exception ex)
+            {
+                MostrarToast("Error al conectar con el servidor: " + ex.Message, "error");
+                bllEvento.RegistrarEvento("error", usuario, $"Error en login: {ex.Message}");
             }
         }
 
-        // Valida las credenciales del usuario contra la base de datos
-        // Retorna el objeto Usuario si las credenciales son válidas, null si no
-        private BE.Usuario ValidarCredenciales(string usuario, string contrasena)
+        protected void Button1_Click(object sender, EventArgs e)
         {
-            // TODO: Reemplazar con consulta a DAL cuando esté implementado
-            // Por ahora, lógica de prueba para que funcione el flujo
-            if (usuario == "admin" && contrasena == "admin")
+            try
             {
-                return new BE.Usuario
-                {
-                    USUARIO_Id = 1,
-                    USUARIO_Nombre = "admin",
-                    USUARIO_Contras = "",
-                    USUARIO_Intentos = 0,
-                    USUARIO_Baja = false
-                };
+                Response.Redirect("/Inicio/Default.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
             }
-
-            // Si el usuario no es "admin", lanzar excepción de usuario inválido
-            if (usuario != "admin")
+            catch (ThreadAbortException)
             {
-                throw new ExcepcionesLogIn(ResultadosLogIn.InvalidUsername);
+                // ThreadAbortException es esperado al usar Response.Redirect
+                // No hacer nada, dejar que el proceso continúe
             }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = "Error al redirigir: " + ex.Message;
+            }
+        }
 
-            // Si el usuario es "admin" pero la contraseña no coincide, lanzar excepción de contraseña inválida
-            throw new ExcepcionesLogIn(ResultadosLogIn.InvalidPassword);
+        private void MostrarToast(string mensaje, string tipo)
+        {
+            string mensajeEscapado = System.Security.SecurityElement.Escape(mensaje);
+            string script = "<script>(function(){" +
+                "var container=document.getElementById('toastContainer');" +
+                "if(!container)return;" +
+                "var toast=document.createElement('div');" +
+                "toast.className='toast toast-" + tipo + "';" +
+                "var icons={success:'bi-check-circle-fill',error:'bi-exclamation-circle-fill',warning:'bi-exclamation-triangle-fill',info:'bi-info-circle-fill'};" +
+                "toast.innerHTML='<div class=\"toast-icon\"><i class=\"bi '+icons['" + tipo + "']+'\"></i></div><div class=\"toast-content\"><div class=\"toast-message\">"+mensajeEscapado+"</div></div><button class=\"toast-close\" onclick=\"this.parentElement.remove()\"><i class=\"bi bi-x\"></i></button>';" +
+                "container.appendChild(toast);" +
+                "setTimeout(function(){toast.classList.add('show');},10);" +
+                "setTimeout(function(){toast.classList.add('hiding');setTimeout(function(){toast.remove();},300);},4000);" +
+                "})();</script>";
+            ClientScript.RegisterStartupScript(this.GetType(), "toast_" + DateTime.Now.Ticks, script);
+        }
+
+        private void RedirigirConToast(string mensaje, string url)
+        {
+            string mensajeEscapado = System.Security.SecurityElement.Escape(mensaje);
+            string urlResuelta = ResolveUrl(url);
+            string script = "<script>(function(){" +
+                "var container=document.getElementById('toastContainer');" +
+                "if(!container)return;" +
+                "var toast=document.createElement('div');" +
+                "toast.className='toast toast-success';" +
+                "toast.innerHTML='<div class=\"toast-icon\"><i class=\"bi bi-check-circle-fill\"></i></div><div class=\"toast-content\"><div class=\"toast-message\">"+mensajeEscapado+"</div></div><button class=\"toast-close\" onclick=\"this.parentElement.remove()\"><i class=\"bi bi-x\"></i></button>';" +
+                "container.appendChild(toast);" +
+                "setTimeout(function(){toast.classList.add('show');},10);" +
+                "setTimeout(function(){window.location.href='" + urlResuelta + "';},1500);" +
+                "})();</script>";
+            ClientScript.RegisterStartupScript(this.GetType(), "redirect_" + DateTime.Now.Ticks, script);
         }
     }
 }
-
 
 
 

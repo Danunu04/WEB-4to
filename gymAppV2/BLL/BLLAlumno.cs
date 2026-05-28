@@ -19,6 +19,113 @@ namespace BLL
             bllEvento = new BLLEvento();
         }
 
+        /// <summary>
+        /// Valida que el DNI sea solo números, de 7-8 dígitos
+        /// </summary>
+        public void ValidarDNI(string dniStr)
+        {
+            if (string.IsNullOrEmpty(dniStr))
+            {
+                throw new Exception("El DNI no puede estar vacío");
+            }
+
+            // Solo números
+            foreach (char c in dniStr)
+            {
+                if (!char.IsDigit(c))
+                {
+                    throw new Exception("El DNI debe contener solo números");
+                }
+            }
+
+            // Longitud válida (7-8 dígitos)
+            if (dniStr.Length < 7 || dniStr.Length > 8)
+            {
+                throw new Exception("El DNI debe tener 7 u 8 dígitos");
+            }
+        }
+
+        /// <summary>
+        /// Valida que el nombre/apellido sean solo letras y espacios
+        /// </summary>
+        public void ValidarNombreApellido(string valor, string campo)
+        {
+            if (string.IsNullOrEmpty(valor))
+            {
+                throw new Exception($"El {campo} no puede estar vacío");
+            }
+
+            // Solo letras y espacios
+            foreach (char c in valor)
+            {
+                if (!char.IsLetter(c) && !char.IsWhiteSpace(c))
+                {
+                    throw new Exception($"El {campo} debe contener solo letras y espacios");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Valida que el teléfono sea formato válido (opcional)
+        /// </summary>
+        public void ValidarTelefono(string telefono)
+        {
+            if (string.IsNullOrEmpty(telefono))
+            {
+                return; // Campo opcional
+            }
+
+            // Solo números y caracteres válidos (+, -, espacio)
+            foreach (char c in telefono)
+            {
+                if (!char.IsDigit(c) && c != '+' && c != '-' && c != ' ')
+                {
+                    throw new Exception("El teléfono debe contener solo números y caracteres válidos (+, -, espacio)");
+                }
+            }
+
+            if (telefono.Replace("+", "").Replace("-", "").Replace(" ", "").Length < 7)
+            {
+                throw new Exception("El teléfono debe tener al menos 7 dígitos");
+            }
+        }
+
+        /// <summary>
+        /// Valida que la fecha de nacimiento no sea futura y esté en rango razonable
+        /// </summary>
+        public void ValidarFechaNacimiento(DateTime fechaNacimiento)
+        {
+            DateTime ahora = DateTime.Now;
+
+            // No puede ser futura
+            if (fechaNacimiento > ahora)
+            {
+                throw new Exception("La fecha de nacimiento no puede ser futura");
+            }
+
+            // No más de 100 años atrás (rango razonable)
+            if (fechaNacimiento.Year < ahora.Year - 100)
+            {
+                throw new Exception("La fecha de nacimiento debe ser dentro de los últimos 100 años");
+            }
+        }
+
+        /// <summary>
+        /// Valida que el peso esté en rango válido (0-500 kg)
+        /// </summary>
+        public void ValidarPeso(decimal? peso)
+        {
+            if (!peso.HasValue || peso <= 0)
+            {
+                throw new Exception("El peso debe ser mayor a 0");
+            }
+
+            if (peso >= 500)
+            {
+                throw new Exception("El peso debe ser menor a 500 kg");
+            }
+        }
+
         private void RegistrarEvento(string tipo, string accion)
         {
             try
@@ -37,10 +144,29 @@ namespace BLL
         {
             try
             {
+                // Validar DNI (solo números, 7-8 dígitos)
+                ValidarDNI(alumno.DNI.ToString());
+
+                // Validar que no exista duplicado
                 if (mppAlumno.AlumnoExiste(alumno.DNI))
                 {
                     throw new Exception("Ya existe un alumno con ese DNI");
                 }
+
+                // Validar Nombre (solo letras y espacios)
+                ValidarNombreApellido(alumno.Nombre, "Nombre");
+
+                // Validar Apellido (solo letras y espacios)
+                ValidarNombreApellido(alumno.Apellido, "Apellido");
+
+                // Validar Teléfono (opcional, formato válido)
+                ValidarTelefono(alumno.Telefono?.ToString());
+
+                // Validar Fecha de Nacimiento (no futura, rango razonable)
+                ValidarFechaNacimiento(alumno.FechaNacimiento);
+
+                // Validar Peso (0-500 kg)
+                ValidarPeso(alumno.Peso);
 
                 mppAlumno.CrearAlumno(alumno);
                 RegistrarEvento("alta_alumno", $"Alumno DNI {alumno.DNI} creado");
@@ -67,6 +193,24 @@ namespace BLL
         {
             try
             {
+                // Validar DNI (solo números, 7-8 dígitos)
+                ValidarDNI(alumno.DNI.ToString());
+
+                // Validar Nombre (solo letras y espacios)
+                ValidarNombreApellido(alumno.Nombre, "Nombre");
+
+                // Validar Apellido (solo letras y espacios)
+                ValidarNombreApellido(alumno.Apellido, "Apellido");
+
+                // Validar Teléfono (opcional, formato válido)
+                ValidarTelefono(alumno.Telefono?.ToString());
+
+                // Validar Fecha de Nacimiento (no futura, rango razonable)
+                ValidarFechaNacimiento(alumno.FechaNacimiento);
+
+                // Validar Peso (0-500 kg)
+                ValidarPeso(alumno.Peso);
+
                 mppAlumno.ActualizarAlumno(alumno);
                 RegistrarEvento("modificacion_alumno", $"Alumno DNI {alumno.DNI} modificado");
             }

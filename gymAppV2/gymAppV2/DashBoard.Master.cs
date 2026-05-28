@@ -1,5 +1,6 @@
 using System;
 using Servicios.Singleton;
+using BLL;
 
 namespace gymAppV2
 {
@@ -15,9 +16,24 @@ namespace gymAppV2
 
         protected void LnkLogout_Click(object sender, EventArgs e)
         {
+            var usuario = Singleton.Instancia.Usuario;
+            string usuarioNombre = usuario?.USUARIO_Usuario ?? "desconocido";
+
+            // Registrar evento de logout antes de cerrar sesión
+            try
+            {
+                var bllEvento = new BLLEvento();
+                bllEvento.RegistrarEvento("logout", usuarioNombre, "Cierre de sesión");
+            }
+            catch
+            {
+                // No impedir el logout si falla el log
+            }
+
             Singleton.Instancia.LogOut();
             System.Web.Security.FormsAuthentication.SignOut();
-            Response.Redirect("~/Inicio/Default.aspx");
+            Response.Redirect("~/LogIn/LogIn.aspx", false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
 }

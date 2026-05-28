@@ -7,13 +7,29 @@ namespace BLL
     public class BLLRol
     {
         private MPPRol mppRol;
+        private BLLEvento bllEvento;
 
         public BLLRol()
         {
             mppRol = new MPPRol();
+            bllEvento = new BLLEvento();
         }
 
-        public Rol ObtenerRol(string usuario)
+        private void RegistrarEvento(string tipo, string accion)
+        {
+            try
+            {
+                var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarEvento(tipo, usr, accion);
+            }
+            catch
+            {
+                // No impedir la operación principal si falla el log
+            }
+        }
+
+        public int ObtenerRol(string usuario)
         {
             try
             {
@@ -25,11 +41,12 @@ namespace BLL
             }
         }
 
-        public void ActualizarRol(string usuario, Rol rol)
+        public void ActualizarRol(string usuario, int rol)
         {
             try
             {
                 mppRol.ActualizarRol(usuario, rol);
+                RegistrarEvento("cambio_rol", $"Rol del usuario '{usuario}' actualizado a {rol}");
             }
             catch (Exception ex)
             {
@@ -37,13 +54,13 @@ namespace BLL
             }
         }
 
-        public bool TieneAccesoAModulo(Rol rol, string modulo)
+        public bool TieneAccesoAModulo(int rol, string modulo)
         {
-            // Implement access control based on LogicaNegocio.txt Section 3
+            // 1=Administrador | 2=Recepcionista | 3=Entrenador | 4=Cliente
             switch (modulo)
             {
                 case "Dashboard":
-                    return true; // All roles have access
+                    return true;
 
                 case "GestionAlumnos":
                 case "GestionUsuarios":
@@ -51,22 +68,20 @@ namespace BLL
                 case "CrearFamiliaPerfil":
                 case "Bitacora":
                 case "PreciosCuota":
-                    return rol == Rol.Administrador || rol == Rol.Recepcionista;
+                    return rol <= 2;
 
                 case "ActividadesCalendario":
-                    return rol == Rol.Administrador || rol == Rol.Recepcionista || rol == Rol.Cliente;
+                case "Pagos":
+                    return rol != 3;
 
                 case "GestionRutinas":
-                    return rol == Rol.Administrador || rol == Rol.Recepcionista || rol == Rol.Entrenador;
+                    return rol <= 3;
 
                 case "GestionClases":
-                    return rol == Rol.Administrador || rol == Rol.Recepcionista;
-
-                case "Pagos":
-                    return rol == Rol.Administrador || rol == Rol.Recepcionista || rol == Rol.Cliente;
+                    return true;
 
                 case "Perfil":
-                    return rol == Rol.Cliente;
+                    return rol == 4;
 
                 default:
                     return false;

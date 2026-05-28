@@ -24,15 +24,6 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl badgeCount;
 
         /// <summary>
-        /// btnCrear control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnCrear;
-
-        /// <summary>
         /// lblTotal control.
         /// </summary>
         /// <remarks>
@@ -105,24 +96,6 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.HtmlControls.HtmlButton btnFiltrar;
 
         /// <summary>
-        /// btnExportar control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnExportar;
-
-        /// <summary>
-        /// btnActualizar control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnActualizar;
-
-        /// <summary>
         /// gvAlumnos control.
         /// </summary>
         /// <remarks>
@@ -141,31 +114,49 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl footerText;
 
         /// <summary>
-        /// pnlSelectedPreview control.
+        /// btnCrear control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlSelectedPreview;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCrear;
 
         /// <summary>
-        /// previewAvatar control.
+        /// btnModificar control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl previewAvatar;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnModificar;
 
         /// <summary>
-        /// previewName control.
+        /// btnEliminar control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl previewName;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnEliminar;
+
+        /// <summary>
+        /// btnAsociarUsuario control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsociarUsuario;
+
+        /// <summary>
+        /// btnCancelar control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelar;
 
         /// <summary>
         /// pnlForm control.
@@ -249,13 +240,22 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.WebControls.TextBox txtPeso;
 
         /// <summary>
-        /// ddlUsuarioForm control.
+        /// chkActivo control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlUsuarioForm;
+        protected global::System.Web.UI.WebControls.CheckBox chkActivo;
+
+        /// <summary>
+        /// ddlUsuarioAsociar control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ddlUsuarioAsociar;
 
         /// <summary>
         /// btnGuardar control.
@@ -267,62 +267,57 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.HtmlControls.HtmlButton btnGuardar;
 
         /// <summary>
-        /// btnCancelarForm control.
+        /// pnlConfirmarEliminar control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarForm;
-
-        /// <summary>
-        /// btnNuevo control.
-        /// </summary>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnNuevo;
-
-        /// <summary>
-        /// pnlFormulario control.
-        /// </summary>
-        protected global::System.Web.UI.WebControls.Panel pnlFormulario;
-
-        /// <summary>
-        /// chkActivo control.
-        /// </summary>
-        protected global::System.Web.UI.WebControls.CheckBox chkActivo;
-
-        /// <summary>
-        /// ddlUsuarioAsociar control.
-        /// </summary>
-        protected global::System.Web.UI.WebControls.DropDownList ddlUsuarioAsociar;
-
-        /// <summary>
-        /// pnlConfirmarEliminar control.
-        /// </summary>
         protected global::System.Web.UI.WebControls.Panel pnlConfirmarEliminar;
+
+        /// <summary>
+        /// btnCloseConfirm control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCloseConfirm;
 
         /// <summary>
         /// lblAlumnoAEliminar control.
         /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblAlumnoAEliminar;
 
         /// <summary>
         /// hdnDniAEliminar control.
         /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
         protected global::System.Web.UI.WebControls.HiddenField hdnDniAEliminar;
-
-        /// <summary>
-        /// btnCloseConfirm control.
-        /// </summary>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnCloseConfirm;
 
         /// <summary>
         /// btnCancelarEliminar control.
         /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarEliminar;
 
         /// <summary>
         /// btnConfirmarEliminar control.
         /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnConfirmarEliminar;
     }
 }

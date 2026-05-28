@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CriptoManager.cs" />
     <Compile Include="Singleton\Singleton.cs" />
     <Compile Include="Singleton\SesionUsuario.cs" />
     <Compile Include="Singleton\ResultadosLogIn.cs" />
@@ -52,10 +53,6 @@
     <ProjectReference Include="..\BE\BE.csproj">
       <Project>{4bfead7d-e7e5-4068-bf50-d45a3c02b956}</Project>
       <Name>BE</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MPP\MPP.csproj">
-      <Project>{9fda2267-4381-487c-96f4-b455e3244c7c}</Project>
-      <Name>MPP</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

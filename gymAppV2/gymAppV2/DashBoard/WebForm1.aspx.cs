@@ -11,11 +11,26 @@ namespace gymAppV2.DashBoard
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            HtmlLink cssLink = new HtmlLink();
-            cssLink.Href = ResolveUrl("~/Content/dashboard.css");
-            cssLink.Attributes["rel"] = "stylesheet";
-            cssLink.Attributes["type"] = "text/css";
-            Page.Header.Controls.Add(cssLink);
+        }
+
+        private void MostrarError(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
+        }
+
+        private void MostrarExito(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
+        }
+
+        private void MostrarAdvertencia(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
+        }
+
+        private void MostrarInfo(string mensaje)
+        {
+            ScriptManager.RegisterStartupScript(this, GetType(), "info", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'info');", true);
         }
     }
 }

@@ -274,10 +274,10 @@ namespace gymAppV2.Alumnos
 
                 txtDNI.Text = alumno.DNI.ToString();
                 txtDNI.Enabled = false;
-                txtNombre.Text = alumno.Nombre;
-                txtApellido.Text = alumno.Apellido;
-                txtTelefono.Text = alumno.Telefono?.ToString() ?? "";
-                txtFechaNacimiento.Text = alumno.FechaNacimiento.ToString("yyyy-MM-dd");
+                txtNombre.Text = alumno.Nombre ?? "";
+                txtApellido.Text = alumno.Apellido ?? "";
+                txtTelefono.Text = alumno.Telefono ?? "";
+                txtFechaNacimiento.Text = alumno.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
                 txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
                 chkActivo.Checked = alumno.Activo;
 
@@ -352,10 +352,10 @@ namespace gymAppV2.Alumnos
 
                 txtDNI.Text = alumno.DNI.ToString();
                 txtDNI.Enabled = false;
-                txtNombre.Text = alumno.Nombre;
-                txtApellido.Text = alumno.Apellido;
-                txtTelefono.Text = alumno.Telefono?.ToString() ?? "";
-                txtFechaNacimiento.Text = alumno.FechaNacimiento.ToString("yyyy-MM-dd");
+                txtNombre.Text = alumno.Nombre ?? "";
+                txtApellido.Text = alumno.Apellido ?? "";
+                txtTelefono.Text = alumno.Telefono ?? "";
+                txtFechaNacimiento.Text = alumno.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
                 txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
                 chkActivo.Checked = alumno.Activo;
 
@@ -488,15 +488,11 @@ namespace gymAppV2.Alumnos
                     peso = p;
                 }
 
-                long? telefono = null;
-                if (!string.IsNullOrEmpty(txtTelefono.Text) && long.TryParse(txtTelefono.Text, out long t))
-                {
-                    telefono = t;
-                }
+                string telefono = string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text;
 
                 if (EsModificacion)
                 {
-                    // Modificar alumno existente
+                    // Modificar alumno existente - solo campos específicos de ALUMNOS
                     var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
                     if (alumno == null)
                     {
@@ -504,10 +500,8 @@ namespace gymAppV2.Alumnos
                         return;
                     }
 
-                    alumno.Nombre = txtNombre.Text.Trim();
-                    alumno.Apellido = txtApellido.Text.Trim();
-                    alumno.Telefono = telefono;
-                    alumno.FechaNacimiento = fechaNacimiento;
+                    // Los datos personales (Nombre, Apellido, Telefono, FechaNacimiento) están en USUARIOS
+                    // Aquí solo actualizamos Peso y Activo que son específicos de ALUMNOS
                     alumno.Peso = peso;
                     alumno.Activo = chkActivo.Checked;
 
@@ -528,33 +522,39 @@ namespace gymAppV2.Alumnos
                 }
                 else
                 {
-                    // Crear nuevo alumno
+                    // Crear nuevo alumno - en esquema normalizado se crea USUARIOS primero con datos personales
                     if (bllAlumno.AlumnoExiste(dni))
                     {
                         MostrarError($"Ya existe un alumno con DNI {dni}");
                         return;
                     }
 
-                    var nuevoAlumno = new Alumno
-                    {
-                        DNI = dni,
-                        Nombre = txtNombre.Text.Trim(),
-                        Apellido = txtApellido.Text.Trim(),
-                        Telefono = telefono,
-                        FechaNacimiento = fechaNacimiento,
-                        Peso = peso,
-                        Activo = chkActivo.Checked,
-                        Usuario = string.IsNullOrEmpty(ddlUsuarioAsociar.SelectedValue)
-                            ? null
-                            : ddlUsuarioAsociar.SelectedValue
-                    };
+                    // Los datos personales se guardan en USUARIOS, no en ALUMNOS
+                    // Se usa BLLUsuario.CrearUsuario con rol=4 para crear Cliente (crea USUARIOS + ALUMNOS)
+                    string usuarioName = $"cliente_{dni}";
+                    string contrasena = txtApellido.Text.Trim() + dni.ToString();
 
-                    bllAlumno.CrearAlumno(nuevoAlumno);
+                    var bllUsuario = new BLL.BLLUsuario();
+                    bllUsuario.CrearUsuario(
+                        usuarioName,
+                        contrasena,
+                        4, // Rol Cliente
+                        txtNombre.Text.Trim(),
+                        txtApellido.Text.Trim(),
+                        telefono,
+                        null, // email
+                        fechaNacimiento,
+                        null, // datosEntrenador
+                        dni // dniAlumno
+                    );
 
-                    // Si se seleccionó usuario, asociarlo
-                    if (!string.IsNullOrEmpty(ddlUsuarioAsociar.SelectedValue))
+                    // Actualizar el peso en ALUMNOS (ya creado por CrearUsuario)
+                    var alumno = bllAlumno.ObtenerAlumno(dni);
+                    if (alumno != null)
                     {
-                        bllAlumno.AsociarUsuario(dni, ddlUsuarioAsociar.SelectedValue);
+                        alumno.Peso = peso;
+                        alumno.Activo = chkActivo.Checked;
+                        bllAlumno.ActualizarAlumno(alumno);
                     }
 
                     MostrarExito($"Alumno creado correctamente");

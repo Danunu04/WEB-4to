@@ -4,11 +4,24 @@ namespace BE
 {
     public class Usuario
     {
+        // Campos principales de USUARIOS
         public string USUARIO_Usuario { get; set; }
         public string USUARIO_Contras { get; set; }
         public bool USUARIO_Activo { get; set; }
+        public bool USUARIO_Bloqueado { get; set; }
         public int USUARIO_Intentos { get; set; }
         public int USUARIO_Rol { get; set; }
+
+        // Campos normalizados (datos personales centralizados)
+        public string USUARIO_Tipo { get; set; }  // 'Empleado', 'Entrenador', 'Cliente'
+        public int USUARIO_DNI { get; set; }
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string Telefono { get; set; }
+        public string Email { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
+
+        // Campos de verificación
         public string USUARIO_DVV { get; set; }
         public string USUARIO_DVH { get; set; }
 
@@ -16,13 +29,23 @@ namespace BE
         {
         }
 
-        public Usuario(string usuario, string contras, bool activo, int intentos, int rol, string dvv, string dvh)
+        public Usuario(string usuario, string contras, bool activo, bool bloqueado, int intentos, int rol,
+                       string tipo, int dni, string nombre, string apellido, string telefono,
+                       string email, DateTime? fechaNacimiento, string dvv, string dvh)
         {
             USUARIO_Usuario = usuario;
             USUARIO_Contras = contras;
             USUARIO_Activo = activo;
+            USUARIO_Bloqueado = bloqueado;
             USUARIO_Intentos = intentos;
             USUARIO_Rol = rol;
+            USUARIO_Tipo = tipo;
+            USUARIO_DNI = dni;
+            Nombre = nombre;
+            Apellido = apellido;
+            Telefono = telefono;
+            Email = email;
+            FechaNacimiento = fechaNacimiento;
             USUARIO_DVV = dvv;
             USUARIO_DVH = dvh;
         }

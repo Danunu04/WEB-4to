@@ -32,6 +32,8 @@ namespace gymAppV2.LogIn
         {
             string usuario = txtUsuario.Text.Trim();
             string contrasena = txtContrasena.Text.Trim();
+            CriptoManager cm = new CriptoManager();
+            string contraHash = cm._686DPGetSHA256(contrasena);
 
             if (string.IsNullOrEmpty(usuario) || string.IsNullOrEmpty(contrasena))
             {

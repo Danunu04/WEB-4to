@@ -356,12 +356,12 @@ namespace gymAppV2.Usuarios
                 string apellido = txtApellido.Text;
                 if(!int.TryParse(txtDNI.Text, out int dni))
                 {
-                    MostrarError("El DNI solo acepta entrada numérica");
+                    MostrarError("El DNI debe ser un número válido");
                     return;
                 }
                 if(!int.TryParse(txtTelefono.Text, out int telefono))
                 {
-                    MostrarError("El Teléfono solo acepta entrada numérica");
+                    MostrarError("El Teléfono debe ser un número válido");
                     return;
                 }
                 string usuario = txtUsuario.Text;
@@ -392,7 +392,7 @@ namespace gymAppV2.Usuarios
                         // Modificar usuario existente
                         int rol = int.Parse(ddlRolForm.SelectedValue);
                         bllUsuario.ModificarUsuario(SelectedUsuario, usuario, nombre, apellido,
-                            telefono.ToString(), email, fechaNacimiento, rol, activo);
+                            telefono.ToString(), email, fechaNacimiento, rol, activo, dni);
                         MostrarExito("Usuario modificado correctamente");
                     }
                     else

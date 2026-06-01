@@ -553,7 +553,7 @@ namespace BLL
         }
 
         public void ModificarUsuario(string usuarioOriginal, string nuevoUsuario, string nombre, string apellido,
-            string telefono, string email, DateTime? fechaNacimiento, int rol, bool activo)
+            string telefono, string email, DateTime? fechaNacimiento, int rol, bool activo, int nuevoDNI)
         {
             try
             {
@@ -573,7 +573,28 @@ namespace BLL
                 // Determinar tipo según rol
                 string tipo = rol == 3 ? "Entrenador" : rol == 4 ? "Cliente" : "Empleado";
 
-                // Actualizar datos principales
+                // Si es entrenador o cliente y cambió el DNI, primero eliminar el registro relacionado
+                // para evitar violación de clave foránea al actualizar USUARIOS
+                bool dniCambio = usuarioExistente.USUARIO_DNI != nuevoDNI;
+
+                if (rol == 3 && dniCambio)
+                {
+                    Entrenador entrenadorViejo = bllEntrenador.ObtenerEntrenador(usuarioExistente.USUARIO_DNI);
+                    if (entrenadorViejo != null)
+                    {
+                        bllEntrenador.EliminarEntrenador(usuarioExistente.USUARIO_DNI);
+                    }
+                }
+                else if (rol == 4 && dniCambio)
+                {
+                    Alumno alumnoViejo = bllAlumno.ObtenerAlumno(usuarioExistente.USUARIO_DNI);
+                    if (alumnoViejo != null)
+                    {
+                        bllAlumno.EliminarAlumno(usuarioExistente.USUARIO_DNI);
+                    }
+                }
+
+                // Actualizar datos principales en USUARIOS
                 Usuario usuarioActualizado = new Usuario(
                     nuevoUsuario,
                     usuarioExistente.USUARIO_Contras, // Mantener contraseña existente
@@ -582,7 +603,7 @@ namespace BLL
                     usuarioExistente.USUARIO_Intentos, // Mantener intentos
                     rol,
                     tipo,
-                    usuarioExistente.USUARIO_DNI, // DNI no se puede cambiar
+                    nuevoDNI, // DNI actualizado
                     nombre,
                     apellido,
                     telefono,
@@ -594,24 +615,64 @@ namespace BLL
 
                 mppUsuario.ActualizarUsuario(usuarioActualizado);
 
-                // Si es entrenador, actualizar datos específicos
+                // Si es entrenador, crear/actualizar registro específico
                 if (rol == 3)
                 {
-                    Entrenador entrenador = bllEntrenador.ObtenerEntrenador(usuarioExistente.USUARIO_DNI);
-                    if (entrenador != null)
+                    if (dniCambio)
                     {
-                        entrenador.Usuario = nuevoUsuario;
-                        bllEntrenador.ActualizarEntrenador(entrenador);
+                        // Verificar si ya existe un entrenador con el nuevo DNI
+                        Entrenador entrenadorExistente = bllEntrenador.ObtenerEntrenador(nuevoDNI);
+                        if (entrenadorExistente == null)
+                        {
+                            Entrenador entrenadorNuevo = new Entrenador(nuevoDNI, 0, activo, "", "", nuevoUsuario);
+                            bllEntrenador.CrearEntrenador(entrenadorNuevo);
+                        }
+                        else
+                        {
+                            entrenadorExistente.Usuario = nuevoUsuario;
+                            entrenadorExistente.Activo = activo;
+                            bllEntrenador.ActualizarEntrenador(entrenadorExistente);
+                        }
+                    }
+                    else
+                    {
+                        // DNI no cambió, solo actualizar usuario
+                        Entrenador entrenador = bllEntrenador.ObtenerEntrenador(usuarioExistente.USUARIO_DNI);
+                        if (entrenador != null)
+                        {
+                            entrenador.Usuario = nuevoUsuario;
+                            bllEntrenador.ActualizarEntrenador(entrenador);
+                        }
                     }
                 }
-                // Si es cliente, actualizar datos específicos
+                // Si es cliente, crear/actualizar registro específico
                 else if (rol == 4)
                 {
-                    Alumno alumno = bllAlumno.ObtenerAlumno(usuarioExistente.USUARIO_DNI);
-                    if (alumno != null)
+                    if (dniCambio)
                     {
-                        alumno.Usuario = nuevoUsuario;
-                        bllAlumno.ActualizarAlumno(alumno);
+                        // Verificar si ya existe un alumno con el nuevo DNI
+                        Alumno alumnoExistente = bllAlumno.ObtenerAlumno(nuevoDNI);
+                        if (alumnoExistente == null)
+                        {
+                            Alumno alumnoNuevo = new Alumno(nuevoDNI, null, activo, true, "", "", nuevoUsuario);
+                            bllAlumno.CrearAlumno(alumnoNuevo);
+                        }
+                        else
+                        {
+                            alumnoExistente.Usuario = nuevoUsuario;
+                            alumnoExistente.Activo = activo;
+                            bllAlumno.ActualizarAlumno(alumnoExistente);
+                        }
+                    }
+                    else
+                    {
+                        // DNI no cambió, solo actualizar usuario
+                        Alumno alumno = bllAlumno.ObtenerAlumno(usuarioExistente.USUARIO_DNI);
+                        if (alumno != null)
+                        {
+                            alumno.Usuario = nuevoUsuario;
+                            bllAlumno.ActualizarAlumno(alumno);
+                        }
                     }
                 }
 

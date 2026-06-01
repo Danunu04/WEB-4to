@@ -4,6 +4,17 @@
     <title>Gestión de Usuarios - GymApp</title>
     <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=2") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script type="text/javascript">
+        function soloNumeros(e) {
+            var key = e.keyCode || e.which;
+            var tecla = String.fromCharCode(key);
+            // Permitir: números (48-57), backspace (8), tab (9), delete (46), flechas (37-40)
+            if ((key >= 48 && key <= 57) || key == 8 || key == 9 || key == 46 || (key >= 37 && key <= 40)) {
+                return true;
+            }
+            return false;
+        }
+    </script>
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -185,13 +196,15 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div style="display:flex;flex-direction:column;gap:0.375rem;">
                         <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">DNI</label>
-                        <asp:TextBox ID="txtDNI" runat="server" placeholder="Ej: 30456789" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="El dni es obligatorio" ControlToValidate="txtDNI" ForeColor="Red"></asp:RequiredFieldValidator>
+                        <asp:TextBox ID="txtDNI" runat="server" placeholder="Ej: 30456789" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;" onkeypress="return soloNumeros(event)" maxlength="10"></asp:TextBox>
+                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="El dni es obligatorio" ControlToValidate="txtDNI" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
+                        <asp:RegularExpressionValidator ID="RegularExpressionValidatorDNI" runat="server" ErrorMessage="El DNI solo debe contener números" ControlToValidate="txtDNI" ForeColor="Red" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:0.375rem;">
                         <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Teléfono</label>
-                        <asp:TextBox ID="txtTelefono" runat="server" placeholder="Ej: 11-4567-8901" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="El Telefono es obligatorio" ControlToValidate="txtTelefono" ForeColor="Red"></asp:RequiredFieldValidator>
+                        <asp:TextBox ID="txtTelefono" runat="server" placeholder="Ej: 11-4567-8901" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;" onkeypress="return soloNumeros(event)" maxlength="15"></asp:TextBox>
+                         <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="El Telefono es obligatorio" ControlToValidate="txtTelefono" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
+                        <asp:RegularExpressionValidator ID="RegularExpressionValidatorTel" runat="server" ErrorMessage="El Teléfono solo debe contener números" ControlToValidate="txtTelefono" ForeColor="Red" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
                     </div>
                 </div>
 

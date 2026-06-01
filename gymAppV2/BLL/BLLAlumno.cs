@@ -153,20 +153,11 @@ namespace BLL
                     throw new Exception("Ya existe un alumno con ese DNI");
                 }
 
-                // Validar Nombre (solo letras y espacios)
-                ValidarNombreApellido(alumno.Nombre, "Nombre");
-
-                // Validar Apellido (solo letras y espacios)
-                ValidarNombreApellido(alumno.Apellido, "Apellido");
-
-                // Validar Teléfono (opcional, formato válido)
-                ValidarTelefono(alumno.Telefono?.ToString());
-
-                // Validar Fecha de Nacimiento (no futura, rango razonable)
-                ValidarFechaNacimiento(alumno.FechaNacimiento);
-
-                // Validar Peso (0-500 kg)
-                ValidarPeso(alumno.Peso);
+                // Validar Peso (0-500 kg) - único campo específico de Alumno
+                if (alumno.Peso.HasValue)
+                {
+                    ValidarPeso(alumno.Peso);
+                }
 
                 mppAlumno.CrearAlumno(alumno);
                 RegistrarEvento("alta_alumno", $"Alumno DNI {alumno.DNI} creado");
@@ -196,20 +187,11 @@ namespace BLL
                 // Validar DNI (solo números, 7-8 dígitos)
                 ValidarDNI(alumno.DNI.ToString());
 
-                // Validar Nombre (solo letras y espacios)
-                ValidarNombreApellido(alumno.Nombre, "Nombre");
-
-                // Validar Apellido (solo letras y espacios)
-                ValidarNombreApellido(alumno.Apellido, "Apellido");
-
-                // Validar Teléfono (opcional, formato válido)
-                ValidarTelefono(alumno.Telefono?.ToString());
-
-                // Validar Fecha de Nacimiento (no futura, rango razonable)
-                ValidarFechaNacimiento(alumno.FechaNacimiento);
-
-                // Validar Peso (0-500 kg)
-                ValidarPeso(alumno.Peso);
+                // Validar Peso (0-500 kg) - único campo específico de Alumno
+                if (alumno.Peso.HasValue)
+                {
+                    ValidarPeso(alumno.Peso);
+                }
 
                 mppAlumno.ActualizarAlumno(alumno);
                 RegistrarEvento("modificacion_alumno", $"Alumno DNI {alumno.DNI} modificado");

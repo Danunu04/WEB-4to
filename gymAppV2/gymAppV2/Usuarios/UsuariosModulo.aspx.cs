@@ -189,6 +189,9 @@ namespace gymAppV2.Usuarios
         {
             string rol = ddlRolForm.SelectedValue;
 
+            // Mostrar/ocultar validator de fecha de nacimiento segun el rol
+            RequiredFieldValidator8.Enabled = (rol == "3" || rol == "4"); // Entrenador o Cliente
+
             if (rol == "3")
             {
                 // Entrenador - mostrar campos de entrenador
@@ -349,59 +352,76 @@ namespace gymAppV2.Usuarios
         {
             if(IsValid)
             {
-                string Nombre = txtNombre.Text;
-                string Apellido = txtApellido.Text;
+                string nombre = txtNombre.Text;
+                string apellido = txtApellido.Text;
                 if(!int.TryParse(txtDNI.Text, out int dni))
                 {
-                    MostrarError("El DNI solo acepta entrada numérica");
+                    MostrarError("El DNI debe ser un número válido");
                     return;
                 }
-                if(!int.TryParse(txtTelefono.Text, out int Telefono))
+                if(!int.TryParse(txtTelefono.Text, out int telefono))
                 {
-                    MostrarError("El Teléfono solo acepta entrada numérica");
+                    MostrarError("El Teléfono debe ser un número válido");
                     return;
                 }
                 string usuario = txtUsuario.Text;
-                string contrasenia = txtApellido.Text + txtDNI.Text;
+                string contrasenia = string.IsNullOrEmpty(txtContrasena.Text) ? txtApellido.Text + txtDNI.Text : txtContrasena.Text;
                 string email = txtEmail.Text;
+                DateTime? fechaNacimiento = null;
+                bool activo = ddlEstadoForm.SelectedValue == "1";
+
+                // Validar fecha de nacimiento para Entrenador o Cliente
+                string rolSeleccionado = ddlRolForm.SelectedValue;
+                if ((rolSeleccionado == "3" || rolSeleccionado == "4") && string.IsNullOrEmpty(txtFechaNacimiento.Text))
+                {
+                    MostrarError("La fecha de nacimiento es obligatoria");
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(txtFechaNacimiento.Text))
+                {
+                    fechaNacimiento = Convert.ToDateTime(txtFechaNacimiento.Text);
+                }
 
                 try
                 {
-                    switch(ddlRolForm.SelectedItem.Text)
-                    {
-                        case "Administrador":
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 1, null, null);
-                            MostrarExito("Administrador creado correctamente");
-                            break;
-                        case "Recepcionista":
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 2, null, null);
-                            MostrarExito("Recepcionista creado correctamente");
-                            break;
-                        case "Entrenador":
-                            if (string.IsNullOrEmpty(txtFechaNacimientoEntrenador.Text))
-                            {
-                                MostrarError("La fecha de nacimiento es obligatoria para entrenadores");
-                                return;
-                            }
-                            Entrenador ent = new Entrenador(dni, Nombre, Apellido, Convert.ToDateTime(txtFechaNacimientoEntrenador.Text), usuario, true, 0);
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 3, ent, null);
-                            MostrarExito("Entrenador creado correctamente");
-                            break;
-                        case "Cliente":
-                            Alumno a = new Alumno(dni, Nombre, Apellido, Telefono, DateTime.Now, null, usuario, true, false);
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 4, null, null);
-                            MostrarExito("Cliente creado correctamente");
-                            break;
-                        default:
-                            MostrarError("Seleccione un rol válido");
-                            return;
-                    }
-
                     bool esModificacion = !string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == "Modificar usuario";
 
                     if (esModificacion)
                     {
+                        // Modificar usuario existente
+                        int rol = int.Parse(ddlRolForm.SelectedValue);
+                        bllUsuario.ModificarUsuario(SelectedUsuario, usuario, nombre, apellido,
+                            telefono.ToString(), email, fechaNacimiento, rol, activo, dni);
                         MostrarExito("Usuario modificado correctamente");
+                    }
+                    else
+                    {
+                        // Crear nuevo usuario
+                        switch (ddlRolForm.SelectedValue)
+                        {
+                            case "1": // Administrador
+                                bllUsuario.CrearUsuario(usuario, contrasenia, 1, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
+                                MostrarExito("Administrador creado correctamente");
+                                break;
+                            case "2": // Recepcionista
+                                bllUsuario.CrearUsuario(usuario, contrasenia, 2, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
+                                MostrarExito("Recepcionista creado correctamente");
+                                break;
+                            case "3": // Entrenador
+                                Entrenador ent = new Entrenador(dni, 0, activo, "", "", usuario);
+                                bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono.ToString(), email, fechaNacimiento, ent, null, null, activo);
+                                MostrarExito("Entrenador creado correctamente");
+                                break;
+                            case "4": // Cliente
+                                // En esquema normalizado: se crea USUARIOS + ALUMNOS con el mismo DNI
+                                bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, dni, null, activo);
+                                MostrarExito("Cliente creado correctamente");
+                                break;
+                            default:
+                                MostrarError("Seleccione un rol válido");
+                                return;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -449,14 +469,33 @@ namespace gymAppV2.Usuarios
             txtEmail.Text = string.Empty;
             txtUsuario.Text = string.Empty;
             txtContrasena.Text = string.Empty;
+            txtFechaNacimiento.Text = string.Empty;
             ddlRolForm.SelectedIndex = 0;
+            ddlEstadoForm.SelectedValue = "1";
+            EntField.Visible = false;
+            clienteFields.Visible = false;
         }
 
         private void CargarUsuarioEnFormulario(BE.UsuarioGestion usuario)
         {
             txtUsuario.Text = usuario.USUARIO_Usuario;
-            ddlRolForm.SelectedValue = usuario.USUARIO_Tipo;
-            // Los demás campos se cargarían de las tablas correspondientes (Alumnos, Entrenadores, etc.)
+            txtDNI.Text = usuario.DNI?.ToString() ?? "";
+            txtNombre.Text = usuario.Nombre ?? "";
+            txtApellido.Text = usuario.Apellido ?? "";
+            txtTelefono.Text = usuario.Telefono ?? "";
+            txtEmail.Text = usuario.Email ?? "";
+            txtFechaNacimiento.Text = usuario.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
+            ddlEstadoForm.SelectedValue = usuario.USUARIO_Activo ? "1" : "0";
+
+            // Buscar el ListItem por texto y seleccionar su valor
+            ListItem rolItem = ddlRolForm.Items.FindByText(usuario.USUARIO_Tipo);
+            if (rolItem != null)
+            {
+                ddlRolForm.SelectedValue = rolItem.Value;
+            }
+
+            // Mostrar campos específicos según el rol
+            MostrarCamposSegunRol();
         }
 
         private void CerrarFormulario()

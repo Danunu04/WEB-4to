@@ -22,20 +22,22 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, los datos personales están en USUARIOS
                 string consulta = @"
                     SELECT
                         e.dni,
-                        e.nombre,
-                        e.apellido,
-                        e.fechaNacimiento,
+                        e.activo,
+                        e.alumnosCount,
                         e.usr,
-                        ISNULL(u.USUARIO_Activo, 0) AS activo,
-                        ISNULL((SELECT COUNT(*) FROM [GymApp].[dbo].[Rutinas] r WHERE r.dniEntrenador = e.dni), 0) AS alumnosCount,
                         e.dvv,
-                        e.dvh
+                        e.dvh,
+                        u.nombre,
+                        u.apellido,
+                        u.telefono,
+                        u.fechaNacimiento
                     FROM [GymApp].[dbo].[Entrenadores] e
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.usr = u.USUARIO_Usuario
-                    ORDER BY e.apellido, e.nombre";
+                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.dni = u.dni
+                    ORDER BY u.apellido, u.nombre";
 
                 ArrayList parametros = new ArrayList();
 
@@ -44,15 +46,20 @@ namespace MPP
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    entrenadores.Add(new Entrenador(
+                    Entrenador entrenador = new Entrenador(
                         Convert.ToInt32(row["dni"]),
-                        row["nombre"].ToString(),
-                        row["apellido"].ToString(),
-                        Convert.ToDateTime(row["fechaNacimiento"]),
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
                         Convert.ToBoolean(row["activo"]),
-                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0
-                    ));
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
+                    );
+                    // Poblar datos personales desde USUARIOS (para visualización)
+                    entrenador.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
+                    entrenador.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
+                    entrenador.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
+                    entrenador.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    entrenadores.Add(entrenador);
                 }
 
                 return entrenadores;
@@ -67,18 +74,17 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, ENTRENADORES solo tiene dni, alumnosCount, activo, usr, dvv, dvh
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Entrenadores]
-                    (dni, nombre, apellido, fechaNacimiento, activo, usr, dvv, dvh)
+                    (dni, alumnosCount, activo, usr, dvv, dvh)
                     VALUES
-                    (@DNI, @Nombre, @Apellido, @FechaNacimiento, @Activo, @Usuario, '', '')";
+                    (@DNI, @AlumnosCount, @Activo, @Usuario, '', '')";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", entrenador.DNI),
-                    new SqlParameter("@Nombre", entrenador.Nombre),
-                    new SqlParameter("@Apellido", entrenador.Apellido),
-                    new SqlParameter("@FechaNacimiento", entrenador.FechaNacimiento),
+                    new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
                     new SqlParameter("@Activo", entrenador.Activo),
                     new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value)
                 };
@@ -124,19 +130,21 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, los datos personales están en USUARIOS
                 string consulta = @"
                     SELECT
                         e.dni,
-                        e.nombre,
-                        e.apellido,
-                        e.fechaNacimiento,
+                        e.activo,
+                        e.alumnosCount,
                         e.usr,
-                        ISNULL(u.USUARIO_Activo, 0) AS activo,
-                        ISNULL((SELECT COUNT(*) FROM [GymApp].[dbo].[Rutinas] r WHERE r.dniEntrenador = e.dni), 0) AS alumnosCount,
                         e.dvv,
-                        e.dvh
+                        e.dvh,
+                        u.nombre,
+                        u.apellido,
+                        u.telefono,
+                        u.fechaNacimiento
                     FROM [GymApp].[dbo].[Entrenadores] e
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.usr = u.USUARIO_Usuario
+                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.dni = u.dni
                     WHERE e.dni = @DNI";
 
                 ArrayList parametros = new ArrayList
@@ -149,15 +157,20 @@ namespace MPP
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
-                    return new Entrenador(
+                    Entrenador entrenador = new Entrenador(
                         Convert.ToInt32(row["dni"]),
-                        row["nombre"].ToString(),
-                        row["apellido"].ToString(),
-                        Convert.ToDateTime(row["fechaNacimiento"]),
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
                         Convert.ToBoolean(row["activo"]),
-                        row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
+                    // Poblar datos personales desde USUARIOS (para visualización)
+                    entrenador.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
+                    entrenador.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
+                    entrenador.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
+                    entrenador.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    return entrenador;
                 }
 
                 return null;
@@ -172,20 +185,19 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, ENTRENADORES solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Entrenadores]
-                    SET nombre = @Nombre,
-                        apellido = @Apellido,
-                        fechaNacimiento = @FechaNacimiento,
+                    SET alumnosCount = @AlumnosCount,
+                        activo = @Activo,
                         usr = @Usuario
                     WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", entrenador.DNI),
-                    new SqlParameter("@Nombre", entrenador.Nombre),
-                    new SqlParameter("@Apellido", entrenador.Apellido),
-                    new SqlParameter("@FechaNacimiento", entrenador.FechaNacimiento),
+                    new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
+                    new SqlParameter("@Activo", entrenador.Activo),
                     new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value)
                 };
 
@@ -266,14 +278,15 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, la FK es por dni
                 string consulta = @"
                     SELECT
                         COUNT(*) as Total,
-                        SUM(CASE WHEN u.USUARIO_Activo = 1 THEN 1 ELSE 0 END) as Activos,
+                        SUM(CASE WHEN u.activo = 1 THEN 1 ELSE 0 END) as Activos,
                         SUM(CASE WHEN EXISTS (SELECT 1 FROM [GymApp].[dbo].[Rutinas] r WHERE r.dniEntrenador = e.dni) THEN 1 ELSE 0 END) as ConAlumnos,
                         SUM(CASE WHEN e.usr IS NULL OR e.usr = '' THEN 1 ELSE 0 END) as SinUsuario
                     FROM [GymApp].[dbo].[Entrenadores] e
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.usr = u.USUARIO_Usuario";
+                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.dni = u.dni";
 
                 ArrayList parametros = new ArrayList();
 

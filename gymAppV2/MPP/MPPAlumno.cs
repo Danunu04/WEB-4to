@@ -21,22 +21,20 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, ALUMNOS solo tiene dni, peso, activo, tieneRutinas, dvv, dvh
+                // Los datos personales están en USUARIOS
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Alumnos]
-                    (dni, nombre, apellido, telefono, fechaNacimiento, peso, activo, usr, dvv, dvh)
+                    (dni, peso, activo, tieneRutinas, dvv, dvh)
                     VALUES
-                    (@DNI, @Nombre, @Apellido, @Telefono, @FechaNacimiento, @Peso, @Activo, @Usuario, '', '')";
+                    (@DNI, @Peso, @Activo, @TieneRutinas, '', '')";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", alumno.DNI),
-                    new SqlParameter("@Nombre", alumno.Nombre),
-                    new SqlParameter("@Apellido", alumno.Apellido),
-                    new SqlParameter("@Telefono", alumno.Telefono ?? (object)DBNull.Value),
-                    new SqlParameter("@FechaNacimiento", alumno.FechaNacimiento),
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
                     new SqlParameter("@Activo", alumno.Activo),
-                    new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value)
+                    new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -51,24 +49,23 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, los datos personales están en USUARIOS
                 string consulta = @"
                     SELECT
                         a.dni,
-                        a.nombre,
-                        a.apellido,
-                        a.telefono,
-                        a.fechaNacimiento,
                         a.peso,
+                        a.activo,
+                        a.tieneRutinas,
                         a.usr,
-                        ISNULL(u.USUARIO_Activo, 0) AS activo,
-                        CASE WHEN EXISTS (
-                            SELECT 1 FROM [GymApp].[dbo].[Rutinas] r
-                            WHERE r.dniAlumno = a.dni
-                        ) THEN 1 ELSE 0 END AS tieneRutinas,
                         a.dvv,
-                        a.dvh
+                        a.dvh,
+                        u.nombre,
+                        u.apellido,
+                        u.telefono,
+                        u.fechaNacimiento,
+                        u.activo AS USUARIO_Activo
                     FROM [GymApp].[dbo].[Alumnos] a
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.usr = u.usr
+                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
                     WHERE a.dni = @DNI";
 
                 ArrayList parametros = new ArrayList
@@ -81,17 +78,21 @@ namespace MPP
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
-                    return new Alumno(
+                    Alumno alumno = new Alumno(
                         Convert.ToInt32(row["dni"]),
-                        row["nombre"].ToString(),
-                        row["apellido"].ToString(),
-                        row["telefono"] != DBNull.Value ? Convert.ToInt64(row["telefono"]) : (long?)null,
-                        Convert.ToDateTime(row["fechaNacimiento"]),
                         row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        Convert.ToBoolean(row["tieneRutinas"]),
                         Convert.ToBoolean(row["activo"]),
-                        Convert.ToBoolean(row["tieneRutinas"])
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
+                    // Poblar datos personales desde USUARIOS (para visualización)
+                    alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
+                    alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
+                    alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
+                    alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    return alumno;
                 }
 
                 return null;
@@ -106,26 +107,21 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, ALUMNOS solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Alumnos]
-                    SET nombre = @Nombre,
-                        apellido = @Apellido,
-                        telefono = @Telefono,
-                        fechaNacimiento = @FechaNacimiento,
-                        peso = @Peso,
+                    SET peso = @Peso,
                         activo = @Activo,
+                        tieneRutinas = @TieneRutinas,
                         usr = @Usuario
                     WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", alumno.DNI),
-                    new SqlParameter("@Nombre", alumno.Nombre),
-                    new SqlParameter("@Apellido", alumno.Apellido),
-                    new SqlParameter("@Telefono", alumno.Telefono ?? (object)DBNull.Value),
-                    new SqlParameter("@FechaNacimiento", alumno.FechaNacimiento),
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
                     new SqlParameter("@Activo", alumno.Activo),
+                    new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
                     new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value)
                 };
 
@@ -170,25 +166,24 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, los datos personales están en USUARIOS
                 string consulta = @"
                     SELECT
                         a.dni,
-                        a.nombre,
-                        a.apellido,
-                        a.telefono,
-                        a.fechaNacimiento,
                         a.peso,
+                        a.activo,
+                        a.tieneRutinas,
                         a.usr,
-                        ISNULL(u.activo, 0) AS activo,
-                        CASE WHEN EXISTS (
-                            SELECT 1 FROM [GymApp].[dbo].[Rutinas] r
-                            WHERE r.dniAlumno = a.dni
-                        ) THEN 1 ELSE 0 END AS tieneRutinas,
                         a.dvv,
-                        a.dvh
+                        a.dvh,
+                        u.nombre,
+                        u.apellido,
+                        u.telefono,
+                        u.fechaNacimiento,
+                        u.activo AS USUARIO_Activo
                     FROM [GymApp].[dbo].[Alumnos] a
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.usr = u.usr
-                    ORDER BY a.apellido, a.nombre";
+                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
+                    ORDER BY u.apellido, u.nombre";
 
                 ArrayList parametros = new ArrayList();
 
@@ -197,17 +192,21 @@ namespace MPP
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    alumnos.Add(new Alumno(
+                    Alumno alumno = new Alumno(
                         Convert.ToInt32(row["dni"]),
-                        row["nombre"].ToString(),
-                        row["apellido"].ToString(),
-                        row["telefono"] != DBNull.Value ? Convert.ToInt64(row["telefono"]) : (long?)null,
-                        Convert.ToDateTime(row["fechaNacimiento"]),
                         row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        Convert.ToBoolean(row["tieneRutinas"]),
                         Convert.ToBoolean(row["activo"]),
-                        Convert.ToBoolean(row["tieneRutinas"])
-                    ));
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
+                    );
+                    // Poblar datos personales desde USUARIOS (para visualización)
+                    alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
+                    alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
+                    alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
+                    alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    alumnos.Add(alumno);
                 }
 
                 return alumnos;
@@ -256,22 +255,24 @@ namespace MPP
         {
             try
             {
+                // En esquema normalizado, buscar ALUMNOS sin usuario asociado
                 string consulta = @"
                     SELECT
                         a.dni,
-                        a.nombre,
-                        a.apellido,
-                        a.telefono,
-                        a.fechaNacimiento,
                         a.peso,
+                        a.activo,
+                        a.tieneRutinas,
                         a.usr,
-                        0 AS activo,
-                        0 AS tieneRutinas,
                         a.dvv,
-                        a.dvh
+                        a.dvh,
+                        u.nombre,
+                        u.apellido,
+                        u.telefono,
+                        u.fechaNacimiento
                     FROM [GymApp].[dbo].[Alumnos] a
-                    WHERE a.usr IS NULL OR a.usr = ''
-                    ORDER BY a.apellido, a.nombre";
+                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
+                    WHERE (a.usr IS NULL OR a.usr = '')
+                    ORDER BY u.apellido, u.nombre";
 
                 ArrayList parametros = new ArrayList();
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
@@ -279,17 +280,21 @@ namespace MPP
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    alumnos.Add(new Alumno(
+                    Alumno alumno = new Alumno(
                         Convert.ToInt32(row["dni"]),
-                        row["nombre"].ToString(),
-                        row["apellido"].ToString(),
-                        row["telefono"] != DBNull.Value ? Convert.ToInt64(row["telefono"]) : (long?)null,
-                        Convert.ToDateTime(row["fechaNacimiento"]),
                         row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
-                        false,
-                        false
-                    ));
+                        Convert.ToBoolean(row["tieneRutinas"]),
+                        Convert.ToBoolean(row["activo"]),
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
+                    );
+                    // Poblar datos personales desde USUARIOS (para visualización)
+                    alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
+                    alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
+                    alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
+                    alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    alumnos.Add(alumno);
                 }
 
                 return alumnos;

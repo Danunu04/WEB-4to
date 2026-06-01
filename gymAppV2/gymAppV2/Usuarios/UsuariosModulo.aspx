@@ -4,6 +4,17 @@
     <title>Gestión de Usuarios - GymApp</title>
     <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=2") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script type="text/javascript">
+        function soloNumeros(e) {
+            var key = e.keyCode || e.which;
+            var tecla = String.fromCharCode(key);
+            // Permitir: números (48-57), backspace (8), tab (9), delete (46), flechas (37-40)
+            if ((key >= 48 && key <= 57) || key == 8 || key == 9 || key == 46 || (key >= 37 && key <= 40)) {
+                return true;
+            }
+            return false;
+        }
+    </script>
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -185,13 +196,15 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div style="display:flex;flex-direction:column;gap:0.375rem;">
                         <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">DNI</label>
-                        <asp:TextBox ID="txtDNI" runat="server" placeholder="Ej: 30456789" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="El dni es obligatorio" ControlToValidate="txtDNI" ForeColor="Red"></asp:RequiredFieldValidator>
+                        <asp:TextBox ID="txtDNI" runat="server" placeholder="Ej: 30456789" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;" onkeypress="return soloNumeros(event)" maxlength="10"></asp:TextBox>
+                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="El dni es obligatorio" ControlToValidate="txtDNI" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
+                        <asp:RegularExpressionValidator ID="RegularExpressionValidatorDNI" runat="server" ErrorMessage="El DNI solo debe contener números" ControlToValidate="txtDNI" ForeColor="Red" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:0.375rem;">
                         <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Teléfono</label>
-                        <asp:TextBox ID="txtTelefono" runat="server" placeholder="Ej: 11-4567-8901" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="El Telefono es obligatorio" ControlToValidate="txtTelefono" ForeColor="Red"></asp:RequiredFieldValidator>
+                        <asp:TextBox ID="txtTelefono" runat="server" placeholder="Ej: 11-4567-8901" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;" onkeypress="return soloNumeros(event)" maxlength="15"></asp:TextBox>
+                         <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="El Telefono es obligatorio" ControlToValidate="txtTelefono" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
+                        <asp:RegularExpressionValidator ID="RegularExpressionValidatorTel" runat="server" ErrorMessage="El Teléfono solo debe contener números" ControlToValidate="txtTelefono" ForeColor="Red" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
                     </div>
                 </div>
 
@@ -211,7 +224,7 @@
                 <div style="display:flex;flex-direction:column;gap:0.375rem;margin-top:1rem;">
                     <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Email</label>
                     <asp:TextBox ID="txtEmail" runat="server" placeholder="usuario@email.com" TextMode="Email" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                     <asp:RequiredFieldValidator ID="RequiredFieldValidator5" runat="server" ErrorMessage="El email es obligatorio" ControlToValidate="txtEmail" ForeColor="Red"></asp:RequiredFieldValidator>
+                    <asp:RegularExpressionValidator ID="RegularExpressionValidator1" runat="server" ErrorMessage="Email inválido" ControlToValidate="txtEmail" ForeColor="Red" ValidationExpression="\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*"></asp:RegularExpressionValidator>
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
@@ -233,33 +246,40 @@
                     </div>
                 </div>
 
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
+                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Fecha de Nacimiento</label>
+                        <asp:TextBox ID="txtFechaNacimiento" runat="server" TextMode="Date" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
+                        <asp:RequiredFieldValidator ID="RequiredFieldValidator8" runat="server" ErrorMessage="La fecha de nacimiento es obligatoria" ControlToValidate="txtFechaNacimiento" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
+                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Estado</label>
+                        <asp:DropDownList ID="ddlEstadoForm" runat="server" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;background:var(--card-bg);color:var(--text-color);">
+                            <asp:ListItem Value="1">Activo</asp:ListItem>
+                            <asp:ListItem Value="0">Inactivo</asp:ListItem>
+                        </asp:DropDownList>
+                    </div>
+                </div>
+
                     <asp:Panel ID="EntField" runat="server" Visible="false" style="margin-top:1.25rem;padding:0.9375rem;background:var(--bg-light);border-radius:0.375rem;border-left:0.25rem solid var(--pink);">
                         <div style="margin-bottom:0.9375rem;">
                             <label style="font-size:0.875rem;font-weight:600;color:var(--pink);display:flex;align-items:center;gap:0.5rem;">
-                                <i class="fa-solid fa-dumbbell"></i> Datos del Entrenador
+                                <i class="fa-solid fa-dumbbell"></i> Datos específicos del Entrenador
                             </label>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                            <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                                <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">DNI Entrenador</label>
-                                <asp:TextBox ID="txtDNIEntrenador" runat="server" placeholder="DNI del entrenador" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                                <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Fecha Nacimiento</label>
-                                <asp:TextBox ID="txtFechaNacimientoEntrenador" runat="server" TextMode="Date" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                            </div>
+                            <small style="color:var(--text-muted);font-size:0.75rem;">
+                                <i class="fa-solid fa-info-circle"></i> Al guardar, se creará el registro en la tabla ENTRENADORES con el mismo DNI
+                            </small>
                         </div>
                     </asp:Panel>
 
                     <asp:Panel ID="clienteFields" runat="server" Visible="false" style="margin-top:1.25rem;padding:0.9375rem;background:var(--bg-light);border-radius:0.375rem;border-left:0.25rem solid var(--pink);">
                         <div style="margin-bottom:0.9375rem;">
                             <label style="font-size:0.875rem;font-weight:600;color:var(--pink);display:flex;align-items:center;gap:0.5rem;">
-                                <i class="fa-solid fa-user"></i> Datos del Cliente
+                                <i class="fa-solid fa-user"></i> Datos específicos del Cliente
                             </label>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                            <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">DNI del Alumno a asociar</label>
-                            <asp:TextBox ID="txtDNIAlumno" runat="server" placeholder="DNI del alumno existente" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
+                            <small style="color:var(--text-muted);font-size:0.75rem;">
+                                <i class="fa-solid fa-info-circle"></i> Al guardar, se creará el registro en la tabla ALUMNOS con el mismo DNI
+                            </small>
                         </div>
                     </asp:Panel>
 

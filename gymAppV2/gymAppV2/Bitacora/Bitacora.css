@@ -200,17 +200,36 @@
 
 /* Filter Bar */
 .filter-bar {
+    display: flex;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .search-input {
-    width: 100%;
+    flex: 1;
+    min-width: 12rem;
     padding: 0.625rem 0.75rem;
     border-radius: var(--radius-md);
     border: 0.0625rem solid var(--color-border);
     background-color: var(--color-surface);
     font-size: 0.875rem;
     transition: outline 0.2s ease, background-color 0.2s ease;
+}
+
+.filter-select {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 0.0625rem solid var(--color-border);
+    background-color: var(--color-surface);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: outline 0.2s ease, background-color 0.2s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.125rem var(--color-accent-lavender);
 }
 
 .search-input:focus {
@@ -313,6 +332,49 @@
 .event-user {
     font-size: 0.75rem;
     color: var(--color-muted);
+}
+
+.event-modulo {
+    font-size: 0.6875rem;
+    color: var(--color-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 0.125rem;
+}
+
+/* Criticidad Badge */
+.criticidad-badge {
+    display: inline-block;
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Criticidad 1 = Alta (más crítico - rojo intenso) */
+.criticidad-1 {
+    background-color: #FEF2F2;
+    color: #DC2626;
+}
+
+/* Criticidad 2 = Media Alta (naranja) */
+.criticidad-2 {
+    background-color: #FFF7ED;
+    color: #EA580C;
+}
+
+/* Criticidad 3 = Media Baja (amarillo/naranja suave) */
+.criticidad-3 {
+    background-color: #FFFBEB;
+    color: #CA8A04;
+}
+
+/* Criticidad 4 = Baja (menos crítico - verde/azul) */
+.criticidad-4 {
+    background-color: #E5F0FF;
+    color: #2563EB;
 }
 
 .event-card-right {

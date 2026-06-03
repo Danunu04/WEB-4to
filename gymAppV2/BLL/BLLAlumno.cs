@@ -126,13 +126,13 @@ namespace BLL
             }
         }
 
-        private void RegistrarEvento(string tipo, string accion)
+        private void RegistrarEvento(string tipo, string accion, int criticidad = 3)
         {
             try
             {
                 var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
                 string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarEvento(tipo, usr, accion);
+                bllEvento.RegistrarEvento(tipo, usr, accion, criticidad);
             }
             catch
             {
@@ -160,7 +160,10 @@ namespace BLL
                 }
 
                 mppAlumno.CrearAlumno(alumno);
-                RegistrarEvento("alta_alumno", $"Alumno DNI {alumno.DNI} creado");
+
+                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarAltaAlumno(usr, alumno.DNI);
             }
             catch (Exception ex)
             {
@@ -194,7 +197,10 @@ namespace BLL
                 }
 
                 mppAlumno.ActualizarAlumno(alumno);
-                RegistrarEvento("modificacion_alumno", $"Alumno DNI {alumno.DNI} modificado");
+
+                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarModificacionAlumno(usr, alumno.DNI);
             }
             catch (Exception ex)
             {
@@ -236,7 +242,10 @@ namespace BLL
                 }
 
                 mppAlumno.EliminarAlumno(dni);
-                RegistrarEvento("baja_alumno", $"Alumno DNI {dni} eliminado (con rutinas asociadas)");
+
+                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarBajaAlumno(usr, dni);
             }
             catch (Exception ex)
             {
@@ -286,7 +295,7 @@ namespace BLL
                 }
 
                 mppAlumno.AsociarUsuario(dni, usuario);
-                RegistrarEvento("asociar_usuario", $"Usuario '{usuario}' asociado a alumno DNI {dni}");
+                bllEvento.RegistrarAsociarUsuario(usuario, dni);
             }
             catch (Exception ex)
             {
@@ -310,7 +319,10 @@ namespace BLL
                 }
 
                 mppAlumno.AsociarUsuario(dni, null);
-                RegistrarEvento("desasociar_usuario", $"Usuario desasociado de alumno DNI {dni}");
+
+                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                string usr = usuario?.USUARIO_Usuario ?? "sistema";
+                bllEvento.RegistrarDesasociarUsuario(usr, dni);
             }
             catch (Exception ex)
             {

@@ -12,18 +12,22 @@ namespace BE
         public string EVENTO_DVV { get; set; }
         public int EVENTO_DVH { get; set; }
         public bool Expandido { get; set; }
+        public int EVENTO_Criticidad { get; set; }
+        public string EVENTO_Modulo { get; set; }
 
         public Evento()
         {
         }
 
-        public Evento(int id, string tipo, string usuario, string accion, DateTime timestamp)
+        public Evento(int id, string tipo, string usuario, string accion, DateTime timestamp, int criticidad = 1, string modulo = "")
         {
             EVENTO_Id = id;
             EVENTO_Tipo = tipo;
             EVENTO_Usuario = usuario;
             EVENTO_Accion = accion;
             EVENTO_Timestamp = timestamp;
+            EVENTO_Criticidad = criticidad;
+            EVENTO_Modulo = modulo;
             Expandido = false;
         }
     }

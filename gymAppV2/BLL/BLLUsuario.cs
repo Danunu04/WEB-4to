@@ -25,13 +25,13 @@ namespace BLL
             bllEvento = new BLLEvento();
         }
 
-        private void RegistrarEvento(string tipo, string accion)
+        private void RegistrarEvento(string tipo, string accion, int criticidad = 1)
         {
             try
             {
                 var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
                 string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarEvento(tipo, usr, accion);
+                bllEvento.RegistrarEvento(tipo, usr, accion, criticidad);
             }
             catch
             {
@@ -65,6 +65,7 @@ namespace BLL
                 // Si cuenta bloqueada → lanzar excepción específica para redirigir a preguntas de seguridad
                 if (mppUsuario.UsuarioEstaBloqueado(usuario))
                 {
+                    bllEvento.RegistrarBloqueoUsuario(usuario);
                     throw new ExcepcionesLogIn(ResultadosLogIn.AccountLocked);
                 }
 
@@ -105,7 +106,7 @@ namespace BLL
                 int intentos = mppUsuario.ObtenerIntentos(usuario);
                 if (intentos >= 3)
                 {
-                    RegistrarEvento("bloqueo_usuario", $"Usuario '{usuario}' bloqueado por exceso de intentos fallidos");
+                    bllEvento.RegistrarBloqueoUsuario(usuario);
                 }
             }
             catch (Exception ex)
@@ -139,7 +140,7 @@ namespace BLL
                 // Registrar evento de desbloqueo si corresponde
                 if (estabaBloqueado)
                 {
-                    RegistrarEvento("desbloqueo_usuario", $"Usuario '{usuario}' desbloqueado");
+                    bllEvento.RegistrarDesbloqueoUsuario(usuario);
                 }
             }
             catch (Exception ex)
@@ -251,7 +252,7 @@ namespace BLL
                 mppUsuario.ActualizarContrasena(usuario, nuevaContrasenaHash);
                 mppUsuario.ReestablecerIntentos(usuario);
 
-                RegistrarEvento("cambio_contrasena", $"Contraseña cambiada para usuario '{usuario}'");
+                bllEvento.RegistrarCambioContrasena(usuario);
             }
             catch (Exception ex)
             {
@@ -370,7 +371,7 @@ namespace BLL
                     mppUsuario.CrearUsuario(nuevoUsuario);
                 }
 
-                RegistrarEvento("alta_usuario", $"Usuario '{usuario}' creado con rol {rol}");
+                bllEvento.RegistrarAltaUsuario(usuario, rol);
             }
             catch (Exception ex)
             {
@@ -452,7 +453,7 @@ namespace BLL
                     mppUsuario.CrearUsuario(nuevoUsuario);
                 }
 
-                RegistrarEvento("alta_usuario", $"Usuario '{dto.Usuario}' creado con rol {dto.Rol}");
+                bllEvento.RegistrarAltaUsuario(dto.Usuario, dto.Rol);
             }
             catch (ArgumentException ex)
             {
@@ -518,7 +519,7 @@ namespace BLL
             try
             {
                 mppUsuario.ActualizarEstado(usuario, true);
-                RegistrarEvento("activar_usuario", $"Usuario '{usuario}' activado");
+                bllEvento.RegistrarActivarUsuario(usuario);
             }
             catch (Exception ex)
             {
@@ -531,7 +532,7 @@ namespace BLL
             try
             {
                 mppUsuario.ActualizarEstado(usuario, false);
-                RegistrarEvento("desactivar_usuario", $"Usuario '{usuario}' desactivado");
+                bllEvento.RegistrarDesactivarUsuario(usuario);
             }
             catch (Exception ex)
             {
@@ -544,7 +545,7 @@ namespace BLL
             try
             {
                 ReestablecerIntentos(usuario);
-                RegistrarEvento("desbloqueo_usuario", $"Usuario '{usuario}' desbloqueado");
+                bllEvento.RegistrarDesbloqueoUsuario(usuario);
             }
             catch (Exception ex)
             {
@@ -676,7 +677,7 @@ namespace BLL
                     }
                 }
 
-                RegistrarEvento("modificacion_usuario", $"Usuario '{usuarioOriginal}' modificado a '{nuevoUsuario}'");
+                bllEvento.RegistrarModificacionUsuario(usuarioOriginal, nuevoUsuario);
             }
             catch (Exception ex)
             {

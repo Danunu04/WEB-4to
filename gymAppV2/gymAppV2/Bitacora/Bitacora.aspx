@@ -54,6 +54,15 @@
 
                 <div class="filter-bar">
                     <asp:TextBox ID="txtBusqueda" runat="server" CssClass="search-input" placeholder="Buscar por usuario o acción..." AutoPostBack="true" OnTextChanged="txtBusqueda_TextChanged"></asp:TextBox>
+                    <asp:DropDownList ID="ddlCriticidad" runat="server" CssClass="filter-select" AutoPostBack="true" OnSelectedIndexChanged="ddlCriticidad_SelectedIndexChanged">
+                        <asp:ListItem Value="" Text="Todas las criticidades" />
+                        <asp:ListItem Value="1" Text="Alta (1)" />
+                        <asp:ListItem Value="2" Text="Media Alta (2)" />
+                        <asp:ListItem Value="3" Text="Media Baja (3)" />
+                        <asp:ListItem Value="4" Text="Baja (4)" />
+                    </asp:DropDownList>
+                    <asp:DropDownList ID="ddlModulo" runat="server" CssClass="filter-select" AutoPostBack="true" OnSelectedIndexChanged="ddlModulo_SelectedIndexChanged">
+                    </asp:DropDownList>
                 </div>
 
                 <div class="filter-buttons">
@@ -76,8 +85,14 @@
                                             <%# GetIconForType(Eval("EVENTO_Tipo").ToString()) %>
                                         </div>
                                         <div class="event-info">
-                                            <div class="event-type"><%# GetLabelForType(Eval("EVENTO_Tipo").ToString()) %></div>
+                                            <div class="event-type">
+                                                <%# GetLabelForType(Eval("EVENTO_Tipo").ToString()) %>
+                                                <span class="criticidad-badge criticidad-<%# Eval("EVENTO_Criticidad") %>">
+                                                    <%# GetCriticidadLabel(Eval("EVENTO_Criticidad")) %>
+                                                </span>
+                                            </div>
                                             <div class="event-user"><%# Eval("EVENTO_Usuario") %></div>
+                                            <%# !string.IsNullOrEmpty(Eval("EVENTO_Modulo").ToString()) ? "<div class=\"event-modulo\">Módulo: " + Eval("EVENTO_Modulo") + "</div>" : "" %>
                                         </div>
                                     </div>
                                     <div class="event-card-right">

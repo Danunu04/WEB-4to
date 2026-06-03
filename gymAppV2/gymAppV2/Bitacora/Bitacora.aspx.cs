@@ -11,6 +11,8 @@ namespace gymAppV2.Bitacora
     {
         private string filtroActual = "all";
         private string busquedaActual = "";
+        private int? filtroCriticidadActual = null;
+        private string filtroModuloActual = null;
         private BLLEvento bllEvento;
 
         protected void Page_Load(object sender, EventArgs e)
@@ -18,12 +20,35 @@ namespace gymAppV2.Bitacora
             if (!IsPostBack)
             {
                 filtroActual = "all";
+                filtroCriticidadActual = null;
+                filtroModuloActual = null;
+                CargarFiltrosModulos();
                 CargarBitacora();
             }
             else
             {
                 filtroActual = ViewState["filtro"] as string ?? "all";
                 busquedaActual = ViewState["busqueda"] as string ?? "";
+                filtroCriticidadActual = ViewState["filtroCriticidad"] as int?;
+                filtroModuloActual = ViewState["filtroModulo"] as string;
+            }
+        }
+
+        private void CargarFiltrosModulos()
+        {
+            try
+            {
+                bllEvento = new BLLEvento();
+                List<string> modulos = bllEvento.ObtenerModulos();
+
+                ddlModulo.DataSource = modulos;
+                ddlModulo.DataBind();
+                ddlModulo.Items.Insert(0, new ListItem("Todos los módulos", "all"));
+            }
+            catch (Exception)
+            {
+                // Si no hay módulos, dejar el dropdown vacío
+                ddlModulo.Items.Insert(0, new ListItem("Todos los módulos", "all"));
             }
         }
 
@@ -36,7 +61,7 @@ namespace gymAppV2.Bitacora
 
                 bllEvento = new BLLEvento();
 
-                List<BE.Evento> eventos = bllEvento.ObtenerEventos(filtroActual, busquedaActual);
+                List<BE.Evento> eventos = bllEvento.ObtenerEventos(filtroActual, busquedaActual, filtroCriticidadActual, filtroModuloActual);
                 Dictionary<string, int> stats = bllEvento.ObtenerEstadisticas();
 
                 lblTotal.Text = stats["Total"].ToString();
@@ -78,6 +103,8 @@ namespace gymAppV2.Bitacora
 
             ViewState["filtro"] = filtroActual;
             ViewState["busqueda"] = busquedaActual;
+            ViewState["filtroCriticidad"] = filtroCriticidadActual;
+            ViewState["filtroModulo"] = filtroModuloActual;
 
             CargarBitacora();
         }
@@ -88,6 +115,34 @@ namespace gymAppV2.Bitacora
 
             ViewState["filtro"] = filtroActual;
             ViewState["busqueda"] = busquedaActual;
+            ViewState["filtroCriticidad"] = filtroCriticidadActual;
+            ViewState["filtroModulo"] = filtroModuloActual;
+
+            CargarBitacora();
+        }
+
+        protected void ddlCriticidad_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string valor = ddlCriticidad.SelectedValue;
+            filtroCriticidadActual = string.IsNullOrEmpty(valor) ? null : (int?)Convert.ToInt32(valor);
+
+            ViewState["filtro"] = filtroActual;
+            ViewState["busqueda"] = busquedaActual;
+            ViewState["filtroCriticidad"] = filtroCriticidadActual;
+            ViewState["filtroModulo"] = filtroModuloActual;
+
+            CargarBitacora();
+        }
+
+        protected void ddlModulo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string valor = ddlModulo.SelectedValue;
+            filtroModuloActual = valor == "all" ? null : valor;
+
+            ViewState["filtro"] = filtroActual;
+            ViewState["busqueda"] = busquedaActual;
+            ViewState["filtroCriticidad"] = filtroCriticidadActual;
+            ViewState["filtroModulo"] = filtroModuloActual;
 
             CargarBitacora();
         }
@@ -122,6 +177,19 @@ namespace gymAppV2.Bitacora
                 case "update": return "Actualización";
                 case "error": return "Error";
                 default: return tipo;
+            }
+        }
+
+        protected string GetCriticidadLabel(object criticidadObj)
+        {
+            int criticidad = Convert.ToInt32(criticidadObj);
+            switch (criticidad)
+            {
+                case 1: return "Alta";
+                case 2: return "Media Alta";
+                case 3: return "Media Baja";
+                case 4: return "Baja";
+                default: return "";
             }
         }
 

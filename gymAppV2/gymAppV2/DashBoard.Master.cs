@@ -23,7 +23,7 @@ namespace gymAppV2
             try
             {
                 var bllEvento = new BLLEvento();
-                bllEvento.RegistrarEvento("logout", usuarioNombre, "Cierre de sesión");
+                bllEvento.RegistrarLogout(usuarioNombre);
             }
             catch
             {

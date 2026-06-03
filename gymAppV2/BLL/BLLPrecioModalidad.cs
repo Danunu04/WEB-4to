@@ -104,7 +104,7 @@ namespace BLL
                 // Actualizar el precio
                 mppPrecioModalidad.ActualizarPrecio(id, nuevoPrecio);
 
-                // Registrar evento de modificación de precio
+                // Registrar evento de modificación de precio (criticidad 2 = Media Alta - Negocio)
                 bllEvento.RegistrarModificacionPrecio(
                     usuarioModificador,
                     modalidadAnterior.ObtenerDescripcion(),
@@ -139,12 +139,12 @@ namespace BLL
 
                 foreach (var usuario in usuarios)
                 {
-                    // Registrar evento individual de notificación
+                    // Registrar evento individual de notificación (criticidad 4 = Baja)
                     bllEvento.RegistrarEvento(
                         "notificacion_cambio_precio",
                         "sistema",
                         $"Notificación enviada a {usuario.USUARIO_Usuario}: {detalleNotificacion}",
-                        2 // Criticidad 2 = Advertencia
+                        4
                     );
 
                     // TODO: Enviar email al correo registrado del usuario
@@ -152,22 +152,22 @@ namespace BLL
                     // EnviarEmail(usuario.Email, "Cambio de Precio - Sportio", detalleNotificacion);
                 }
 
-                // Registrar evento consolidado
+                // Registrar evento consolidado (criticidad 4 = Baja)
                 bllEvento.RegistrarEvento(
                     "notificacion_masiva_precio",
                     "sistema",
                     $"Notificación de cambio de precio enviada a {usuarios.Count} usuarios no-entrenadores",
-                    2
+                    4
                 );
             }
             catch (Exception ex)
             {
-                // No impedir la modificación si falla la notificación
+                // No impedir la modificación si falla la notificación (criticidad 4 = Baja)
                 bllEvento.RegistrarEvento(
                     "error_notificacion_precio",
                     "sistema",
                     $"Error al notificar cambio de precio: {ex.Message}",
-                    3 // Criticidad 3 = Error
+                    4
                 );
             }
         }

@@ -1,0 +1,137 @@
+=============================================================================
+LOGICA DE NEGOCIO - SISTEMA DE BITÁCORA (GYM APP)
+=============================================================================
+
+-----------------------------------------------------------------------------
+ESCALA DE CRITICIDAD (1 a 4)
+-----------------------------------------------------------------------------
+
+La bitácora utiliza una escala de criticidad invertida donde:
+- 1 = ALTA (más crítico/urgente)
+- 2 = MEDIA ALTA
+- 3 = MEDIA BAJA
+- 4 = BAJA (menos crítico/rutinario)
+
+-----------------------------------------------------------------------------
+CLASIFICACIÓN DE EVENTOS POR CRITICIDAD
+-----------------------------------------------------------------------------
+
+CRITICIDAD 1 - ALTA (Seguridad y Usuarios)
+------------------------------------------
+Eventos relacionados con la seguridad del sistema y gestión de usuarios:
+- Login de usuarios
+- Logout de usuarios
+- Alta de nuevos usuarios
+- Modificación de datos de usuario
+- Cambio de rol/perfil de usuario
+- Bloqueo de usuario por intentos fallidos
+- Desbloqueo de usuario
+- Activación de usuario
+- Desactivación de usuario
+- Cambio de contraseña
+
+Justificación: Estos eventos afectan directamente la seguridad del sistema
+y el acceso de los usuarios. Requieren atención inmediata en caso de
+actividades sospechosas.
+
+
+CRITICIDAD 2 - MEDIA ALTA (Negocio/Operaciones Comerciales)
+-----------------------------------------------------------
+Eventos relacionados con operaciones comerciales y de negocio:
+- Check-in de alumnos
+- Registro de pagos
+- Modificación de precios de actividades/modalidades
+- Inscripciones a actividades
+- Alta de rutinas
+- Modificación de rutinas
+- Baja de rutinas
+- Asociación de usuario a alumno
+- Desasociación de usuario de alumno
+
+Justificación: Son operaciones que afectan el negocio directamente pero
+no comprometen la seguridad. Importantes para el seguimiento comercial.
+
+
+CRITICIDAD 3 - MEDIA BAJA (ABM Básico)
+--------------------------------------
+Eventos de alta, baja y modificación de entidades básicas:
+- Alta de alumnos
+- Baja de alumnos
+- Modificación de datos de alumnos
+- Alta de entrenadores
+- Baja de entrenadores
+- Modificación de datos de entrenadores
+- Cambios de datos básicos de alumnos
+- Cambios de datos básicos de usuario (no críticos)
+
+Justificación: Son operaciones administrativas rutinarias que requieren
+registro pero no necesitan atención inmediata.
+
+
+CRITICIDAD 4 - BAJA (Básicos/Configuración)
+-------------------------------------------
+Eventos básicos, de configuración y errores no críticos:
+- Errores del sistema (no bloqueantes)
+- Cambio de idioma (futuro)
+- Cambios de configuración
+- Backup de datos
+- Actualizaciones del sistema
+- Notificaciones masivas
+- Eventos informativos generales
+
+Justificación: Son eventos rutinarios, informativos o de mantenimiento
+que no requieren atención prioritaria.
+
+-----------------------------------------------------------------------------
+REGLAS DE NEGOCIO ASOCIADAS
+-----------------------------------------------------------------------------
+
+1. REGISTRO OBLIGATORIO
+   - Todos los eventos deben registrarse antes de completar la acción
+   - El fallo en el registro no debe impedir la operación principal
+   - Los eventos se almacenan en la tabla EVENTO con verificación DVV/DVH
+
+2. CONSERVACIÓN DE DATOS
+   - Los eventos son inmutables una vez registrados
+   - No existe función de eliminación de eventos
+   - El historial debe mantenerse íntegro para auditoría
+
+3. VALIDACIÓN DE USUARIO
+   - El usuario registrado debe coincidir con el de la sesión activa
+   - Se permite "sistema" para eventos automáticos
+   - Login y error pueden registrarse sin sesión validada
+
+4. INTEGRIDAD
+   - Cada evento incluye DVV (digito verificador vertical) y DVH (horizontal)
+   - Los timestamps se registran en hora local del servidor
+   - La criticidad no puede modificarse después del registro
+
+5. CONSULTA Y FILTRADO
+   - La bitácora permite filtrar por tipo de evento
+   - Se puede buscar por usuario o descripción
+   - El filtro por criticidad permite priorizar revisiones
+   - El filtro por módulo identifica el origen del evento
+
+-----------------------------------------------------------------------------
+MÓDULOS DEL SISTEMA
+-----------------------------------------------------------------------------
+
+- Autenticación: Login, logout, bloqueo, cambio de contraseña
+- Usuarios: Alta, modificación, activación, desactivación, cambio de rol
+- Alumnos: ABM completo, check-in, asociación de usuarios
+- Entrenadores: ABM completo
+- Actividades: Modificación de precios, inscripciones
+- Rutinas: Alta, modificación, baja
+- Pagos: Registro de transacciones
+- Sistema: Backup, configuración, errores
+
+-----------------------------------------------------------------------------
+AUDITORÍA Y REVISIÓN
+-----------------------------------------------------------------------------
+
+- Eventos de criticidad 1 (Alta) deben revisarse diariamente
+- Eventos de criticidad 2 (Media Alta) deben revisarse semanalmente
+- Eventos de criticidad 3-4 (Media Baja/Baja) se revisan mensualmente
+- Cualquier patrón sospechoso debe escalarse al administrador
+
+=============================================================================

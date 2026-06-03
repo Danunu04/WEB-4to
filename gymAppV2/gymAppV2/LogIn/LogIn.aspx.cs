@@ -63,7 +63,7 @@ namespace gymAppV2.LogIn
 
                     FormsAuthentication.SetAuthCookie(userBD.USUARIO_Usuario, false);
 
-                    bllEvento.RegistrarEvento("login", userBD.USUARIO_Usuario, "Inicio de sesión exitoso");
+                    bllEvento.RegistrarLogin(userBD.USUARIO_Usuario);
 
                     // Mostrar toast de exito y redirigir desde el cliente
                     RedirigirConToast("Inicio de sesion exitoso!", "~/DashBoard/WebForm1.aspx");
@@ -97,7 +97,7 @@ namespace gymAppV2.LogIn
                     MostrarToast(mensaje, "error");
                 }
 
-                bllEvento.RegistrarEvento("error", usuario, $"Intento fallido de login - {ex.Result}");
+                bllEvento.RegistrarError(usuario, $"Intento fallido de login - {ex.Result}");
             }
             catch (ThreadAbortException)
             {
@@ -107,7 +107,7 @@ namespace gymAppV2.LogIn
             catch (Exception ex)
             {
                 MostrarToast("Error al conectar con el servidor: " + ex.Message, "error");
-                bllEvento.RegistrarEvento("error", usuario, $"Error en login: {ex.Message}");
+                bllEvento.RegistrarError(usuario, $"Error en login: {ex.Message}");
             }
         }
 

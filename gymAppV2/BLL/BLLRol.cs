@@ -15,20 +15,6 @@ namespace BLL
             bllEvento = new BLLEvento();
         }
 
-        private void RegistrarEvento(string tipo, string accion)
-        {
-            try
-            {
-                var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarEvento(tipo, usr, accion);
-            }
-            catch
-            {
-                // No impedir la operación principal si falla el log
-            }
-        }
-
         public int ObtenerRol(string usuario)
         {
             try
@@ -46,7 +32,7 @@ namespace BLL
             try
             {
                 mppRol.ActualizarRol(usuario, rol);
-                RegistrarEvento("cambio_rol", $"Rol del usuario '{usuario}' actualizado a {rol}");
+                bllEvento.RegistrarCambioRol(usuario, rol);
             }
             catch (Exception ex)
             {

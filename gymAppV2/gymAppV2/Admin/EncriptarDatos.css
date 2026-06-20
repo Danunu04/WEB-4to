@@ -1,0 +1,106 @@
+:root {
+    --color-accent-lavender: #C7B5FF;
+    --color-accent-lavender-light: #F0EBFF;
+}
+
+.encriptar-container {
+    width: 100%;
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.encriptar-header {
+    margin-bottom: 1.5rem;
+}
+
+.encriptar-title {
+    font-family: 'Fraunces', system-ui, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 0.5rem 0;
+}
+
+.encriptar-subtitle {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    margin: 0;
+}
+
+.advertencia-box {
+    background-color: #FFFBEB;
+    border: 0.0625rem solid #FDE68A;
+    color: #92400E;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+}
+
+.encriptar-actions {
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+    background-color: var(--color-accent-lavender);
+    color: var(--color-text);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.12s ease, transform 0.12s ease;
+}
+
+.btn-primary:hover {
+    background-color: #B5A0FF;
+    transform: translateY(-0.0625rem);
+}
+
+.resultado-panel {
+    background-color: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.25rem;
+}
+
+.resultado-panel h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--color-text);
+}
+
+.resultado-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.resultado-grid th,
+.resultado-grid td {
+    padding: 0.625rem 0.75rem;
+    text-align: left;
+    border-bottom: 0.0625rem solid var(--color-border);
+}
+
+.resultado-grid th {
+    background-color: var(--color-surface-2);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.resultado-grid tr:last-child td {
+    border-bottom: none;
+}
+
+.error-box {
+    background-color: #FEF2F2;
+    border: 0.0625rem solid #FECACA;
+    color: #B91C1C;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+}

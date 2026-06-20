@@ -424,6 +424,25 @@
     cursor: pointer;
 }
 
+.event-toggle-bar {
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.event-toggle-link {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    text-decoration: none;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    transition: color 0.12s ease, background-color 0.12s ease;
+}
+
+.event-toggle-link:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-2);
+}
+
 /* Event Card Types */
 .event-card-login {
     background-color: var(--bitacora-bg-mint);
@@ -479,6 +498,33 @@
     color: var(--bitacora-bg-pink-dark);
 }
 
+.event-card-bloqueo_usuario {
+    background-color: var(--bitacora-bg-rose);
+    border-color: var(--bitacora-bg-rose-dark);
+}
+
+.event-card-bloqueo_usuario .event-icon {
+    color: var(--bitacora-bg-rose-dark);
+}
+
+.event-card-desbloqueo_usuario {
+    background-color: var(--bitacora-bg-mint);
+    border-color: var(--bitacora-bg-mint-dark);
+}
+
+.event-card-desbloqueo_usuario .event-icon {
+    color: var(--bitacora-bg-mint-dark);
+}
+
+.event-card-cambio_contrasena {
+    background-color: var(--bitacora-bg-lavender);
+    border-color: var(--bitacora-bg-lavender-dark);
+}
+
+.event-card-cambio_contrasena .event-icon {
+    color: var(--bitacora-bg-lavender-dark);
+}
+
 /* Filter Button Active States */
 .event-card-login ~ .filter-buttons [data-type="login"].active {
     background-color: var(--bitacora-bg-mint-dark);
@@ -507,6 +553,21 @@
 
 .event-card-error ~ .filter-buttons [data-type="error"].active {
     background-color: var(--bitacora-bg-pink-dark);
+    color: var(--color-text);
+}
+
+.event-card-bloqueo_usuario ~ .filter-buttons [data-type="bloqueo_usuario"].active {
+    background-color: var(--bitacora-bg-rose-dark);
+    color: var(--color-text);
+}
+
+.event-card-desbloqueo_usuario ~ .filter-buttons [data-type="desbloqueo_usuario"].active {
+    background-color: var(--bitacora-bg-mint-dark);
+    color: var(--color-text);
+}
+
+.event-card-cambio_contrasena ~ .filter-buttons [data-type="cambio_contrasena"].active {
+    background-color: var(--bitacora-bg-lavender-dark);
     color: var(--color-text);
 }
 

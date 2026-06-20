@@ -131,8 +131,12 @@ namespace BLL
             try
             {
                 var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarEvento(tipo, usr, accion, criticidad);
+                if (usuario == null)
+                {
+                    // No registrar evento si no hay usuario válido
+                    return;
+                }
+                bllEvento.RegistrarEvento(tipo, usuario.USUARIO_Usuario, accion, criticidad);
             }
             catch
             {
@@ -162,8 +166,10 @@ namespace BLL
                 mppAlumno.CrearAlumno(alumno);
 
                 var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarAltaAlumno(usr, alumno.DNI);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarAltaAlumno(usuario.USUARIO_Usuario, alumno.DNI);
+                }
             }
             catch (Exception ex)
             {
@@ -199,8 +205,10 @@ namespace BLL
                 mppAlumno.ActualizarAlumno(alumno);
 
                 var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarModificacionAlumno(usr, alumno.DNI);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarModificacionAlumno(usuario.USUARIO_Usuario, alumno.DNI);
+                }
             }
             catch (Exception ex)
             {
@@ -244,8 +252,10 @@ namespace BLL
                 mppAlumno.EliminarAlumno(dni);
 
                 var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarBajaAlumno(usr, dni);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarBajaAlumno(usuario.USUARIO_Usuario, dni);
+                }
             }
             catch (Exception ex)
             {
@@ -321,12 +331,31 @@ namespace BLL
                 mppAlumno.AsociarUsuario(dni, null);
 
                 var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarDesasociarUsuario(usr, dni);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarDesasociarUsuario(usuario.USUARIO_Usuario, dni);
+                }
             }
             catch (Exception ex)
             {
                 throw new Exception("Error al desasociar usuario: " + ex.Message, ex);
+            }
+        }
+
+        public int CantidadAlumnosAsociados(string usuario)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(usuario))
+                {
+                    return 0;
+                }
+
+                return mppAlumno.CantidadAlumnosAsociados(usuario);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener la cantidad de alumnos asociados: " + ex.Message, ex);
             }
         }
 

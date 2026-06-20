@@ -24,10 +24,17 @@ namespace MPP
         {
             try
             {
+                // Validar que el usuario no sea vacío o "sistema"
+                // Todos los eventos deben estar atados a un usuario válido
+                if (string.IsNullOrEmpty(evento.EVENTO_Usuario) || evento.EVENTO_Usuario == "sistema")
+                {
+                    throw new Exception("No se puede registrar un evento sin usuario válido");
+                }
+
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Evento]
-                    (tipo, usr, descripcion, fecha, criticidad, dvv, dvh)
-                    VALUES (@Tipo, @Usuario, @Accion, @Timestamp, @Criticidad, @DVV, @DVH);
+                    (tipo, usr, descripcion, fecha, criticidad, modulo, dvv, dvh)
+                    VALUES (@Tipo, @Usuario, @Accion, @Timestamp, @Criticidad, @Modulo, @DVV, @DVH);
 
                     SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
@@ -38,6 +45,7 @@ namespace MPP
                     new SqlParameter("@Accion", evento.EVENTO_Accion),
                     new SqlParameter("@Timestamp", evento.EVENTO_Timestamp),
                     new SqlParameter("@Criticidad", criticidad),
+                    new SqlParameter("@Modulo", string.IsNullOrEmpty(evento.EVENTO_Modulo) ? (object)DBNull.Value : evento.EVENTO_Modulo),
                     new SqlParameter("@DVV", ""),
                     new SqlParameter("@DVH", "")
                 };
@@ -83,7 +91,7 @@ namespace MPP
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    eventos.Add(new Evento(
+                    Evento evento = new Evento(
                         Convert.ToInt32(row["codEvento"]),
                         row["tipo"].ToString(),
                         row["usr"].ToString(),
@@ -91,7 +99,9 @@ namespace MPP
                         Convert.ToDateTime(row["fecha"]),
                         Convert.IsDBNull(row["criticidad"]) ? 1 : Convert.ToInt32(row["criticidad"]),
                         Convert.IsDBNull(row["modulo"]) ? "" : row["modulo"].ToString()
-                    ));
+                    );
+                    evento.Expandido = false;
+                    eventos.Add(evento);
                 }
 
                 return eventos;

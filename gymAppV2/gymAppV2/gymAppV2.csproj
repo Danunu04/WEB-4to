@@ -100,6 +100,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="About.aspx" />
+    <Content Include="AccesoDenegado.aspx" />
+    <Content Include="Admin\EncriptarDatos.aspx" />
+    <Content Include="Admin\EncriptarDatos.css" />
     <Content Include="Actividades\actividades.aspx" />
     <Content Include="Alumnos\Alumnos.aspx" />
     <Content Include="Alumnos\Alumnos.css" />
@@ -127,9 +130,12 @@
     <Content Include="Entrenadores\Entrenadores.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="CambiarContra\Cambiar-contra.aspx" />
     <Content Include="Inicio\Default.aspx" />
     <Content Include="Inicio\inicio.css" />
     <Content Include="LogIn\LogIn.aspx" />
+    <Content Include="LogIn\PreguntasSeguridad.aspx" />
+    <Content Include="LogIn\ConfigurarPreguntas.aspx" />
     <Content Include="LogIn\StyleSheet1.css" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
@@ -219,13 +225,37 @@
     <Compile Include="About.aspx.designer.cs">
       <DependentUpon>About.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Admin\EncriptarDatos.aspx.cs">
+      <DependentUpon>EncriptarDatos.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\EncriptarDatos.aspx.designer.cs">
+      <DependentUpon>EncriptarDatos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="AccesoDenegado.aspx.cs">
+      <DependentUpon>AccesoDenegado.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AccesoDenegado.aspx.designer.cs">
+      <DependentUpon>AccesoDenegado.aspx</DependentUpon>
+    </Compile>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="BasePage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="Bitacora\Bitacora.aspx.cs">
       <DependentUpon>Bitacora.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Bitacora\Bitacora.aspx.designer.cs">
       <DependentUpon>Bitacora.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="CambiarContra\Cambiar-contra.aspx.cs">
+      <DependentUpon>Cambiar-contra.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CambiarContra\Cambiar-contra.aspx.designer.cs">
+      <DependentUpon>Cambiar-contra.aspx</DependentUpon>
     </Compile>
     <Compile Include="Contact.aspx.cs">
       <DependentUpon>Contact.aspx</DependentUpon>
@@ -244,6 +274,9 @@
     <Compile Include="DashBoard.Master.cs">
       <DependentUpon>DashBoard.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="DashBoard.Master.designer.cs">
+      <DependentUpon>DashBoard.Master</DependentUpon>
     </Compile>
     <Compile Include="Entrenadores\Entrenadores.aspx.cs">
       <DependentUpon>Entrenadores.aspx</DependentUpon>
@@ -268,6 +301,20 @@
     </Compile>
     <Compile Include="LogIn\LogIn.aspx.designer.cs">
       <DependentUpon>LogIn.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="LogIn\PreguntasSeguridad.aspx.cs">
+      <DependentUpon>PreguntasSeguridad.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="LogIn\PreguntasSeguridad.aspx.designer.cs">
+      <DependentUpon>PreguntasSeguridad.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="LogIn\ConfigurarPreguntas.aspx.cs">
+      <DependentUpon>ConfigurarPreguntas.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="LogIn\ConfigurarPreguntas.aspx.designer.cs">
+      <DependentUpon>ConfigurarPreguntas.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Site.Master.cs">

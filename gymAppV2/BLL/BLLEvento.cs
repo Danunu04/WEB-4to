@@ -57,6 +57,8 @@ namespace BLL
         public const string EVENTO_ACTUALIZACION = "update";
         public const string EVENTO_NUEVO_USUARIO = "new_user";
 
+        private const string USUARIO_SISTEMA = "sistema";
+
         private MPPEvento mppEvento;
 
         public BLLEvento()
@@ -82,19 +84,47 @@ namespace BLL
                     throw new Exception("La criticidad debe estar entre 1 (Alta) y 4 (Baja)");
                 }
 
-                // Permitir eventos de login/error sin validación de sesión (ocurren antes de autenticar)
-                bool esEventoPreAuth = tipo == EVENTO_LOGIN || tipo == EVENTO_ERROR || tipo == "bloqueo_usuario";
+                // Validar que el usuario no sea vacío o "sistema"
+                // Todos los eventos deben estar atados a un usuario válido
+                if (string.IsNullOrEmpty(usuario) || usuario == USUARIO_SISTEMA)
+                {
+                    throw new Exception("No se puede registrar un evento sin usuario válido");
+                }
+
+                // Eventos que pueden ocurrir antes de autenticar (login, bloqueo, error)
+                bool esEventoPreAuth = tipo == EVENTO_LOGIN || tipo == EVENTO_ERROR || tipo == EVENTO_BLOQUEO_USUARIO;
 
                 if (!esEventoPreAuth)
                 {
-                    // Validar que el usuario corresponda al de la sesión activa
-                    var usuarioSesion = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as BE.Usuario;
-                    string usuarioEsperado = usuarioSesion?.USUARIO_Usuario ?? "sistema";
+                    // Validar que el usuario corresponda al de la sesión activa.
+                    // Si la sesión expiró, se lanza una excepción controlada para no perder
+                    // la trazabilidad sin romper silenciosamente la operación.
+                    var contexto = System.Web.HttpContext.Current;
+                    if (contexto?.Session == null)
+                    {
+                        throw new Exception("No se puede registrar el evento post-autenticación porque la sesión no está disponible.");
+                    }
 
-                    // Permitir "sistema" para eventos automáticos, pero validar que coincida en otros casos
-                    if (usuario != "sistema" && usuario != usuarioEsperado)
+                    var usuarioSesion = contexto.Session["UsuarioLogueado"] as BE.Usuario;
+                    if (usuarioSesion == null)
+                    {
+                        throw new Exception("No hay sesión activa para registrar el evento post-autenticación.");
+                    }
+
+                    string usuarioEsperado = usuarioSesion.USUARIO_Usuario;
+                    if (!string.Equals(usuario, usuarioEsperado, StringComparison.OrdinalIgnoreCase))
                     {
                         throw new Exception($"El usuario '{usuario}' no corresponde al usuario de la sesión activa ('{usuarioEsperado}')");
+                    }
+                }
+                else
+                {
+                    // Para eventos pre-autenticación, validar que el usuario exista en la BD
+                    var bllUsuario = new BLLUsuario();
+                    bool usuarioExiste = bllUsuario.UsuarioExiste(usuario);
+                    if (!usuarioExiste)
+                    {
+                        throw new Exception($"El usuario '{usuario}' no existe en la base de datos - no se registra el evento");
                     }
                 }
 
@@ -183,6 +213,11 @@ namespace BLL
         public int RegistrarBloqueoUsuario(string usuario)
         {
             return RegistrarEvento(EVENTO_BLOQUEO_USUARIO, usuario, "Usuario bloqueado por exceso de intentos fallidos", 1, "Autenticación");
+        }
+
+        public int RegistrarRespuestaSeguridadIncorrecta(string usuario)
+        {
+            return RegistrarEvento(EVENTO_BLOQUEO_USUARIO, usuario, "Respuesta de seguridad incorrecta - usuario requiere desbloqueo administrativo", 1, "Autenticación");
         }
 
         public int RegistrarDesbloqueoUsuario(string usuario)
@@ -303,6 +338,11 @@ namespace BLL
         // ================================
         public int RegistrarError(string usuario, string mensajeError)
         {
+            // No registrar error si no hay usuario válido
+            if (string.IsNullOrEmpty(usuario))
+            {
+                throw new Exception("No se puede registrar un evento de error sin usuario válido");
+            }
             return RegistrarEvento(EVENTO_ERROR, usuario, $"Error: {mensajeError}", 4, "Sistema");
         }
 

@@ -12,6 +12,10 @@ namespace Servicios.Singleton
         {
             get
             {
+                if (HttpContext.Current?.Session == null)
+                {
+                    return null;
+                }
                 return HttpContext.Current.Session[SESSION_KEY] as Usuario;
             }
         }

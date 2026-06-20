@@ -5,25 +5,53 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using BLL;
 using BE;
+using gymAppV2;
+using Servicios.Singleton;
 
 namespace gymAppV2.Alumnos
 {
-    public partial class Alumnos : System.Web.UI.Page
+    public partial class Alumnos : BasePage
     {
         private BLLAlumno bllAlumno;
         private BLLUsuario bllUsuario;
+        private BLLEvento bllEvento;
         private int? DniSeleccionado { get; set; }
         private bool EsModificacion { get; set; }
 
+        private bool EsSoloLectura
+        {
+            get { return Singleton.Instancia.Usuario?.USUARIO_Rol == 4; }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
+            VerificarAcceso("GestionAlumnos");
+
             bllAlumno = new BLLAlumno();
             bllUsuario = new BLLUsuario();
+            bllEvento = new BLLEvento();
 
             if (!IsPostBack)
             {
                 CargarAlumnos();
                 CargarUsuariosDropdown();
+                ConfigurarModoSoloLectura();
+            }
+        }
+
+        /// <summary>
+        /// Para los clientes, el módulo de alumnos es solo lectura de sus alumnos asociados.
+        /// </summary>
+        private void ConfigurarModoSoloLectura()
+        {
+            if (EsSoloLectura)
+            {
+                btnCrear.Visible = false;
+                btnModificar.Visible = false;
+                btnEliminar.Visible = false;
+                btnAsociarUsuario.Visible = false;
+                pnlForm.Visible = false;
+                pnlConfirmarEliminar.Visible = false;
             }
         }
 
@@ -35,6 +63,14 @@ namespace gymAppV2.Alumnos
             {
                 var alumnos = bllAlumno.ListarAlumnos() ?? new List<Alumno>();
 
+                // Un Cliente solo ve los alumnos asociados a su usuario
+                if (EsSoloLectura)
+                {
+                    string usuarioActual = Singleton.Instancia.Usuario?.USUARIO_Usuario;
+                    alumnos = alumnos.Where(a => !string.IsNullOrEmpty(a.Usuario)
+                        && a.Usuario.Equals(usuarioActual, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
                 // Aplicar filtros
                 if (!string.IsNullOrEmpty(ddlEstado.SelectedValue))
                 {
@@ -42,7 +78,7 @@ namespace gymAppV2.Alumnos
                     alumnos = alumnos.Where(a => a.Activo == activo).ToList();
                 }
 
-                if (!string.IsNullOrEmpty(ddlUsuario.SelectedValue))
+                if (!string.IsNullOrEmpty(ddlUsuario.SelectedValue) && !EsSoloLectura)
                 {
                     string filtro = ddlUsuario.SelectedValue;
                     if (filtro == "con_usuario")
@@ -265,6 +301,7 @@ namespace gymAppV2.Alumnos
 
                 var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
                 if (alumno == null)
+
                 {
                     MostrarError("El alumno no existe");
                     return;
@@ -512,11 +549,16 @@ namespace gymAppV2.Alumnos
                     if (!string.IsNullOrEmpty(usuarioSeleccionado) && string.IsNullOrEmpty(alumno.Usuario))
                     {
                         bllAlumno.AsociarUsuario(alumno.DNI, usuarioSeleccionado);
+                        bllEvento.RegistrarAsociarUsuario(ObtenerUsuarioActual(), alumno.DNI);
                     }
                     else if (string.IsNullOrEmpty(usuarioSeleccionado) && !string.IsNullOrEmpty(alumno.Usuario))
                     {
                         bllAlumno.DesasociarUsuario(alumno.DNI);
+                        bllEvento.RegistrarDesasociarUsuario(ObtenerUsuarioActual(), alumno.DNI);
                     }
+
+                    bllEvento.RegistrarModificacionAlumno(ObtenerUsuarioActual(), alumno.DNI);
+                    bllEvento.RegistrarCambioDatosAlumno(ObtenerUsuarioActual(), alumno.DNI, "datos alumno");
 
                     MostrarExito($"Alumno modificado correctamente");
                 }
@@ -532,9 +574,9 @@ namespace gymAppV2.Alumnos
                     // Los datos personales se guardan en USUARIOS, no en ALUMNOS
                     // Se usa BLLUsuario.CrearUsuario con rol=4 para crear Cliente (crea USUARIOS + ALUMNOS)
                     string usuarioName = $"cliente_{dni}";
-                    string contrasena = txtApellido.Text.Trim() + dni.ToString();
 
                     var bllUsuario = new BLL.BLLUsuario();
+                    string contrasena = bllUsuario.GenerarContrasenaSegura();
                     bllUsuario.CrearUsuario(
                         usuarioName,
                         contrasena,
@@ -558,6 +600,8 @@ namespace gymAppV2.Alumnos
                     }
 
                     MostrarExito($"Alumno creado correctamente");
+
+                    bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
                 }
 
                 pnlForm.Visible = false;
@@ -581,6 +625,7 @@ namespace gymAppV2.Alumnos
 
                 bllAlumno.EliminarAlumno(dni);
                 MostrarExito($"Alumno eliminado correctamente");
+                bllEvento.RegistrarBajaAlumno(ObtenerUsuarioActual(), dni);
 
                 pnlConfirmarEliminar.Visible = false;
                 CargarAlumnos();
@@ -592,6 +637,11 @@ namespace gymAppV2.Alumnos
         }
 
         // ==================== MÉTODOS AUXILIARES ====================
+
+        private string ObtenerUsuarioActual()
+        {
+            return Singleton.Instancia.Usuario?.USUARIO_Usuario ?? string.Empty;
+        }
 
         private void LimpiarFormulario()
         {

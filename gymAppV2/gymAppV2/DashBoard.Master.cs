@@ -8,16 +8,46 @@ namespace gymAppV2
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (!Singleton.Instancia.IsLogged())
+            if (!IsPostBack)
             {
-                Response.Redirect("~/LogIn/LogIn.aspx");
+                if (!Singleton.Instancia.IsLogged())
+                {
+                    Response.Redirect("~/LogIn/LogIn.aspx");
+                }
             }
+
+            ConfigurarMenuSegunRol();
+        }
+
+        /// <summary>
+        /// Muestra u oculta las opciones del menú lateral según el rol del usuario logueado.
+        /// </summary>
+        private void ConfigurarMenuSegunRol()
+        {
+            var bllRol = new BLLRol();
+
+            liDashboard.Visible = bllRol.UsuarioActualTieneAcceso("Dashboard");
+            liUsuarios.Visible = bllRol.UsuarioActualTieneAcceso("GestionUsuarios");
+            liAlumnos.Visible = bllRol.UsuarioActualTieneAcceso("GestionAlumnos");
+            liEntrenadores.Visible = bllRol.UsuarioActualTieneAcceso("GestionEntrenadores");
+            liActividades.Visible = bllRol.UsuarioActualTieneAcceso("ActividadesCalendario");
+            liRutinas.Visible = bllRol.UsuarioActualTieneAcceso("GestionRutinas");
+            liBitacora.Visible = bllRol.UsuarioActualTieneAcceso("Bitacora");
+            liPagos.Visible = bllRol.UsuarioActualTieneAcceso("Pagos");
+            liPerfil.Visible = bllRol.UsuarioActualTieneAcceso("Perfil");
+
+            // El módulo de permisos no está implementado; se mantiene oculto hasta su desarrollo.
+            liPermisos.Visible = false;
         }
 
         protected void LnkLogout_Click(object sender, EventArgs e)
         {
             var usuario = Singleton.Instancia.Usuario;
             string usuarioNombre = usuario?.USUARIO_Usuario ?? "desconocido";
+
+            // Invalidar la cookie de autenticación de forms antes de destruir la sesión.
+            // El orden es importante: primero la cookie, luego la sesión.
+            System.Web.Security.FormsAuthentication.SignOut();
 
             // Registrar evento de logout antes de cerrar sesión
             try
@@ -31,7 +61,6 @@ namespace gymAppV2
             }
 
             Singleton.Instancia.LogOut();
-            System.Web.Security.FormsAuthentication.SignOut();
             Response.Redirect("~/LogIn/LogIn.aspx", false);
             Context.ApplicationInstance.CompleteRequest();
         }

@@ -21,6 +21,11 @@ namespace BE
 
         // Datos específicos para Cliente (Rol 4) - asociar alumno existente
         public int? AlumnoDNI { get; set; }
+        public string AlumnoNombre { get; set; }
+        public string AlumnoApellido { get; set; }
+        public DateTime? AlumnoFechaNacimiento { get; set; }
+        public string AlumnoTelefono { get; set; }
+        public string AlumnoEmail { get; set; }
 
         public UsuarioCrearDTO()
         {
@@ -75,6 +80,21 @@ namespace BE
                 if (!AlumnoDNI.HasValue || AlumnoDNI <= 0)
                 {
                     throw new ArgumentException("Para crear un Cliente, el DNI del alumno a asociar es requerido");
+                }
+
+                if (string.IsNullOrEmpty(AlumnoNombre))
+                {
+                    throw new ArgumentException("Para crear un Cliente, el nombre es requerido");
+                }
+
+                if (string.IsNullOrEmpty(AlumnoApellido))
+                {
+                    throw new ArgumentException("Para crear un Cliente, el apellido es requerido");
+                }
+
+                if (!AlumnoFechaNacimiento.HasValue)
+                {
+                    throw new ArgumentException("Para crear un Cliente, la fecha de nacimiento es requerida");
                 }
             }
         }

@@ -1,6 +1,7 @@
 using System;
 using BE;
 using MPP;
+using Servicios.Singleton;
 
 namespace BLL
 {
@@ -40,21 +41,25 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Devuelve true si el rol tiene acceso al módulo indicado.
+        /// 1=Administrador | 2=Recepcionista | 3=Entrenador | 4=Cliente
+        /// </summary>
         public bool TieneAccesoAModulo(int rol, string modulo)
         {
-            // 1=Administrador | 2=Recepcionista | 3=Entrenador | 4=Cliente
             switch (modulo)
             {
                 case "Dashboard":
                     return true;
 
-                case "GestionAlumnos":
                 case "GestionUsuarios":
                 case "GestionEntrenadores":
-                case "CrearFamiliaPerfil":
                 case "Bitacora":
                 case "PreciosCuota":
                     return rol <= 2;
+
+                case "GestionAlumnos":
+                    return rol <= 2 || rol == 4;
 
                 case "ActividadesCalendario":
                 case "Pagos":
@@ -63,15 +68,24 @@ namespace BLL
                 case "GestionRutinas":
                     return rol <= 3;
 
-                case "GestionClases":
-                    return true;
-
                 case "Perfil":
                     return rol == 4;
 
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Verifica si el usuario logueado actualmente tiene acceso al módulo indicado.
+        /// </summary>
+        public bool UsuarioActualTieneAcceso(string modulo)
+        {
+            var usuario = Singleton.Instancia.Usuario;
+            if (usuario == null)
+                return false;
+
+            return TieneAccesoAModulo(usuario.USUARIO_Rol, modulo);
         }
     }
 }

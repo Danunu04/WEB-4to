@@ -11,6 +11,7 @@ namespace BE
         public bool USUARIO_Bloqueado { get; set; }
         public int USUARIO_Intentos { get; set; }
         public int USUARIO_Rol { get; set; }
+        public bool USUARIO_PrimerLogin { get; set; }
 
         // Campos normalizados (datos personales centralizados)
         public string USUARIO_Tipo { get; set; }  // 'Empleado', 'Entrenador', 'Cliente'
@@ -31,7 +32,7 @@ namespace BE
 
         public Usuario(string usuario, string contras, bool activo, bool bloqueado, int intentos, int rol,
                        string tipo, int dni, string nombre, string apellido, string telefono,
-                       string email, DateTime? fechaNacimiento, string dvv, string dvh)
+                       string email, DateTime? fechaNacimiento, string dvv, string dvh, bool primerLogin = true)
         {
             USUARIO_Usuario = usuario;
             USUARIO_Contras = contras;
@@ -39,6 +40,7 @@ namespace BE
             USUARIO_Bloqueado = bloqueado;
             USUARIO_Intentos = intentos;
             USUARIO_Rol = rol;
+            USUARIO_PrimerLogin = primerLogin;
             USUARIO_Tipo = tipo;
             USUARIO_DNI = dni;
             Nombre = nombre;

@@ -121,6 +121,24 @@ namespace gymAppV2 {
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liBitacora;
 
         /// <summary>
+        /// Control liPagos.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liPagos;
+
+        /// <summary>
+        /// Control liPerfil.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liPerfil;
+
+        /// <summary>
         /// Control lnkLogout.
         /// </summary>
         /// <remarks>

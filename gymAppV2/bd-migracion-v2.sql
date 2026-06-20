@@ -38,7 +38,7 @@ PRINT '=== FASE 1: Agregando nuevas columnas a USUARIOS ===';
 
 -- Agregar columnas para datos personales y control de intentos
 ALTER TABLE USUARIOS ADD (
-    tipo VARCHAR(20) NULL,           -- 'Empleado', 'Entrenador', 'Cliente'
+    tipo VARCHAR(50) NULL,           -- 'Empleado', 'Entrenador', 'Cliente', 'Familiar'
     dni INT NULL,                     -- DNI único del usuario
     nombre VARCHAR(100) NULL,         -- Nombre completo
     apellido VARCHAR(100) NULL,       -- Apellido completo
@@ -144,7 +144,7 @@ BEGIN
 END
 
 -- Ahora hacer las columnas NOT NULL
-ALTER TABLE USUARIOS ALTER COLUMN tipo VARCHAR(20) NOT NULL;
+ALTER TABLE USUARIOS ALTER COLUMN tipo VARCHAR(50) NOT NULL;
 ALTER TABLE USUARIOS ALTER COLUMN dni INT NOT NULL;
 ALTER TABLE USUARIOS ALTER COLUMN nombre VARCHAR(100) NOT NULL;
 ALTER TABLE USUARIOS ALTER COLUMN apellido VARCHAR(100) NOT NULL;
@@ -167,8 +167,16 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'CK_USUARIOS_Tipo' AND type = 'C')
 BEGIN
     ALTER TABLE USUARIOS ADD CONSTRAINT CK_USUARIOS_Tipo
-        CHECK (tipo IN ('Empleado', 'Entrenador', 'Cliente'));
+        CHECK (tipo IN ('Empleado', 'Entrenador', 'Cliente', 'Familiar'));
     PRINT 'Constraint CK_USUARIOS_Tipo agregado';
+END
+
+-- Check constraint para Rol
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'CK_USUARIOS_Rol' AND type = 'C')
+BEGIN
+    ALTER TABLE USUARIOS ADD CONSTRAINT CK_USUARIOS_Rol
+        CHECK (rol IN (1, 2, 3, 4));
+    PRINT 'Constraint CK_USUARIOS_Rol agregado';
 END
 
 -- Índice en tipo para búsquedas rápidas
@@ -183,6 +191,37 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_USUARIOS_DNI')
 BEGIN
     CREATE NONCLUSTERED INDEX IX_USUARIOS_DNI ON USUARIOS(dni);
     PRINT 'Índice IX_USUARIOS_DNI creado';
+END
+GO
+
+-- ============================================================================
+-- FASE 5.1: CREAR TABLA PreguntasSeguridad
+-- ============================================================================
+
+PRINT '=== FASE 5.1: Creando tabla PreguntasSeguridad ===';
+
+IF OBJECT_ID('PreguntasSeguridad', 'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[PreguntasSeguridad](
+        [codPregunta]   INT             IDENTITY(1,1) NOT NULL,
+        [usr]           VARCHAR(50)     NOT NULL,
+        [pregunta]      VARCHAR(500)    NOT NULL,
+        [respuesta]     VARCHAR(500)    NOT NULL,
+        [dvv]           VARCHAR(50)     NOT NULL,
+        [dvh]           VARCHAR(50)     NOT NULL,
+        CONSTRAINT [PK_PreguntasSeguridad] PRIMARY KEY CLUSTERED ([codPregunta] ASC),
+        CONSTRAINT [FK_PreguntasSeguridad_Usuario] FOREIGN KEY ([usr])
+            REFERENCES [dbo].[USUARIOS] ([usr])
+    );
+
+    CREATE NONCLUSTERED INDEX [IX_PreguntasSeguridad_usr]
+        ON [dbo].[PreguntasSeguridad] ([usr] ASC);
+
+    PRINT 'Tabla PreguntasSeguridad e índice IX_PreguntasSeguridad_usr creados';
+END
+ELSE
+BEGIN
+    PRINT 'Tabla PreguntasSeguridad ya existe';
 END
 GO
 
@@ -278,23 +317,19 @@ END
 GO
 
 -- ============================================================================
--- FASE 8: ELIMINAR TABLA USUARIO_Intentos (ya no necesaria)
+-- FASE 8: MARCAR TABLA USUARIO_Intentos COMO OBSOLETA
 -- ============================================================================
+-- NOTA: El código usa USUARIOS.intentos. No se elimina la tabla para permitir
+--       un rollback limpio de esta migración, pero se deja vacía y documentada
+--       como obsoleta.
 
-PRINT '=== FASE 8: Eliminando tabla USUARIO_Intentos ===';
+PRINT '=== FASE 8: Marcando tabla USUARIO_Intentos como obsoleta ===';
 
--- Eliminar FK si existe
-IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_UsuarioIntentos_Usuario')
-BEGIN
-    ALTER TABLE USUARIO_Intentos DROP CONSTRAINT FK_UsuarioIntentos_Usuario;
-    PRINT 'FK FK_UsuarioIntentos_Usuario eliminada';
-END
-
--- Eliminar tabla
+-- Vaciar datos migrados para evitar duplicación/confusión
 IF OBJECT_ID('USUARIO_Intentos', 'U') IS NOT NULL
 BEGIN
-    DROP TABLE USUARIO_Intentos;
-    PRINT 'Tabla USUARIO_Intentos eliminada';
+    DELETE FROM USUARIO_Intentos;
+    PRINT 'Tabla USUARIO_Intentos vaciada (obsoleta - usar USUARIOS.intentos)';
 END
 GO
 

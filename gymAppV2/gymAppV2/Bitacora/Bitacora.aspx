@@ -69,6 +69,9 @@
                     <asp:Button ID="btnTodos" runat="server" Text="Todos" CssClass="filter-btn active" CommandArgument="all" OnClick="btnFiltro_Click" />
                     <asp:Button ID="btnLogin" runat="server" Text="Login" CssClass="filter-btn" CommandArgument="login" OnClick="btnFiltro_Click" />
                     <asp:Button ID="btnLogout" runat="server" Text="Logout" CssClass="filter-btn" CommandArgument="logout" OnClick="btnFiltro_Click" />
+                    <asp:Button ID="btnBloqueo" runat="server" Text="Bloqueos" CssClass="filter-btn" CommandArgument="bloqueo_usuario" OnClick="btnFiltro_Click" />
+                    <asp:Button ID="btnDesbloqueo" runat="server" Text="Desbloqueos" CssClass="filter-btn" CommandArgument="desbloqueo_usuario" OnClick="btnFiltro_Click" />
+                    <asp:Button ID="btnCambioContrasena" runat="server" Text="Cambio Contraseña" CssClass="filter-btn" CommandArgument="cambio_contrasena" OnClick="btnFiltro_Click" />
                     <asp:Button ID="btnBackup" runat="server" Text="Backup" CssClass="filter-btn" CommandArgument="backup" OnClick="btnFiltro_Click" />
                     <asp:Button ID="btnUsuarioNuevo" runat="server" Text="Usuario Nuevo" CssClass="filter-btn" CommandArgument="new_user" OnClick="btnFiltro_Click" />
                     <asp:Button ID="btnActualizacion" runat="server" Text="Actualización" CssClass="filter-btn" CommandArgument="update" OnClick="btnFiltro_Click" />
@@ -104,7 +107,11 @@
                                     <p class="event-action"><%# Eval("EVENTO_Accion") %></p>
                                     <p class="event-id">ID: EVT-<%# Eval("EVENTO_Id", "{0:D5}") %></p>
                                 </asp:Panel>
-                                <asp:LinkButton ID="lnkToggle" runat="server" CommandName="Toggle" CommandArgument='<%# Eval("EVENTO_Id") %>' CssClass="event-toggle"></asp:LinkButton>
+                                <div class="event-toggle-bar">
+                                    <asp:LinkButton ID="lnkToggle" runat="server" CommandName="Toggle" CommandArgument='<%# Eval("EVENTO_Id") %>' CssClass="event-toggle-link">
+                                        <%# Convert.ToBoolean(Eval("Expandido")) ? "Ocultar detalles" : "Ver detalles" %>
+                                    </asp:LinkButton>
+                                </div>
                             </div>
                         </ItemTemplate>
                     </asp:Repeater>

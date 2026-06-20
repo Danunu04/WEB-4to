@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -43,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CriptoManager.cs" />
+    <Compile Include="CriptoMigracion.cs" />
+    <Compile Include="Excepciones\AccesoDenegadoException.cs" />
     <Compile Include="Singleton\Singleton.cs" />
     <Compile Include="Singleton\SesionUsuario.cs" />
     <Compile Include="Singleton\ResultadosLogIn.cs" />
@@ -53,6 +56,10 @@
     <ProjectReference Include="..\BE\BE.csproj">
       <Project>{4bfead7d-e7e5-4068-bf50-d45a3c02b956}</Project>
       <Name>BE</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DAL\DAL.csproj">
+      <Project>{780f71b2-f757-4605-9757-19122876d6ff}</Project>
+      <Name>DAL</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

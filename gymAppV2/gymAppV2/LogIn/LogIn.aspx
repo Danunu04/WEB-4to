@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LogIn</title>
      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
      <link href="~/LogIn/StyleSheet1.css" rel="stylesheet" runat="server">
      <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet">
      <style>
@@ -20,7 +21,7 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        
+        <asp:ScriptManager runat="server" />
         <div>
             <asp:Button CssClass="BtnInicio" ID="Button1" runat="server" Text="Ir a inicio" OnClick="Button1_Click" />
             <!-- Toast Notifications Container -->
@@ -28,20 +29,35 @@
             <div class="BloqueRosa">
                 <div class="formulario">
                     <h1 class="titulo">Log In</h1>
-                    <asp:TextBox ID="txtUsuario" runat="server" CssClass="form-control form-control-lg mt-5" placeholder="Usuario" />
+                    <asp:TextBox ID="txtUsuario" runat="server" CssClass="form-control form-control-lg mt-5" placeholder="Usuario" MaxLength="50" />
                     <asp:RequiredFieldValidator
                     ID="RequiredFieldValidator1"
                     runat="server"
-                    ErrorMessage="Requerido" 
-                    ControlToValidate="txtUsuario"></asp:RequiredFieldValidator>
-                    <asp:TextBox ID="txtContrasena" runat="server" CssClass="form-control form-control-lg mt-5" placeholder="Password" TextMode="Password" />
+                    ErrorMessage="* Campo requerido"
+                    ControlToValidate="txtUsuario"
+                    ValidationGroup="LoginGroup"
+                    CssClass="text-danger"
+                    Display="Dynamic"></asp:RequiredFieldValidator>
+                    <asp:TextBox ID="txtContrasena" runat="server" CssClass="form-control form-control-lg mt-5" placeholder="Password" TextMode="Password" MaxLength="128" />
                     <asp:RequiredFieldValidator
                     ID="RequiredFieldValidator2"
                     runat="server"
-                    ErrorMessage="Requerido"
-                    ControlToValidate="txtContrasena"></asp:RequiredFieldValidator>
-                    <asp:Label ID="lblMensaje" runat="server" CssClass="lblMensaje" />
-                    <asp:Button ID="btnLogIn" runat="server" CssClass="btnFormLogIn" Text="Iniciar Sesión" OnClick="btnLogIn_Click" />
+                    ErrorMessage="* Campo requerido"
+                    ControlToValidate="txtContrasena"
+                    ValidationGroup="LoginGroup"
+                    CssClass="text-danger"
+                    Display="Dynamic"></asp:RequiredFieldValidator>
+                    <asp:RegularExpressionValidator
+                    ID="revContrasena"
+                    runat="server"
+                    ErrorMessage="* La contraseña debe tener al menos 6 caracteres"
+                    ControlToValidate="txtContrasena"
+                    ValidationExpression=".{6,128}"
+                    ValidationGroup="LoginGroup"
+                    CssClass="text-danger"
+                    Display="Dynamic"></asp:RegularExpressionValidator>
+                    <asp:Button ID="btnLogIn" runat="server" CssClass="btnFormLogIn" Text="Iniciar Sesión" OnClick="btnLogIn_Click" CausesValidation="true" ValidationGroup="LoginGroup" />
+                    <a href="<%= ResolveUrl("~/LogIn/PreguntasSeguridad.aspx") %>" class="link-volver">¿Olvidaste tu contraseña? / Cuenta bloqueada</a>
                 </div>
             </div>
         </div>

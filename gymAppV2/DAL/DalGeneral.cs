@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -34,11 +34,11 @@ namespace DAL
             }
             catch (SqlException ex)
             {
-                throw new Exception($"Error al inicializar conexión SQL: {ex.Message} (Error Number: {ex.Number})", ex);
+                throw new Exception("Error al inicializar la conexión con la base de datos. Contacte al administrador.", ex);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error inesperado al inicializar DalGeneral: " + ex.Message, ex);
+                throw new Exception("Error inesperado al inicializar el acceso a datos. Contacte al administrador.", ex);
             }
         }
 
@@ -47,6 +47,38 @@ namespace DAL
             bool windowsAuth = !string.IsNullOrEmpty(auth) && auth == "1";
 
             return $"Data Source={server};Initial Catalog={database};Integrated Security=True;";
+        }
+
+        /// <summary>
+        /// Devuelve un mensaje genérico para el usuario final sin exponer detalles de SQL.
+        /// El error original se conserva en InnerException para depuración.
+        /// </summary>
+        private Exception CrearExcepcionSegura(SqlException ex, string contexto)
+        {
+            // Códigos de error comunes de SQL Server que el usuario puede entender de forma abstracta.
+            string mensajeUsuario;
+            switch (ex.Number)
+            {
+                case 547: // FOREIGN KEY constraint conflict
+                    mensajeUsuario = "No se puede realizar la operación porque el registro está relacionado con otros datos.";
+                    break;
+                case 2601: // Cannot insert duplicate key row (índice único)
+                case 2627: // Violation of PRIMARY KEY constraint
+                    mensajeUsuario = "Ya existe un registro con los mismos datos. Verifique la información ingresada.";
+                    break;
+                case 4060: // Cannot open database
+                case 18456: // Login failed
+                    mensajeUsuario = "No se pudo conectar con la base de datos. Contacte al administrador.";
+                    break;
+                case -2: // Timeout
+                    mensajeUsuario = "La operación tardó demasiado. Intente nuevamente en unos momentos.";
+                    break;
+                default:
+                    mensajeUsuario = "Ocurrió un error al acceder a la base de datos. Intente nuevamente o contacte al administrador.";
+                    break;
+            }
+
+            return new Exception(mensajeUsuario, ex);
         }
 
         public DataTable _686DPConsultar(string consulta, ArrayList parametros)
@@ -80,11 +112,11 @@ namespace DAL
             }
             catch (SqlException ex)
             {
-                throw new Exception($"Error SQL: {ex.Message} (Error Number: {ex.Number}, State: {ex.State})");
+                throw CrearExcepcionSegura(ex, "consulta");
             }
             catch (Exception ex)
             {
-                throw new Exception("🛑 Error inesperado en la operación de consulta: " + ex.Message, ex);
+                throw new Exception("Error inesperado al consultar la información. Contacte al administrador.", ex);
             }
             finally
             {
@@ -128,11 +160,11 @@ namespace DAL
             }
             catch (SqlException ex)
             {
-                throw new Exception($"⚠️ Error SQL al ejecutar Stored Procedure: {ex.Message} (Error Number: {ex.Number}, State: {ex.State})", ex);
+                throw CrearExcepcionSegura(ex, "stored procedure");
             }
             catch (Exception ex)
             {
-                throw new Exception("🛑 Error general al ejecutar Stored Procedure: " + ex.Message, ex);
+                throw new Exception("Error inesperado al ejecutar el proceso en base de datos. Contacte al administrador.", ex);
             }
             finally
             {
@@ -171,11 +203,11 @@ namespace DAL
             }
             catch (SqlException ex)
             {
-                throw new Exception($"⚠️ Error SQL al ejecutar SP: {ex.Message} (Error Number: {ex.Number}, State: {ex.State})", ex);
+                throw CrearExcepcionSegura(ex, "stored procedure");
             }
             catch (Exception ex)
             {
-                throw new Exception("🛑 Error general al ejecutar el SP: " + ex.Message, ex);
+                throw new Exception("Error inesperado al ejecutar el proceso en base de datos. Contacte al administrador.", ex);
             }
             finally
             {
@@ -212,11 +244,11 @@ namespace DAL
             }
             catch (SqlException ex)
             {
-                throw new Exception($"⚠️ Error SQL (escalar): {ex.Message} (Error Number: {ex.Number}, State: {ex.State})", ex);
+                throw CrearExcepcionSegura(ex, "consulta escalar");
             }
             catch (Exception ex)
             {
-                throw new Exception("🛑 Error general en ExecuteScalar: " + ex.Message, ex);
+                throw new Exception("Error inesperado al obtener el valor. Contacte al administrador.", ex);
             }
             finally
             {
@@ -253,11 +285,11 @@ namespace DAL
             }
             catch (SqlException ex)
             {
-                throw new Exception($"⚠️ Error SQL: {ex.Message} (Error Number: {ex.Number}, State: {ex.State})", ex);
+                throw CrearExcepcionSegura(ex, "escritura");
             }
             catch (Exception ex)
             {
-                throw new Exception("🛑 Error general al ejecutar la instrucción SQL: " + ex.Message, ex);
+                throw new Exception("Error inesperado al guardar la información. Contacte al administrador.", ex);
             }
             finally
             {

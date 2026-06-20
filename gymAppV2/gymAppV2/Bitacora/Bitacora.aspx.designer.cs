@@ -132,6 +132,33 @@ namespace gymAppV2.Bitacora
         protected global::System.Web.UI.WebControls.Button btnLogout;
 
         /// <summary>
+        /// btnBloqueo control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnBloqueo;
+
+        /// <summary>
+        /// btnDesbloqueo control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnDesbloqueo;
+
+        /// <summary>
+        /// btnCambioContrasena control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnCambioContrasena;
+
+        /// <summary>
         /// btnBackup control.
         /// </summary>
         /// <remarks>

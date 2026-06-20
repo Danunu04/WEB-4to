@@ -47,6 +47,7 @@
     <Compile Include="MPPEvento.cs" />
     <Compile Include="MPPEntrenador.cs" />
     <Compile Include="MPPPrecioModalidad.cs" />
+    <Compile Include="MPPPreguntaSeguridad.cs" />
     <Compile Include="MPPRol.cs" />
     <Compile Include="MPPUsuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

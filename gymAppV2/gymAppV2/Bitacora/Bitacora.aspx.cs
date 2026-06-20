@@ -4,10 +4,11 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using BE;
 using BLL;
+using gymAppV2;
 
 namespace gymAppV2.Bitacora
 {
-    public partial class Bitacora : System.Web.UI.Page
+    public partial class Bitacora : BasePage
     {
         private string filtroActual = "all";
         private string busquedaActual = "";
@@ -15,8 +16,24 @@ namespace gymAppV2.Bitacora
         private string filtroModuloActual = null;
         private BLLEvento bllEvento;
 
+        private HashSet<int> EventosExpandidos
+        {
+            get
+            {
+                var ids = ViewState["EventosExpandidos"] as HashSet<int>;
+                if (ids == null)
+                {
+                    ids = new HashSet<int>();
+                    ViewState["EventosExpandidos"] = ids;
+                }
+                return ids;
+            }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
+            VerificarAcceso("Bitacora");
+
             if (!IsPostBack)
             {
                 filtroActual = "all";
@@ -62,6 +79,12 @@ namespace gymAppV2.Bitacora
                 bllEvento = new BLLEvento();
 
                 List<BE.Evento> eventos = bllEvento.ObtenerEventos(filtroActual, busquedaActual, filtroCriticidadActual, filtroModuloActual);
+                var expandidos = EventosExpandidos;
+                foreach (var evento in eventos)
+                {
+                    evento.Expandido = expandidos.Contains(evento.EVENTO_Id);
+                }
+
                 Dictionary<string, int> stats = bllEvento.ObtenerEstadisticas();
 
                 lblTotal.Text = stats["Total"].ToString();
@@ -152,6 +175,15 @@ namespace gymAppV2.Bitacora
             if (e.CommandName == "Toggle")
             {
                 int eventoId = Convert.ToInt32(e.CommandArgument);
+                var expandidos = EventosExpandidos;
+
+                if (expandidos.Contains(eventoId))
+                    expandidos.Remove(eventoId);
+                else
+                    expandidos.Add(eventoId);
+
+                ViewState["EventosExpandidos"] = expandidos;
+                CargarBitacora();
             }
         }
 
@@ -159,11 +191,23 @@ namespace gymAppV2.Bitacora
         {
             btnLogin.Text = "Login (" + stats["Logins"] + ")";
             btnLogout.Text = "Logout";
+            btnBloqueo.Text = "Bloqueos";
+            btnDesbloqueo.Text = "Desbloqueos";
+            btnCambioContrasena.Text = "Cambio Contraseña";
             btnBackup.Text = "Backup";
             btnUsuarioNuevo.Text = "Usuario Nuevo (" + stats["UsuariosNuevos"] + ")";
             btnActualizacion.Text = "Actualización";
             btnError.Text = "Error (" + stats["Errores"] + ")";
             btnTodos.Text = "Todos (" + stats["Total"] + ")";
+
+            // Resaltar visualmente el filtro activo
+            foreach (var btn in new[] { btnTodos, btnLogin, btnLogout, btnBloqueo, btnDesbloqueo, btnCambioContrasena, btnBackup, btnUsuarioNuevo, btnActualizacion, btnError })
+            {
+                if (btn.CommandArgument == filtroActual)
+                    btn.CssClass = "filter-btn active";
+                else
+                    btn.CssClass = "filter-btn";
+            }
         }
 
         protected string GetLabelForType(string tipo)
@@ -172,6 +216,9 @@ namespace gymAppV2.Bitacora
             {
                 case "login": return "Login";
                 case "logout": return "Logout";
+                case "bloqueo_usuario": return "Bloqueo de usuario";
+                case "desbloqueo_usuario": return "Desbloqueo de usuario";
+                case "cambio_contrasena": return "Cambio de contraseña";
                 case "backup": return "Backup";
                 case "new_user": return "Usuario Nuevo";
                 case "update": return "Actualización";
@@ -209,6 +256,12 @@ namespace gymAppV2.Bitacora
                     return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2\"/></svg>";
                 case "error":
                     return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg>";
+                case "bloqueo_usuario":
+                    return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></svg>";
+                case "desbloqueo_usuario":
+                    return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 9.9-1\"/><circle cx=\"12\" cy=\"16\" r=\"1\"/></svg>";
+                case "cambio_contrasena":
+                    return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/><circle cx=\"12\" cy=\"16\" r=\"1\"/></svg>";
                 default:
                     return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></svg>";
             }

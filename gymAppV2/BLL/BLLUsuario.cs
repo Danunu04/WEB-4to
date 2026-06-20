@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using BE;
 using MPP;
 using Servicios;
 using Servicios.Singleton;
 using SERVICIOS;
+using static BE.ConstantesSeguridad;
 
 namespace BLL
 {
@@ -15,6 +17,7 @@ namespace BLL
         private BLLEntrenador bllEntrenador;
         private BLLAlumno bllAlumno;
         private BLLEvento bllEvento;
+        private BLLPreguntaSeguridad bllPreguntaSeguridad;
 
         public BLLUsuario()
         {
@@ -23,6 +26,7 @@ namespace BLL
             bllEntrenador = new BLLEntrenador();
             bllAlumno = new BLLAlumno();
             bllEvento = new BLLEvento();
+            bllPreguntaSeguridad = new BLLPreguntaSeguridad();
         }
 
         private void RegistrarEvento(string tipo, string accion, int criticidad = 1)
@@ -30,18 +34,23 @@ namespace BLL
             try
             {
                 var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarEvento(tipo, usr, accion, criticidad);
+                if (usuario == null)
+                {
+                    // No registrar evento si no hay usuario válido
+                    return;
+                }
+                bllEvento.RegistrarEvento(tipo, usuario.USUARIO_Usuario, accion, criticidad);
             }
-            catch
+            catch (Exception ex)
             {
-                // No impedir la operación principal si falla el log
+                // Fallback: no impedir la operación principal si falla el log,
+                // pero dejar traza en el diagnostic trace para poder diagnosticar.
+                System.Diagnostics.Trace.WriteLine($"[AUDITORIA FALLBACK] Tipo={tipo}, Accion={accion}, Error={ex.Message}");
             }
         }
 
         public bool ValidarLogin(string usuario, string contrasena)
         {
-            bool ok = false;
             try
             {
                 // Validar campos no vacíos
@@ -59,7 +68,8 @@ namespace BLL
 
                 if (!usuarioBD.USUARIO_Activo)
                 {
-                    throw new Exception("El usuario está desactivado o no esta registrado");
+                    // Tratar usuarios inactivos como credenciales inválidas para evitar enumeración.
+                    throw new ExcepcionesLogIn(ResultadosLogIn.InvalidUsername);
                 }
 
                 // Si cuenta bloqueada → lanzar excepción específica para redirigir a preguntas de seguridad
@@ -69,21 +79,20 @@ namespace BLL
                     throw new ExcepcionesLogIn(ResultadosLogIn.AccountLocked);
                 }
 
-                string contrasenaHash = criptoManager._686DPGetSHA256(contrasena);
+                string contrasenaHash = criptoManager.GenerarHashSHA256(contrasena);
                 string contrasenaBD = mppUsuario.ObtenerContrasena(usuario);
 
                 if (contrasenaHash == contrasenaBD)
                 {
-                    ok = true;
                     // Login exitoso: reestablecer intentos
                     ReestablecerIntentos(usuario);
-                    return ok;
+                    return true;
                 }
                 else
                 {
-                    // Contraseña incorrecta: registrar intento fallido
+                    // Contraseña incorrecta: registrar intento fallido y lanzar excepción
                     RegistrarIntentoFallido(usuario);
-                    return ok;
+                    throw new ExcepcionesLogIn(ResultadosLogIn.InvalidPassword);
                 }
             }
             catch (ExcepcionesLogIn)
@@ -104,10 +113,15 @@ namespace BLL
 
                 // Verificar si se bloquea por llegar a 3 intentos
                 int intentos = mppUsuario.ObtenerIntentos(usuario);
-                if (intentos >= 3)
+                if (intentos >= MAX_INTENTOS_LOGIN)
                 {
                     bllEvento.RegistrarBloqueoUsuario(usuario);
+                    throw new ExcepcionesLogIn(ResultadosLogIn.AccountLocked);
                 }
+            }
+            catch (ExcepcionesLogIn)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -120,7 +134,7 @@ namespace BLL
             try
             {
                 int intentos = mppUsuario.ObtenerIntentos(usuario);
-                return 3 - intentos;
+                return MAX_INTENTOS_LOGIN - intentos;
             }
             catch (Exception ex)
             {
@@ -132,20 +146,23 @@ namespace BLL
         {
             try
             {
-                // Verificar si estaba bloqueado antes de reestablecer
-                bool estabaBloqueado = mppUsuario.UsuarioEstaBloqueado(usuario);
-
                 mppUsuario.ReestablecerIntentos(usuario);
-
-                // Registrar evento de desbloqueo si corresponde
-                if (estabaBloqueado)
-                {
-                    bllEvento.RegistrarDesbloqueoUsuario(usuario);
-                }
             }
             catch (Exception ex)
             {
                 throw new Exception("Error al reestablecer los intentos: " + ex.Message, ex);
+            }
+        }
+
+        public DateTime? ObtenerFechaNacimiento(string usuario)
+        {
+            try
+            {
+                return mppUsuario.ObtenerFechaNacimiento(usuario);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener la fecha de nacimiento: " + ex.Message, ex);
             }
         }
 
@@ -197,6 +214,18 @@ namespace BLL
             }
         }
 
+        public bool UsuarioExiste(string usuario)
+        {
+            try
+            {
+                return mppUsuario.UsuarioExiste(usuario);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public void ValidarRequisitosContrasena(string contrasena)
         {
             if (string.IsNullOrEmpty(contrasena))
@@ -204,9 +233,9 @@ namespace BLL
                 throw new Exception("La contraseña no puede estar vacía");
             }
 
-            if (contrasena.Length < 6)
+            if (contrasena.Length < CONTRASENA_MIN_LENGTH)
             {
-                throw new Exception("La contraseña debe tener al menos 6 caracteres");
+                throw new Exception($"La contraseña debe tener al menos {CONTRASENA_MIN_LENGTH} caracteres");
             }
 
             bool tieneMayuscula = false;
@@ -241,7 +270,7 @@ namespace BLL
             try
             {
                 ValidarRequisitosContrasena(nuevaContrasena);
-                string nuevaContrasenaHash = criptoManager._686DPGetSHA256(nuevaContrasena);
+                string nuevaContrasenaHash = criptoManager.GenerarHashSHA256(nuevaContrasena);
 
                 if (mppUsuario.ContrasenaFueUtilizada(usuario, nuevaContrasenaHash))
                 {
@@ -257,6 +286,28 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception("Error al cambiar contraseña: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Marca el primer login como finalizado para el usuario.
+        /// Se llama después de que el usuario configuró sus preguntas de seguridad.
+        /// </summary>
+        public void FinalizarPrimerLogin(string usuario)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(usuario))
+                {
+                    throw new ArgumentException("El usuario no puede ser nulo o vacío");
+                }
+
+                mppUsuario.FinalizarPrimerLogin(usuario);
+                bllEvento.RegistrarEvento("configuracion_preguntas_seguridad", usuario, "Preguntas de seguridad configuradas", 1, "Autenticación");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al finalizar el primer login: " + ex.Message, ex);
             }
         }
 
@@ -310,7 +361,7 @@ namespace BLL
                     throw new Exception("Las contraseñas no coinciden");
                 }
 
-                string contrasenaHash = criptoManager._686DPGetSHA256(contrasena);
+                string contrasenaHash = criptoManager.GenerarHashSHA256(contrasena);
 
                 // Determinar tipo y datos personales según el rol
                 string tipo = "";
@@ -323,12 +374,16 @@ namespace BLL
                     {
                         throw new Exception("Para crear un usuario de tipo Entrenador, se deben proporcionar los datos del entrenador");
                     }
+                    if (!fechaNacimiento.HasValue)
+                    {
+                        throw new Exception("Para crear un usuario de tipo Entrenador, se debe proporcionar la fecha de nacimiento");
+                    }
                     tipo = "Entrenador";
                     dni = datosEntrenador.DNI;
                     fechaNac = fechaNacimiento;
 
-                    // Crear usuario primero con datos personales
-                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "");
+                    // Crear usuario primero con datos personales; primerLogin = 1 fuerza cambio de contraseña.
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ENTRENADORES (solo datos específicos del rol)
@@ -342,16 +397,18 @@ namespace BLL
                     {
                         throw new Exception("Para crear un usuario de tipo Cliente, se debe proporcionar el DNI del alumno");
                     }
+                    if (!fechaNacimiento.HasValue)
+                    {
+                        throw new Exception("Para crear un usuario de tipo Cliente, se debe proporcionar la fecha de nacimiento");
+                    }
 
                     // En esquema normalizado: primero creamos USUARIOS, luego ALUMNOS
                     tipo = "Cliente";
                     dni = dniAlumno.Value;
+                    fechaNac = fechaNacimiento;
 
-                    // Verificar que no exista ya un usuario con este DNI
-                    // (se podría agregar un método en MPP para esto)
-
-                    // Crear usuario con datos personales
-                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "");
+                    // Crear usuario con datos personales; primerLogin = 1 fuerza cambio de contraseña.
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ALUMNOS (solo datos específicos del rol)
@@ -367,11 +424,26 @@ namespace BLL
                     fechaNac = fechaNacimiento ?? DateTime.Parse("1990-01-01");
                     telefono = telefono ?? "0000-0000";
 
-                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "");
+                    // primerLogin = 1 fuerza cambio de contraseña en el primer login.
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
                 }
 
+                // Guardar contraseña inicial en el historial para evitar reutilización.
+                try
+                {
+                    mppUsuario.GuardarContrasenaEnHistorial(usuario, contrasenaHash);
+                }
+                catch
+                {
+                    // No impedir la creación del usuario si falla el historial.
+                }
+
                 bllEvento.RegistrarAltaUsuario(usuario, rol);
+
+                // Crear pregunta de seguridad por defecto basada en fecha de nacimiento.
+                // Si falla, se propaga el error para que el operador lo corrija; el usuario ya fue creado.
+                bllPreguntaSeguridad.CrearPreguntaSeguridadPorDefecto(usuario);
             }
             catch (Exception ex)
             {
@@ -401,7 +473,7 @@ namespace BLL
                 }
 
                 ValidarRequisitosContrasena(dto.Contrasena);
-                string contrasenaHash = criptoManager._686DPGetSHA256(dto.Contrasena);
+                string contrasenaHash = criptoManager.GenerarHashSHA256(dto.Contrasena);
 
                 // Determinar tipo y datos personales según el rol
                 string tipo = "";
@@ -420,8 +492,8 @@ namespace BLL
                     apellido = dto.EntrenadorApellido;
                     fechaNacimiento = dto.EntrenadorFechaNacimiento;
 
-                    // Crear usuario primero con datos personales
-                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "");
+                    // Crear usuario primero con datos personales; primerLogin = 1 fuerza cambio de contraseña.
+                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ENTRENADORES
@@ -432,9 +504,14 @@ namespace BLL
                 {
                     tipo = "Cliente";
                     dni = dto.AlumnoDNI.Value;
+                    nombre = dto.AlumnoNombre;
+                    apellido = dto.AlumnoApellido;
+                    telefono = dto.AlumnoTelefono;
+                    email = dto.AlumnoEmail;
+                    fechaNacimiento = dto.AlumnoFechaNacimiento;
 
-                    // Crear usuario primero
-                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "");
+                    // Crear usuario primero; primerLogin = 1 fuerza cambio de contraseña.
+                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ALUMNOS
@@ -449,11 +526,26 @@ namespace BLL
                     apellido = dto.Usuario;
                     fechaNacimiento = DateTime.Parse("1990-01-01");
 
-                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "");
+                    // primerLogin = 1 fuerza cambio de contraseña en el primer login.
+                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
                 }
 
+                // Guardar contraseña inicial en el historial para evitar reutilización.
+                try
+                {
+                    mppUsuario.GuardarContrasenaEnHistorial(dto.Usuario, contrasenaHash);
+                }
+                catch
+                {
+                    // No impedir la creación del usuario si falla el historial.
+                }
+
                 bllEvento.RegistrarAltaUsuario(dto.Usuario, dto.Rol);
+
+                // Crear pregunta de seguridad por defecto basada en fecha de nacimiento.
+                // Si falla, se propaga el error para que el operador lo corrija; el usuario ya fue creado.
+                bllPreguntaSeguridad.CrearPreguntaSeguridadPorDefecto(dto.Usuario);
             }
             catch (ArgumentException ex)
             {
@@ -465,41 +557,39 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Genera una contraseña aleatoria segura que cumple con los requisitos del modelo.
+        /// Longitud mínima 10 caracteres, incluye mayúscula, minúscula, número y carácter especial.
+        /// </summary>
+        public string GenerarContrasenaSegura()
+        {
+            const string mayusculas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string minusculas = "abcdefghijklmnopqrstuvwxyz";
+            const string numeros = "0123456789";
+            const string especiales = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+            const string todos = mayusculas + minusculas + numeros + especiales;
+
+            var random = new Random();
+            var caracteres = new List<char>
+            {
+                mayusculas[random.Next(mayusculas.Length)],
+                minusculas[random.Next(minusculas.Length)],
+                numeros[random.Next(numeros.Length)],
+                especiales[random.Next(especiales.Length)]
+            };
+
+            while (caracteres.Count < 12)
+            {
+                caracteres.Add(todos[random.Next(todos.Length)]);
+            }
+
+            // Mezclar para que no siempre aparezcan en el mismo orden.
+            return new string(caracteres.OrderBy(c => random.Next()).ToArray());
+        }
+
         private string GenerarContrasenaAutomatica(UsuarioCrearDTO dto)
         {
-            string baseContrasena = string.Empty;
-
-            if (dto.Rol == 3 && !string.IsNullOrEmpty(dto.EntrenadorApellido) && dto.EntrenadorDNI.HasValue)
-            {
-                baseContrasena = $"{dto.EntrenadorApellido}{dto.EntrenadorDNI.Value}";
-            }
-            else if (dto.Rol == 4 && dto.AlumnoDNI.HasValue)
-            {
-                // En esquema normalizado, el apellido ya no está en Alumno
-                // Usar el DNI directamente
-                baseContrasena = $"Alumno{dto.AlumnoDNI.Value}";
-            }
-            else
-            {
-                baseContrasena = $"{dto.Usuario}123";
-            }
-
-            if (baseContrasena.Length < 6)
-            {
-                baseContrasena += "2024";
-            }
-
-            if (!System.Text.RegularExpressions.Regex.IsMatch(baseContrasena, @"[A-Z]"))
-            {
-                baseContrasena = char.ToUpper(baseContrasena[0]) + baseContrasena.Substring(1);
-            }
-
-            if (!System.Text.RegularExpressions.Regex.IsMatch(baseContrasena, @"[^a-zA-Z0-9]"))
-            {
-                baseContrasena += "!";
-            }
-
-            return baseContrasena;
+            return GenerarContrasenaSegura();
         }
 
         public List<BE.UsuarioGestion> ListarUsuariosClientesDisponibles()

@@ -45,10 +45,12 @@
     <Compile Include="Entrenador.cs" />
     <Compile Include="Evento.cs" />
     <Compile Include="PrecioModalidad.cs" />
+    <Compile Include="PreguntaSeguridad.cs" />
     <Compile Include="Usuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UsuarioCrearDTO.cs" />
     <Compile Include="UsuarioGestion.cs" />
+    <Compile Include="ConstantesSeguridad.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

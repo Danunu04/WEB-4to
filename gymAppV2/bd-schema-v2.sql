@@ -90,26 +90,38 @@ GO
 -- ============================================================================
 -- TABLA PRINCIPAL: USUARIOS (con datos personales centralizados)
 -- ============================================================================
+-- NOTA DE SEGURIDAD:
+--   - [contra] almacena el hash SHA256 de la contraseña (nunca texto plano).
+--   - [activo] indica si el usuario puede iniciar sesión.
+--   - [bloqueado] y [intentos] implementan el bloqueo por intentos fallidos.
+--   - [rol] define el perfil del sistema (1 Admin, 2 Recepcionista,
+--     3 Entrenador, 4 Cliente).
+--   - [tipo] clasifica al usuario para la lógica de negocio
+--     (Empleado, Entrenador, Cliente, Familiar).
+--   - [dvv] y [dvh] son valores de verificación de integridad (DVV/DVH).
+-- ============================================================================
 
 CREATE TABLE [dbo].[USUARIOS](
     [usr]               VARCHAR(50)     NOT NULL,
-    [contra]            VARCHAR(255)    NOT NULL,
-    [activo]            BIT             NOT NULL,
+    [contra]            VARCHAR(255)    NOT NULL,        -- hash SHA256
+    [activo]            BIT             NOT NULL DEFAULT 1,
     [bloqueado]         BIT             NOT NULL DEFAULT 0,
     [intentos]          INT             NOT NULL DEFAULT 0,
-    [tipo]              VARCHAR(20)     NOT NULL,  -- 'Empleado', 'Entrenador', 'Cliente'
+    [tipo]              VARCHAR(50)     NOT NULL,        -- 'Empleado', 'Entrenador', 'Cliente', 'Familiar'
     [dni]               INT             NOT NULL,
-    [nombre]            VARCHAR(100)    NOT NULL,
-    [apellido]          VARCHAR(100)    NOT NULL,
-    [telefono]          VARCHAR(20)     NULL,
-    [email]             VARCHAR(255)    NULL,
-    [fechaNacimiento]   DATE            NULL,
-    [rol]               INT             NOT NULL,  -- 1=Admin, 2=Recepcionista, 3=Entrenador, 4=Cliente
+    [nombre]            VARCHAR(500)    NOT NULL,        -- ciphertext AES-256 (Base64 + IV)
+    [apellido]          VARCHAR(500)    NOT NULL,        -- ciphertext AES-256 (Base64 + IV)
+    [telefono]          VARCHAR(500)    NULL,           -- ciphertext AES-256 (Base64 + IV)
+    [email]             VARCHAR(500)    NULL,           -- ciphertext AES-256 (Base64 + IV)
+    [fechaNacimiento]   VARCHAR(100)    NULL,           -- fecha encriptada como yyyy-MM-dd en Base64 + IV
+    [rol]               INT             NOT NULL DEFAULT 4,  -- 1=Admin, 2=Recepcionista, 3=Entrenador, 4=Cliente
+    [primerLogin]       BIT             NOT NULL DEFAULT 1,  -- 1=debe cambiar contraseña en primer login
     [dvv]               VARCHAR(50)     NOT NULL,
     [dvh]               VARCHAR(50)     NOT NULL,
     CONSTRAINT [PK_USUARIOS] PRIMARY KEY CLUSTERED ([usr] ASC),
     CONSTRAINT [UK_USUARIOS_DNI] UNIQUE ([dni] ASC),
-    CONSTRAINT [CK_USUARIOS_Tipo] CHECK ([tipo] IN ('Empleado', 'Entrenador', 'Cliente'))
+    CONSTRAINT [CK_USUARIOS_Tipo] CHECK ([tipo] IN ('Empleado', 'Entrenador', 'Cliente', 'Familiar')),
+    CONSTRAINT [CK_USUARIOS_Rol] CHECK ([rol] IN (1, 2, 3, 4))
 ) ON [PRIMARY]
 GO
 
@@ -152,18 +164,68 @@ CREATE TABLE [dbo].[ENTRENADORES](
 GO
 
 -- ============================================================================
+-- TABLA: USUARIO_Intentos (OBSOLETA - mantenida solo para rollback de migración)
+-- ============================================================================
+-- NOTA DE SEGURIDAD:
+--   Esta tabla quedó obsoleta tras centralizar el control de intentos fallidos
+--   en USUARIOS.intentos y USUARIOS.bloqueado. Se conserva vacía para permitir
+--   un rollback limpio de bd-migracion-v2.sql. NO insertar datos nuevos.
+
+CREATE TABLE [dbo].[USUARIO_Intentos](
+    [usr]           VARCHAR(50)     NOT NULL,
+    [intentos]      INT             NOT NULL DEFAULT 0,
+    [dvv]           VARCHAR(50)     NOT NULL,
+    [dvh]           VARCHAR(50)     NOT NULL,
+    CONSTRAINT [PK_USUARIO_Intentos] PRIMARY KEY CLUSTERED ([usr] ASC),
+    CONSTRAINT [FK_UsuarioIntentos_Usuario] FOREIGN KEY ([usr])
+        REFERENCES [dbo].[USUARIOS] ([usr])
+) ON [PRIMARY]
+GO
+
+-- ============================================================================
 -- TABLA: USUARIO_Contras (historial de contraseñas)
 -- ============================================================================
+-- NOTA DE SEGURIDAD:
+--   Guarda los hashes SHA256 de las contraseñas históricas de cada usuario.
+--   Se utiliza para evitar que el usuario reutilice contraseñas recientes.
+--   La PK compuesta (usr, contra) impide duplicados.
 
 CREATE TABLE [dbo].[USUARIO_Contras](
     [usr]       VARCHAR(50)     NOT NULL,
-    [contra]    VARCHAR(255)    NOT NULL,
+    [contra]    VARCHAR(255)    NOT NULL,    -- hash SHA256 de una contraseña anterior
     [dvv]       VARCHAR(50)     NOT NULL,
     [dvh]       VARCHAR(50)     NOT NULL,
     CONSTRAINT [PK_USUARIO_Contras] PRIMARY KEY CLUSTERED ([usr] ASC, [contra] ASC),
     CONSTRAINT [FK_UsuarioContras_Usuario] FOREIGN KEY ([usr])
         REFERENCES [dbo].[USUARIOS] ([usr])
 ) ON [PRIMARY]
+GO
+
+-- ============================================================================
+-- TABLA: PreguntasSeguridad (recuperación de contraseña)
+-- ============================================================================
+-- NOTA DE SEGURIDAD:
+--   Almacena preguntas y respuestas de seguridad asociadas a cada usuario.
+--   Permite verificar la identidad del usuario cuando solicita recuperar o
+--   cambiar su contraseña sin contacto directo con un administrador.
+--   Se recomienda no almacenar la respuesta en texto plano si se amplía
+--   el modelo; por ahora se guarda tal cual la ingresa el usuario.
+
+CREATE TABLE [dbo].[PreguntasSeguridad](
+    [codPregunta]   INT             IDENTITY(1,1) NOT NULL,
+    [usr]           VARCHAR(50)     NOT NULL,
+    [pregunta]      VARCHAR(500)    NOT NULL,
+    [respuesta]     VARCHAR(500)    NOT NULL,
+    [dvv]           VARCHAR(50)     NOT NULL,
+    [dvh]           VARCHAR(50)     NOT NULL,
+    CONSTRAINT [PK_PreguntasSeguridad] PRIMARY KEY CLUSTERED ([codPregunta] ASC),
+    CONSTRAINT [FK_PreguntasSeguridad_Usuario] FOREIGN KEY ([usr])
+        REFERENCES [dbo].[USUARIOS] ([usr])
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_PreguntasSeguridad_usr]
+    ON [dbo].[PreguntasSeguridad] ([usr] ASC)
 GO
 
 -- ============================================================================

@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using BE;
 using BLL;
+using gymAppV2;
 using SERVICIOS;
 
 namespace gymAppV2.Usuarios
 {
-    public partial class UsuariosModulo : System.Web.UI.Page
+    public partial class UsuariosModulo : BasePage
     {
         private string SelectedUsuario
         {
@@ -35,6 +37,8 @@ namespace gymAppV2.Usuarios
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            VerificarAcceso("GestionUsuarios");
+
             bllUsuario = new BLLUsuario();
 
             if (!IsPostBack)
@@ -141,26 +145,76 @@ namespace gymAppV2.Usuarios
             footerText.InnerText = $"Mostrando {total} de {total} usuarios";
         }
 
+        /// <summary>
+        /// Escapa un texto para usarlo de forma segura dentro de una cadena JavaScript entre comillas simples.
+        /// </summary>
+        private string EscaparParaJs(string mensaje)
+        {
+            if (string.IsNullOrEmpty(mensaje))
+            {
+                return string.Empty;
+            }
+
+            return mensaje
+                .Replace("\\", "\\\\")
+                .Replace("'", "\\'")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n");
+        }
+
+        private void MostrarMensaje(string mensaje, string tipo, string cssClass)
+        {
+            // Toast (si la página provee la función showToast)
+            string script = $"if(typeof window.showToast==='function'){{window.showToast('{EscaparParaJs(mensaje)}','{EscaparParaJs(tipo)}');}}";
+            ClientScript.RegisterStartupScript(this.GetType(), Guid.NewGuid().ToString(), script, true);
+
+            // Fallback visual dentro del formulario
+            if (lblMensajeForm != null)
+            {
+                lblMensajeForm.Text = mensaje;
+                lblMensajeForm.CssClass = cssClass;
+                lblMensajeForm.Visible = true;
+            }
+        }
+
         private void MostrarError(string mensaje)
         {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
+            MostrarMensaje(mensaje, "error", "mensaje-error");
         }
 
         private void MostrarExito(string mensaje)
         {
-            // Limpiar emojis si existen
-            string mensajeLimpio = mensaje.Replace("✅ ", "").Replace("❌ ", "");
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensajeLimpio)}', 'success');", true);
+            MostrarMensaje(mensaje, "success", "mensaje-exito");
         }
 
         private void MostrarAdvertencia(string mensaje)
         {
-            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
+            MostrarMensaje(mensaje, "warning", "mensaje-advertencia");
         }
 
         private void MostrarInfo(string mensaje)
         {
-            ScriptManager.RegisterStartupScript(this, GetType(), "info", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'info');", true);
+            MostrarMensaje(mensaje, "info", "mensaje-info");
+        }
+
+        /// <summary>
+        /// Recolecta los mensajes de validación de ASP.NET que no pasaron y los muestra en el label fallback.
+        /// </summary>
+        private void MostrarErroresValidacion()
+        {
+            var sb = new StringBuilder();
+            foreach (IValidator validator in Validators)
+            {
+                if (!validator.IsValid)
+                {
+                    sb.AppendLine("• " + validator.ErrorMessage);
+                }
+            }
+
+            if (sb.Length > 0)
+            {
+                MostrarError(sb.ToString().Trim());
+            }
         }
 
         // ==================== EVENTOS DE FILTROS ====================
@@ -350,90 +404,93 @@ namespace gymAppV2.Usuarios
 
         protected void btnGuardar_Click(object sender, EventArgs e)
         {
-            if(IsValid)
+            if (!IsValid)
             {
-                string nombre = txtNombre.Text;
-                string apellido = txtApellido.Text;
-                if(!int.TryParse(txtDNI.Text, out int dni))
-                {
-                    MostrarError("El DNI debe ser un número válido");
-                    return;
-                }
-                if(!int.TryParse(txtTelefono.Text, out int telefono))
-                {
-                    MostrarError("El Teléfono debe ser un número válido");
-                    return;
-                }
-                string usuario = txtUsuario.Text;
-                string contrasenia = string.IsNullOrEmpty(txtContrasena.Text) ? txtApellido.Text + txtDNI.Text : txtContrasena.Text;
-                string email = txtEmail.Text;
-                DateTime? fechaNacimiento = null;
-                bool activo = ddlEstadoForm.SelectedValue == "1";
-
-                // Validar fecha de nacimiento para Entrenador o Cliente
-                string rolSeleccionado = ddlRolForm.SelectedValue;
-                if ((rolSeleccionado == "3" || rolSeleccionado == "4") && string.IsNullOrEmpty(txtFechaNacimiento.Text))
-                {
-                    MostrarError("La fecha de nacimiento es obligatoria");
-                    return;
-                }
-
-                if (!string.IsNullOrEmpty(txtFechaNacimiento.Text))
-                {
-                    fechaNacimiento = Convert.ToDateTime(txtFechaNacimiento.Text);
-                }
-
-                try
-                {
-                    bool esModificacion = !string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == "Modificar usuario";
-
-                    if (esModificacion)
-                    {
-                        // Modificar usuario existente
-                        int rol = int.Parse(ddlRolForm.SelectedValue);
-                        bllUsuario.ModificarUsuario(SelectedUsuario, usuario, nombre, apellido,
-                            telefono.ToString(), email, fechaNacimiento, rol, activo, dni);
-                        MostrarExito("Usuario modificado correctamente");
-                    }
-                    else
-                    {
-                        // Crear nuevo usuario
-                        switch (ddlRolForm.SelectedValue)
-                        {
-                            case "1": // Administrador
-                                bllUsuario.CrearUsuario(usuario, contrasenia, 1, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
-                                MostrarExito("Administrador creado correctamente");
-                                break;
-                            case "2": // Recepcionista
-                                bllUsuario.CrearUsuario(usuario, contrasenia, 2, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
-                                MostrarExito("Recepcionista creado correctamente");
-                                break;
-                            case "3": // Entrenador
-                                Entrenador ent = new Entrenador(dni, 0, activo, "", "", usuario);
-                                bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono.ToString(), email, fechaNacimiento, ent, null, null, activo);
-                                MostrarExito("Entrenador creado correctamente");
-                                break;
-                            case "4": // Cliente
-                                // En esquema normalizado: se crea USUARIOS + ALUMNOS con el mismo DNI
-                                bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, dni, null, activo);
-                                MostrarExito("Cliente creado correctamente");
-                                break;
-                            default:
-                                MostrarError("Seleccione un rol válido");
-                                return;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MostrarError("Error al guardar usuario: " + ex.Message);
-                    return;
-                }
-
-                CerrarFormulario();
-                CargarUsuarios();
-                ActualizarEstadisticas();
+                MostrarErroresValidacion();
+                return;
             }
+
+            string nombre = txtNombre.Text;
+            string apellido = txtApellido.Text;
+            if(!int.TryParse(txtDNI.Text, out int dni))
+            {
+                MostrarError("El DNI debe ser un número válido");
+                return;
+            }
+            if(!int.TryParse(txtTelefono.Text, out int telefono))
+            {
+                MostrarError("El Teléfono debe ser un número válido");
+                return;
+            }
+            string usuario = txtUsuario.Text;
+            string contrasenia = string.IsNullOrEmpty(txtContrasena.Text) ? bllUsuario.GenerarContrasenaSegura() : txtContrasena.Text;
+            string email = txtEmail.Text;
+            DateTime? fechaNacimiento = null;
+            bool activo = ddlEstadoForm.SelectedValue == "1";
+
+            // Validar fecha de nacimiento para Entrenador o Cliente
+            string rolSeleccionado = ddlRolForm.SelectedValue;
+            if ((rolSeleccionado == "3" || rolSeleccionado == "4") && string.IsNullOrEmpty(txtFechaNacimiento.Text))
+            {
+                MostrarError("La fecha de nacimiento es obligatoria");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(txtFechaNacimiento.Text))
+            {
+                fechaNacimiento = Convert.ToDateTime(txtFechaNacimiento.Text);
+            }
+
+            try
+            {
+                bool esModificacion = !string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == "Modificar usuario";
+
+                if (esModificacion)
+                {
+                    // Modificar usuario existente
+                    int rol = int.Parse(ddlRolForm.SelectedValue);
+                    bllUsuario.ModificarUsuario(SelectedUsuario, usuario, nombre, apellido,
+                        telefono.ToString(), email, fechaNacimiento, rol, activo, dni);
+                    MostrarExito("Usuario modificado correctamente");
+                }
+                else
+                {
+                    // Crear nuevo usuario
+                    switch (ddlRolForm.SelectedValue)
+                    {
+                        case "1": // Administrador
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 1, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
+                            MostrarExito("Administrador creado correctamente");
+                            break;
+                        case "2": // Recepcionista
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 2, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
+                            MostrarExito("Recepcionista creado correctamente");
+                            break;
+                        case "3": // Entrenador
+                            Entrenador ent = new Entrenador(dni, 0, activo, "", "", usuario);
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono.ToString(), email, fechaNacimiento, ent, null, null, activo);
+                            MostrarExito("Entrenador creado correctamente");
+                            break;
+                        case "4": // Cliente
+                            // En esquema normalizado: se crea USUARIOS + ALUMNOS con el mismo DNI
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, dni, null, activo);
+                            MostrarExito("Cliente creado correctamente");
+                            break;
+                        default:
+                            MostrarError("Seleccione un rol válido");
+                            return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al guardar usuario: " + ex.Message);
+                return;
+            }
+
+            CerrarFormulario();
+            CargarUsuarios();
+            ActualizarEstadisticas();
         }
 
         protected void btnCancelarForm_Click(object sender, EventArgs e)
@@ -474,6 +531,12 @@ namespace gymAppV2.Usuarios
             ddlEstadoForm.SelectedValue = "1";
             EntField.Visible = false;
             clienteFields.Visible = false;
+
+            if (lblMensajeForm != null)
+            {
+                lblMensajeForm.Text = string.Empty;
+                lblMensajeForm.Visible = false;
+            }
         }
 
         private void CargarUsuarioEnFormulario(BE.UsuarioGestion usuario)

@@ -4,14 +4,15 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using gymAppV2;
 
 namespace gymAppV2.Actividades
 {
-    public partial class actividades : System.Web.UI.Page
+    public partial class actividades : BasePage
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            VerificarAcceso("ActividadesCalendario");
         }
 
         private void MostrarError(string mensaje)

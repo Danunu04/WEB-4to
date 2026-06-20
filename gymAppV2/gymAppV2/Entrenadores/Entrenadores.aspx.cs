@@ -4,14 +4,15 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using gymAppV2;
 
 namespace gymAppV2.Entrenadores
 {
-    public partial class Entrenadores : System.Web.UI.Page
+    public partial class Entrenadores : BasePage
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            VerificarAcceso("GestionEntrenadores");
         }
 
         private void MostrarError(string mensaje)

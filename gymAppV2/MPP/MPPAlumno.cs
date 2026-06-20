@@ -305,6 +305,35 @@ namespace MPP
             }
         }
 
+        public int CantidadAlumnosAsociados(string usuario)
+        {
+            try
+            {
+                string consulta = @"
+                    SELECT COUNT(*)
+                    FROM [GymApp].[dbo].[Alumnos]
+                    WHERE usr = @Usuario";
+
+                ArrayList parametros = new ArrayList
+                {
+                    new SqlParameter("@Usuario", usuario)
+                };
+
+                object resultado = dal._686DPEscalar(consulta, parametros);
+
+                if (resultado != null && resultado != DBNull.Value)
+                {
+                    return Convert.ToInt32(resultado);
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener la cantidad de alumnos asociados: " + ex.Message, ex);
+            }
+        }
+
         public void AsociarUsuario(int dni, string usuario)
         {
             try

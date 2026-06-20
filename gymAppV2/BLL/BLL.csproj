@@ -46,8 +46,10 @@
     <Compile Include="BLLEntrenador.cs" />
     <Compile Include="BLLEvento.cs" />
     <Compile Include="BLLPrecioModalidad.cs" />
+    <Compile Include="BLLPreguntaSeguridad.cs" />
     <Compile Include="BLLRol.cs" />
     <Compile Include="BLLUsuario.cs" />
+    <Compile Include="BLLCriptoMigracion.cs" />
     <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -21,8 +21,12 @@ namespace BLL
             try
             {
                 var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarEvento(tipo, usr, accion, criticidad);
+                if (usuario == null)
+                {
+                    // No registrar evento si no hay usuario válido
+                    return;
+                }
+                bllEvento.RegistrarEvento(tipo, usuario.USUARIO_Usuario, accion, criticidad);
             }
             catch
             {
@@ -42,8 +46,10 @@ namespace BLL
                 mppEntrenador.CrearEntrenador(entrenador);
 
                 var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarAltaEntrenador(usr, entrenador.DNI);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarAltaEntrenador(usuario.USUARIO_Usuario, entrenador.DNI);
+                }
             }
             catch (Exception ex)
             {
@@ -70,8 +76,10 @@ namespace BLL
                 mppEntrenador.ActualizarEntrenador(entrenador);
 
                 var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarModificacionEntrenador(usr, entrenador.DNI);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarModificacionEntrenador(usuario.USUARIO_Usuario, entrenador.DNI);
+                }
             }
             catch (Exception ex)
             {
@@ -86,8 +94,10 @@ namespace BLL
                 mppEntrenador.EliminarEntrenador(dni);
 
                 var usuario = System.Web.HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                string usr = usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarBajaEntrenador(usr, dni);
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarBajaEntrenador(usuario.USUARIO_Usuario, dni);
+                }
             }
             catch (Exception ex)
             {

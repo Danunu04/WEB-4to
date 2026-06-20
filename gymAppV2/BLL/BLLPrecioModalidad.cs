@@ -113,7 +113,7 @@ namespace BLL
                 );
 
                 // Disparar notificación a todos los usuarios que no sean Entrenadores (rol != 3)
-                NotificarCambioDePrecio(id, precioAnterior, nuevoPrecio);
+                NotificarCambioDePrecio(id, precioAnterior, nuevoPrecio, usuarioModificador);
             }
             catch (Exception ex)
             {
@@ -125,8 +125,15 @@ namespace BLL
         /// Notifica el cambio de precio a todos los usuarios que no sean Entrenadores
         /// Según LogicaNegocio.txt: alerta interna + email
         /// </summary>
-        private void NotificarCambioDePrecio(int id, decimal precioAnterior, decimal precioNuevo)
+        private void NotificarCambioDePrecio(int id, decimal precioAnterior, decimal precioNuevo, string usuarioModificador = null)
         {
+            // Si no hay usuario válido, no registrar eventos de notificación
+            // (las notificaciones son eventos secundarios, el evento principal ya se registró)
+            if (string.IsNullOrEmpty(usuarioModificador))
+            {
+                return;
+            }
+
             try
             {
                 // Obtener todos los usuarios excepto Entrenadores (rol != 3)
@@ -142,7 +149,7 @@ namespace BLL
                     // Registrar evento individual de notificación (criticidad 4 = Baja)
                     bllEvento.RegistrarEvento(
                         "notificacion_cambio_precio",
-                        "sistema",
+                        usuarioModificador,
                         $"Notificación enviada a {usuario.USUARIO_Usuario}: {detalleNotificacion}",
                         4
                     );
@@ -155,7 +162,7 @@ namespace BLL
                 // Registrar evento consolidado (criticidad 4 = Baja)
                 bllEvento.RegistrarEvento(
                     "notificacion_masiva_precio",
-                    "sistema",
+                    usuarioModificador,
                     $"Notificación de cambio de precio enviada a {usuarios.Count} usuarios no-entrenadores",
                     4
                 );
@@ -163,12 +170,16 @@ namespace BLL
             catch (Exception ex)
             {
                 // No impedir la modificación si falla la notificación (criticidad 4 = Baja)
-                bllEvento.RegistrarEvento(
-                    "error_notificacion_precio",
-                    "sistema",
-                    $"Error al notificar cambio de precio: {ex.Message}",
-                    4
-                );
+                // Solo registrar si hay usuario válido
+                if (!string.IsNullOrEmpty(usuarioModificador))
+                {
+                    bllEvento.RegistrarEvento(
+                        "error_notificacion_precio",
+                        usuarioModificador,
+                        $"Error al notificar cambio de precio: {ex.Message}",
+                        4
+                    );
+                }
             }
         }
 

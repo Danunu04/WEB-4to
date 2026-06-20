@@ -285,17 +285,21 @@
 
                     <div id="passwordRow" runat="server" style="display:flex;flex-direction:column;gap:0.375rem;margin-top:1rem;">
                         <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Contraseña (opcional - se genera automáticamente)</label>
-                        <asp:TextBox ID="txtContrasena" runat="server" placeholder="Se generará automáticamente: Apellido + DNI" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
+                        <asp:TextBox ID="txtContrasena" runat="server" placeholder="Se generará automáticamente una contraseña segura" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
                         <small style="color:var(--text-muted);font-size:0.75rem;">
-                            <i class="fa-solid fa-info-circle"></i> Si se deja vacío, se generará automáticamente: Apellido + DNI
+                            <i class="fa-solid fa-info-circle"></i> Si se deja vacío, se generará una contraseña segura de 12 caracteres.
                         </small>
                     </div>
 
+                    <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;">
+                        <asp:Label ID="lblMensajeForm" runat="server" Visible="false" style="display:block;padding:0.75rem;border-radius:0.375rem;font-size:0.875rem;"></asp:Label>
+                    </div>
+
                     <div style="display:flex;gap:0.75rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border-color);">
-                        <button id="btnGuardar" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnGuardar_Click">
+                        <button id="btnGuardar" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnGuardar_Click" type="button">
                             <i class="fa-solid fa-floppy-disk"></i> Guardar
                         </button>
-                        <button id="btnCancelarForm" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnCancelarForm_Click">
+                        <button id="btnCancelarForm" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnCancelarForm_Click" type="button">
                             <i class="fa-solid fa-xmark"></i> Cancelar
                         </button>
                     </div>

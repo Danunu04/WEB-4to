@@ -20,15 +20,7 @@ namespace DAL
         {
             try
             {
-                //string server = Environment.GetEnvironmentVariable("DB_SERVER");
-                //string database = Environment.GetEnvironmentVariable("DB_DATABASE");
-                //string user = Environment.GetEnvironmentVariable("DB_USER");
-                //string password = Environment.GetEnvironmentVariable("DB_PASSWORD");
-                //string auth = Environment.GetEnvironmentVariable("DB_AUTH");
-
-                //cadenaConexion = ConstruirConnectionString(server, database, user, password, auth);
-
-                cadenaConexion = "Data Source=.;Initial Catalog=GymApp;Integrated Security=True";
+                cadenaConexion = "Data Source=.;Network Library=dbnmpntw;Initial Catalog=GymApp;Integrated Security=True";
 
                 conn = new SqlConnection(cadenaConexion);
             }

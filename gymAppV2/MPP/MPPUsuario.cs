@@ -5,7 +5,6 @@ using System.Data;
 using System.Data.SqlClient;
 using BE;
 using DAL;
-using SERVICIOS;
 using static BE.ConstantesSeguridad;
 
 namespace MPP
@@ -13,66 +12,10 @@ namespace MPP
     public class MPPUsuario
     {
         private DalGeneral dal;
-        private CriptoManager criptoManager;
 
         public MPPUsuario()
         {
             dal = new DalGeneral();
-            criptoManager = new CriptoManager();
-        }
-
-        /// <summary>
-        /// Encripta un campo personal con AES-256 si tiene valor; de lo contrario devuelve null.
-        /// </summary>
-        private string EncriptarCampoPersonal(string valor)
-        {
-            return string.IsNullOrEmpty(valor) ? null : criptoManager.EncriptarAES256(valor);
-        }
-
-        /// <summary>
-        /// Desencripta un campo personal con AES-256 si tiene valor; de lo contrario devuelve el valor original o null.
-        /// </summary>
-        private string DesencriptarCampoPersonal(string valor)
-        {
-            if (string.IsNullOrEmpty(valor))
-                return null;
-
-            try
-            {
-                return criptoManager.DesencriptarAES256(valor);
-            }
-            catch
-            {
-                // Si no se puede desencriptar, asumimos que el valor aún no está encriptado (migración gradual).
-                return valor;
-            }
-        }
-
-        /// <summary>
-        /// Desencripta una fecha encriptada con AES-256. Si falla, intenta parsearla como texto plano (migración gradual).
-        /// </summary>
-        private DateTime? DesencriptarFechaPersonal(object valorBD)
-        {
-            if (valorBD == null || valorBD == DBNull.Value)
-                return null;
-
-            string textoEncriptado = valorBD.ToString();
-            if (string.IsNullOrEmpty(textoEncriptado))
-                return null;
-
-            try
-            {
-                string textoPlano = criptoManager.DesencriptarAES256(textoEncriptado);
-                if (DateTime.TryParse(textoPlano, out DateTime fecha))
-                    return fecha;
-            }
-            catch
-            {
-                if (DateTime.TryParse(textoEncriptado, out DateTime fechaPlana))
-                    return fechaPlana;
-            }
-
-            return null;
         }
 
         public Usuario ObtenerUsuario(string usuario)
@@ -80,25 +23,11 @@ namespace MPP
             try
             {
                 string consulta = @"
-            SELECT
-                us.usr,
-                us.contra,
-                us.activo,
-                us.bloqueado,
-                us.intentos,
-                us.rol,
-                us.tipo,
-                us.dni,
-                us.nombre,
-                us.apellido,
-                us.telefono,
-                us.email,
-                us.fechaNacimiento,
-                us.primerLogin,
-                us.dvv,
-                us.dvh
-            FROM [GymApp].[dbo].[USUARIOS] as us
-            WHERE us.usr = @Usuario";
+                    SELECT us.usr, us.contra, us.activo, us.rol, us.dvv, us.dvh,
+                           ISNULL(ui.intentos, 0) AS intentos
+                    FROM [GymApp].[dbo].[USUARIOS] us
+                    LEFT JOIN [GymApp].[dbo].[USUARIO_Intentos] ui ON us.usr = ui.usr
+                    WHERE us.usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -110,23 +39,26 @@ namespace MPP
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
+                    int intentos = Convert.ToInt32(row["intentos"]);
+                    bool bloqueado = intentos >= MAX_INTENTOS_LOGIN;
+
                     return new Usuario(
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
-                        row["contra"] != DBNull.Value ? row["contra"].ToString() : string.Empty,
+                        row["usr"].ToString(),
+                        row["contra"].ToString(),
                         Convert.ToBoolean(row["activo"]),
-                        row["bloqueado"] != DBNull.Value && Convert.ToBoolean(row["bloqueado"]),
-                        row["intentos"] != DBNull.Value ? Convert.ToInt32(row["intentos"]) : 0,
-                        row["rol"] != DBNull.Value ? Convert.ToInt32(row["rol"]) : 1,
-                        row["tipo"] != DBNull.Value ? row["tipo"].ToString() : string.Empty,
-                        row["dni"] != DBNull.Value ? Convert.ToInt32(row["dni"]) : 0,
-                        DesencriptarCampoPersonal(row["nombre"] != DBNull.Value ? row["nombre"].ToString() : string.Empty),
-                        DesencriptarCampoPersonal(row["apellido"] != DBNull.Value ? row["apellido"].ToString() : string.Empty),
-                        DesencriptarCampoPersonal(row["telefono"] != DBNull.Value ? row["telefono"].ToString() : string.Empty),
-                        DesencriptarCampoPersonal(row["email"] != DBNull.Value ? row["email"].ToString() : string.Empty),
-                        DesencriptarFechaPersonal(row["fechaNacimiento"]),
+                        bloqueado,
+                        intentos,
+                        Convert.ToInt32(row["rol"]),
+                        string.Empty,
+                        0,
+                        string.Empty,
+                        string.Empty,
+                        string.Empty,
+                        string.Empty,
+                        null,
                         row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
-                        row["primerLogin"] != DBNull.Value && Convert.ToBoolean(row["primerLogin"])
+                        false
                     );
                 }
 
@@ -143,8 +75,8 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT intentos
-                    FROM [GymApp].[dbo].[USUARIOS]
+                    SELECT ISNULL(intentos, 0)
+                    FROM [GymApp].[dbo].[USUARIO_Intentos]
                     WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
@@ -153,13 +85,7 @@ namespace MPP
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToInt32(resultado);
-                }
-
-                return 0;
+                return resultado != null && resultado != DBNull.Value ? Convert.ToInt32(resultado) : 0;
             }
             catch (Exception ex)
             {
@@ -171,11 +97,14 @@ namespace MPP
         {
             try
             {
-                string consulta = $@"
-                    UPDATE [GymApp].[dbo].[USUARIOS]
-                    SET intentos = intentos + 1,
-                        bloqueado = CASE WHEN intentos + 1 >= {MAX_INTENTOS_LOGIN} THEN 1 ELSE 0 END
-                    WHERE usr = @Usuario";
+                // MERGE: si ya existe la fila en USUARIO_Intentos la actualiza, si no la crea
+                string consulta = @"
+                    MERGE INTO [GymApp].[dbo].[USUARIO_Intentos] AS target
+                    USING (VALUES (@Usuario)) AS source (usr) ON target.usr = source.usr
+                    WHEN MATCHED THEN
+                        UPDATE SET intentos = intentos + 1
+                    WHEN NOT MATCHED THEN
+                        INSERT (usr, intentos, dvv, dvh) VALUES (@Usuario, 1, '', '');";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -195,9 +124,8 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    UPDATE [GymApp].[dbo].[USUARIOS]
-                    SET intentos = 0,
-                        bloqueado = 0
+                    UPDATE [GymApp].[dbo].[USUARIO_Intentos]
+                    SET intentos = 0
                     WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
@@ -217,24 +145,8 @@ namespace MPP
         {
             try
             {
-                string consulta = @"
-                    SELECT bloqueado
-                    FROM [GymApp].[dbo].[USUARIOS]
-                    WHERE usr = @Usuario";
-
-                ArrayList parametros = new ArrayList
-                {
-                    new SqlParameter("@Usuario", usuario)
-                };
-
-                object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToBoolean(resultado);
-                }
-
-                return false;
+                int intentos = ObtenerIntentos(usuario);
+                return intentos >= MAX_INTENTOS_LOGIN;
             }
             catch (Exception ex)
             {
@@ -247,9 +159,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT activo
-                    FROM [GymApp].[dbo].[USUARIOS]
-                    WHERE usr = @Usuario";
+                    SELECT activo FROM [GymApp].[dbo].[USUARIOS] WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -257,13 +167,7 @@ namespace MPP
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToBoolean(resultado);
-                }
-
-                return false;
+                return resultado != null && resultado != DBNull.Value && Convert.ToBoolean(resultado);
             }
             catch (Exception ex)
             {
@@ -276,9 +180,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT contra
-                    FROM [GymApp].[dbo].[USUARIOS]
-                    WHERE usr = @Usuario";
+                    SELECT contra FROM [GymApp].[dbo].[USUARIOS] WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -286,13 +188,7 @@ namespace MPP
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return resultado.ToString();
-                }
-
-                return string.Empty;
+                return resultado != null && resultado != DBNull.Value ? resultado.ToString() : string.Empty;
             }
             catch (Exception ex)
             {
@@ -305,9 +201,8 @@ namespace MPP
             try
             {
                 string consulta = @"
-            SELECT COUNT(*) as count
-            FROM [GymApp].[dbo].[USUARIO_Contras]
-            WHERE usr = @Usuario AND contra = @Contrasena";
+                    SELECT COUNT(*) FROM [GymApp].[dbo].[USUARIO_Contras]
+                    WHERE usr = @Usuario AND contra = @Contrasena";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -316,13 +211,7 @@ namespace MPP
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToInt32(resultado) > 0;
-                }
-
-                return false;
+                return resultado != null && resultado != DBNull.Value && Convert.ToInt32(resultado) > 0;
             }
             catch (Exception ex)
             {
@@ -334,10 +223,9 @@ namespace MPP
         {
             try
             {
-                // Insertar la nueva contraseña en el historial.
                 string insertar = @"
-            INSERT INTO [GymApp].[dbo].[USUARIO_Contras] (usr, contra, dvv, dvh)
-            VALUES (@Usuario, @Contrasena, '', '')";
+                    INSERT INTO [GymApp].[dbo].[USUARIO_Contras] (usr, contra, dvv, dvh)
+                    VALUES (@Usuario, @Contrasena, '', '')";
 
                 ArrayList parametrosInsertar = new ArrayList
                 {
@@ -347,16 +235,14 @@ namespace MPP
 
                 dal._686DPEscribir(insertar, parametrosInsertar);
 
-                // Mantener solo las últimas N contraseñas históricas para evitar acumulación infinita.
                 string limpiar = @"
-            WITH ContrasOrdenadas AS (
-                SELECT TOP 1000000 [usr], [contra], [dvv], [dvh],
-                    ROW_NUMBER() OVER (PARTITION BY [usr] ORDER BY (SELECT NULL)) AS rn
-                FROM [GymApp].[dbo].[USUARIO_Contras]
-                WHERE [usr] = @Usuario
-            )
-            DELETE FROM ContrasOrdenadas
-            WHERE rn > @MaxHistorial";
+                    WITH ContrasOrdenadas AS (
+                        SELECT TOP 1000000 [usr], [contra], [dvv], [dvh],
+                            ROW_NUMBER() OVER (PARTITION BY [usr] ORDER BY (SELECT NULL)) AS rn
+                        FROM [GymApp].[dbo].[USUARIO_Contras]
+                        WHERE [usr] = @Usuario
+                    )
+                    DELETE FROM ContrasOrdenadas WHERE rn > @MaxHistorial";
 
                 ArrayList parametrosLimpiar = new ArrayList
                 {
@@ -377,9 +263,8 @@ namespace MPP
             try
             {
                 string consulta = @"
-            UPDATE [GymApp].[dbo].[USUARIOS]
-            SET contra = @Contrasena
-            WHERE usr = @Usuario";
+                    UPDATE [GymApp].[dbo].[USUARIOS]
+                    SET contra = @Contrasena WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -397,24 +282,7 @@ namespace MPP
 
         public void FinalizarPrimerLogin(string usuario)
         {
-            try
-            {
-                string consulta = @"
-            UPDATE [GymApp].[dbo].[USUARIOS]
-            SET primerLogin = 0
-            WHERE usr = @Usuario";
-
-                ArrayList parametros = new ArrayList
-                {
-                    new SqlParameter("@Usuario", usuario)
-                };
-
-                dal._686DPEscribir(consulta, parametros);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al finalizar el primer login: " + ex.Message, ex);
-            }
+            // La columna primerLogin no existe en el schema actual — no-op
         }
 
         public void CrearUsuario(Usuario usuario)
@@ -422,27 +290,15 @@ namespace MPP
             try
             {
                 string consulta = @"
-            INSERT INTO [GymApp].[dbo].[USUARIOS]
-            (usr, contra, activo, bloqueado, intentos, rol, primerLogin, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, dvv, dvh)
-            VALUES
-            (@Usuario, @Contrasena, @Activo, @Bloqueado, @Intentos, @Rol, @PrimerLogin, @Tipo, @DNI, @Nombre, @Apellido, @Telefono, @Email, @FechaNacimiento, '', '')";
+                    INSERT INTO [GymApp].[dbo].[USUARIOS] (usr, contra, activo, rol, dvv, dvh)
+                    VALUES (@Usuario, @Contrasena, @Activo, @Rol, '', '')";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@Usuario", usuario.USUARIO_Usuario),
                     new SqlParameter("@Contrasena", usuario.USUARIO_Contras),
                     new SqlParameter("@Activo", usuario.USUARIO_Activo),
-                    new SqlParameter("@Bloqueado", usuario.USUARIO_Bloqueado),
-                    new SqlParameter("@Intentos", usuario.USUARIO_Intentos),
-                    new SqlParameter("@Rol", usuario.USUARIO_Rol),
-                    new SqlParameter("@PrimerLogin", usuario.USUARIO_PrimerLogin),
-                    new SqlParameter("@Tipo", usuario.USUARIO_Tipo),
-                    new SqlParameter("@DNI", usuario.USUARIO_DNI),
-                    new SqlParameter("@Nombre", EncriptarCampoPersonal(usuario.Nombre) ?? (object)DBNull.Value),
-                    new SqlParameter("@Apellido", EncriptarCampoPersonal(usuario.Apellido) ?? (object)DBNull.Value),
-                    new SqlParameter("@Telefono", EncriptarCampoPersonal(usuario.Telefono) ?? (object)DBNull.Value),
-                    new SqlParameter("@Email", EncriptarCampoPersonal(usuario.Email) ?? (object)DBNull.Value),
-                    new SqlParameter("@FechaNacimiento", EncriptarCampoPersonal(usuario.FechaNacimiento?.ToString("yyyy-MM-dd")) ?? (object)DBNull.Value)
+                    new SqlParameter("@Rol", usuario.USUARIO_Rol)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -458,48 +314,28 @@ namespace MPP
             try
             {
                 string consulta = @"
-            SELECT
-                u.usr AS USUARIO_Usuario,
-                u.tipo AS USUARIO_Tipo,
-                u.activo AS USUARIO_Activo,
-                u.bloqueado AS USUARIO_Bloqueado,
-                u.intentos AS USUARIO_Intentos,
-                u.dvv AS USUARIO_DVV,
-                u.dvh AS USUARIO_DVH,
-                u.nombre AS Nombre,
-                u.apellido AS Apellido,
-                u.dni AS DNI,
-                u.telefono AS Telefono,
-                u.email AS Email,
-                u.fechaNacimiento AS FechaNacimiento
-            FROM [GymApp].[dbo].[USUARIOS] u
-            ORDER BY u.tipo, u.usr";
+                    SELECT u.usr, u.activo, u.rol, u.dvv, u.dvh,
+                           ISNULL(ui.intentos, 0) AS intentos
+                    FROM [GymApp].[dbo].[USUARIOS] u
+                    LEFT JOIN [GymApp].[dbo].[USUARIO_Intentos] ui ON u.usr = ui.usr
+                    ORDER BY u.usr";
 
-                ArrayList parametros = new ArrayList();
-
-                DataTable dt = dal._686DPConsultar(consulta, parametros);
+                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
                 List<BE.UsuarioGestion> usuarios = new List<BE.UsuarioGestion>();
 
                 foreach (DataRow row in dt.Rows)
                 {
+                    int intentos = Convert.ToInt32(row["intentos"]);
                     usuarios.Add(new BE.UsuarioGestion(
-                        row["USUARIO_Usuario"] != DBNull.Value ? row["USUARIO_Usuario"].ToString() : string.Empty,
-                        string.Empty, // Contra no se expone
-                        row["USUARIO_Tipo"] != DBNull.Value ? row["USUARIO_Tipo"].ToString() : string.Empty,
-                        Convert.ToBoolean(row["USUARIO_Activo"]),
-                        Convert.ToBoolean(row["USUARIO_Bloqueado"]),
-                        row["USUARIO_Intentos"] != DBNull.Value ? Convert.ToInt32(row["USUARIO_Intentos"]) : 0,
-                        row["USUARIO_DVV"] != DBNull.Value ? row["USUARIO_DVV"].ToString() : string.Empty,
-                        row["USUARIO_DVH"] != DBNull.Value ? row["USUARIO_DVH"].ToString() : string.Empty
-                    )
-                    {
-                        Nombre = DesencriptarCampoPersonal(row["Nombre"] != DBNull.Value ? row["Nombre"].ToString() : string.Empty),
-                        Apellido = DesencriptarCampoPersonal(row["Apellido"] != DBNull.Value ? row["Apellido"].ToString() : string.Empty),
-                        DNI = row["DNI"] != DBNull.Value && int.TryParse(row["DNI"].ToString(), out int dni) ? (int?)dni : null,
-                        Telefono = DesencriptarCampoPersonal(row["Telefono"] != DBNull.Value ? row["Telefono"].ToString() : string.Empty),
-                        Email = DesencriptarCampoPersonal(row["Email"] != DBNull.Value ? row["Email"].ToString() : string.Empty),
-                        FechaNacimiento = DesencriptarFechaPersonal(row["FechaNacimiento"])
-                    });
+                        row["usr"].ToString(),
+                        string.Empty,
+                        string.Empty,
+                        Convert.ToBoolean(row["activo"]),
+                        intentos >= MAX_INTENTOS_LOGIN,
+                        intentos,
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
+                    ));
                 }
 
                 return usuarios;
@@ -515,9 +351,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT COUNT(*)
-                    FROM [GymApp].[dbo].[USUARIOS]
-                    WHERE usr = @Usuario";
+                    SELECT COUNT(*) FROM [GymApp].[dbo].[USUARIOS] WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -525,13 +359,7 @@ namespace MPP
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToInt32(resultado) > 0;
-                }
-
-                return false;
+                return resultado != null && resultado != DBNull.Value && Convert.ToInt32(resultado) > 0;
             }
             catch (Exception ex)
             {
@@ -543,53 +371,29 @@ namespace MPP
         {
             try
             {
-                // En el esquema normalizado, los clientes (tipo='Cliente') que no tienen registro en ALUMNOS
+                // En el schema actual, clientes son rol=4. Busca los que no tienen alumno asociado en Alumnos.usr
                 string consulta = @"
-                    SELECT
-                        u.usr AS USUARIO_Usuario,
-                        u.tipo AS USUARIO_Tipo,
-                        u.activo AS USUARIO_Activo,
-                        u.bloqueado AS USUARIO_Bloqueado,
-                        u.intentos AS USUARIO_Intentos,
-                        u.dvv AS USUARIO_DVV,
-                        u.dvh AS USUARIO_DVH,
-                        u.nombre AS Nombre,
-                        u.apellido AS Apellido,
-                        u.dni AS DNI,
-                        u.telefono AS Telefono,
-                        u.email AS Email,
-                        u.fechaNacimiento AS FechaNacimiento
+                    SELECT u.usr, u.activo, u.rol, u.dvv, u.dvh
                     FROM [GymApp].[dbo].[USUARIOS] u
-                    LEFT JOIN [GymApp].[dbo].[ALUMNOS] a ON u.dni = a.dni
-                    WHERE u.tipo = 'Cliente'
-                      AND u.activo = 1
-                      AND a.dni IS NULL
+                    LEFT JOIN [GymApp].[dbo].[Alumnos] a ON u.usr = a.usr
+                    WHERE u.rol = 4 AND u.activo = 1 AND a.usr IS NULL
                     ORDER BY u.usr";
 
-                ArrayList parametros = new ArrayList();
-                DataTable dt = dal._686DPConsultar(consulta, parametros);
+                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
                 List<BE.UsuarioGestion> usuarios = new List<BE.UsuarioGestion>();
 
                 foreach (DataRow row in dt.Rows)
                 {
                     usuarios.Add(new BE.UsuarioGestion(
-                        row["USUARIO_Usuario"] != DBNull.Value ? row["USUARIO_Usuario"].ToString() : string.Empty,
+                        row["usr"].ToString(),
                         string.Empty,
-                        row["USUARIO_Tipo"] != DBNull.Value ? row["USUARIO_Tipo"].ToString() : string.Empty,
-                        Convert.ToBoolean(row["USUARIO_Activo"]),
-                        Convert.ToBoolean(row["USUARIO_Bloqueado"]),
-                        row["USUARIO_Intentos"] != DBNull.Value ? Convert.ToInt32(row["USUARIO_Intentos"]) : 0,
-                        row["USUARIO_DVV"] != DBNull.Value ? row["USUARIO_DVV"].ToString() : string.Empty,
-                        row["USUARIO_DVH"] != DBNull.Value ? row["USUARIO_DVH"].ToString() : string.Empty
-                    )
-                    {
-                        Nombre = DesencriptarCampoPersonal(row["Nombre"] != DBNull.Value ? row["Nombre"].ToString() : string.Empty),
-                        Apellido = DesencriptarCampoPersonal(row["Apellido"] != DBNull.Value ? row["Apellido"].ToString() : string.Empty),
-                        DNI = row["DNI"] != DBNull.Value && int.TryParse(row["DNI"].ToString(), out int dni) ? (int?)dni : null,
-                        Telefono = DesencriptarCampoPersonal(row["Telefono"] != DBNull.Value ? row["Telefono"].ToString() : string.Empty),
-                        Email = DesencriptarCampoPersonal(row["Email"] != DBNull.Value ? row["Email"].ToString() : string.Empty),
-                        FechaNacimiento = DesencriptarFechaPersonal(row["FechaNacimiento"])
-                    });
+                        string.Empty,
+                        Convert.ToBoolean(row["activo"]),
+                        false,
+                        0,
+                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
+                    ));
                 }
 
                 return usuarios;
@@ -605,9 +409,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    UPDATE [GymApp].[dbo].[USUARIOS]
-                    SET activo = @Activo
-                    WHERE usr = @Usuario";
+                    UPDATE [GymApp].[dbo].[USUARIOS] SET activo = @Activo WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -625,58 +427,25 @@ namespace MPP
 
         public DateTime? ObtenerFechaNacimiento(string usuario)
         {
-            try
-            {
-                string consulta = @"
-                    SELECT fechaNacimiento
-                    FROM [GymApp].[dbo].[USUARIOS]
-                    WHERE usr = @Usuario";
-
-                ArrayList parametros = new ArrayList
-                {
-                    new SqlParameter("@Usuario", usuario)
-                };
-
-                object resultado = dal._686DPEscalar(consulta, parametros);
-
-                return DesencriptarFechaPersonal(resultado);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener la fecha de nacimiento: " + ex.Message, ex);
-            }
+            // La columna fechaNacimiento no existe en el schema actual
+            return null;
         }
 
         public void ActualizarUsuario(Usuario usuario)
         {
             try
             {
+                // Solo actualizamos columnas que existen en el schema actual
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[USUARIOS]
-                    SET
-                        tipo = @Tipo,
-                        dni = @DNI,
-                        nombre = @Nombre,
-                        apellido = @Apellido,
-                        telefono = @Telefono,
-                        email = @Email,
-                        fechaNacimiento = @FechaNacimiento,
-                        rol = @Rol,
-                        primerLogin = @PrimerLogin
+                    SET activo = @Activo, rol = @Rol
                     WHERE usr = @Usuario";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@Usuario", usuario.USUARIO_Usuario),
-                    new SqlParameter("@Tipo", usuario.USUARIO_Tipo),
-                    new SqlParameter("@DNI", usuario.USUARIO_DNI),
-                    new SqlParameter("@Nombre", EncriptarCampoPersonal(usuario.Nombre) ?? (object)DBNull.Value),
-                    new SqlParameter("@Apellido", EncriptarCampoPersonal(usuario.Apellido) ?? (object)DBNull.Value),
-                    new SqlParameter("@Telefono", EncriptarCampoPersonal(usuario.Telefono) ?? (object)DBNull.Value),
-                    new SqlParameter("@Email", EncriptarCampoPersonal(usuario.Email) ?? (object)DBNull.Value),
-                    new SqlParameter("@FechaNacimiento", EncriptarCampoPersonal(usuario.FechaNacimiento?.ToString("yyyy-MM-dd")) ?? (object)DBNull.Value),
-                    new SqlParameter("@Rol", usuario.USUARIO_Rol),
-                    new SqlParameter("@PrimerLogin", usuario.USUARIO_PrimerLogin)
+                    new SqlParameter("@Activo", usuario.USUARIO_Activo),
+                    new SqlParameter("@Rol", usuario.USUARIO_Rol)
                 };
 
                 dal._686DPEscribir(consulta, parametros);

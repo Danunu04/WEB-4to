@@ -24,8 +24,12 @@ namespace BE
         // Referencia al usuario (solo el usr, no datos personales)
         public string Usuario { get; set; }
 
-        // Propiedades de solo lectura para visualización (se llenan desde USUARIOS via JOIN)
-        // Se usan en la UI para mostrar/buscar alumnos pero no se persisten en ALUMNOS
+        // Datos de membresía (null = sin membresía activa; DiasRestantes null = modalidad diaria ilimitada)
+        public int? DiasRestantes { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public int? IdModalidad { get; set; }
+
+        // Propiedades de solo lectura para visualización (se llenan desde USUARIOS via JOIN, ya descifradas)
         public string Nombre { get; set; }
         public string Apellido { get; set; }
         public string Telefono { get; set; }

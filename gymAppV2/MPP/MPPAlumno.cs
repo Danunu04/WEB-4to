@@ -17,24 +17,47 @@ namespace MPP
             dal = new DalGeneral();
         }
 
+        private Alumno MapearAlumno(DataRow row)
+        {
+            Alumno alumno = new Alumno(
+                Convert.ToInt32(row["dni"]),
+                row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
+                false,
+                Convert.ToBoolean(row["activo"]),
+                row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
+                row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
+            );
+            alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
+            alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
+            alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
+            alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+            alumno.DiasRestantes = row["diasRestantes"] != DBNull.Value ? (int?)Convert.ToInt32(row["diasRestantes"]) : null;
+            alumno.FechaVencimiento = row["fechaVencimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaVencimiento"]) : null;
+            alumno.IdModalidad = row["idModalidad"] != DBNull.Value ? (int?)Convert.ToInt32(row["idModalidad"]) : null;
+            return alumno;
+        }
+
         public void CrearAlumno(Alumno alumno)
         {
             try
             {
-                // En esquema normalizado, ALUMNOS solo tiene dni, peso, activo, tieneRutinas, dvv, dvh
-                // Los datos personales están en USUARIOS
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Alumnos]
-                    (dni, peso, activo, tieneRutinas, dvv, dvh)
+                    (dni, nombre, apellido, telefono, fechaNacimiento, peso, activo, usr, dvv, dvh)
                     VALUES
-                    (@DNI, @Peso, @Activo, @TieneRutinas, '', '')";
+                    (@DNI, @Nombre, @Apellido, @Telefono, @FechaNacimiento, @Peso, @Activo, @Usuario, '', '')";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", alumno.DNI),
+                    new SqlParameter("@Nombre", alumno.Nombre ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido", alumno.Apellido ?? (object)DBNull.Value),
+                    new SqlParameter("@Telefono", alumno.Telefono ?? (object)DBNull.Value),
+                    new SqlParameter("@FechaNacimiento", alumno.FechaNacimiento ?? (object)DBNull.Value),
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
                     new SqlParameter("@Activo", alumno.Activo),
-                    new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
+                    new SqlParameter("@Usuario", string.IsNullOrEmpty(alumno.Usuario) ? (object)DBNull.Value : alumno.Usuario),
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -49,24 +72,12 @@ namespace MPP
         {
             try
             {
-                // En esquema normalizado, los datos personales están en USUARIOS
                 string consulta = @"
-                    SELECT
-                        a.dni,
-                        a.peso,
-                        a.activo,
-                        a.tieneRutinas,
-                        a.usr,
-                        a.dvv,
-                        a.dvh,
-                        u.nombre,
-                        u.apellido,
-                        u.telefono,
-                        u.fechaNacimiento,
-                        u.activo AS USUARIO_Activo
-                    FROM [GymApp].[dbo].[Alumnos] a
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
-                    WHERE a.dni = @DNI";
+                    SELECT dni, nombre, apellido, telefono, fechaNacimiento,
+                           peso, activo, usr, dvv, dvh,
+                           diasRestantes, fechaVencimiento, idModalidad
+                    FROM [GymApp].[dbo].[Alumnos]
+                    WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -75,27 +86,7 @@ namespace MPP
 
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
 
-                if (dt.Rows.Count > 0)
-                {
-                    DataRow row = dt.Rows[0];
-                    Alumno alumno = new Alumno(
-                        Convert.ToInt32(row["dni"]),
-                        row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
-                        Convert.ToBoolean(row["tieneRutinas"]),
-                        Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
-                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
-                    );
-                    // Poblar datos personales desde USUARIOS (para visualización)
-                    alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
-                    alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
-                    alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
-                    alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
-                    return alumno;
-                }
-
-                return null;
+                return dt.Rows.Count > 0 ? MapearAlumno(dt.Rows[0]) : null;
             }
             catch (Exception ex)
             {
@@ -107,21 +98,26 @@ namespace MPP
         {
             try
             {
-                // En esquema normalizado, ALUMNOS solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Alumnos]
-                    SET peso = @Peso,
+                    SET nombre = @Nombre,
+                        apellido = @Apellido,
+                        telefono = @Telefono,
+                        fechaNacimiento = @FechaNacimiento,
+                        peso = @Peso,
                         activo = @Activo,
-                        tieneRutinas = @TieneRutinas,
                         usr = @Usuario
                     WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", alumno.DNI),
+                    new SqlParameter("@Nombre", alumno.Nombre ?? (object)DBNull.Value),
+                    new SqlParameter("@Apellido", alumno.Apellido ?? (object)DBNull.Value),
+                    new SqlParameter("@Telefono", alumno.Telefono ?? (object)DBNull.Value),
+                    new SqlParameter("@FechaNacimiento", alumno.FechaNacimiento ?? (object)DBNull.Value),
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
                     new SqlParameter("@Activo", alumno.Activo),
-                    new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
                     new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value)
                 };
 
@@ -148,13 +144,7 @@ namespace MPP
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToInt32(resultado) > 0;
-                }
-
-                return false;
+                return resultado != null && resultado != DBNull.Value && Convert.ToInt32(resultado) > 0;
             }
             catch (Exception ex)
             {
@@ -166,48 +156,18 @@ namespace MPP
         {
             try
             {
-                // En esquema normalizado, los datos personales están en USUARIOS
                 string consulta = @"
-                    SELECT
-                        a.dni,
-                        a.peso,
-                        a.activo,
-                        a.tieneRutinas,
-                        a.usr,
-                        a.dvv,
-                        a.dvh,
-                        u.nombre,
-                        u.apellido,
-                        u.telefono,
-                        u.fechaNacimiento,
-                        u.activo AS USUARIO_Activo
-                    FROM [GymApp].[dbo].[Alumnos] a
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
-                    ORDER BY u.apellido, u.nombre";
+                    SELECT dni, nombre, apellido, telefono, fechaNacimiento,
+                           peso, activo, usr, dvv, dvh,
+                           diasRestantes, fechaVencimiento, idModalidad
+                    FROM [GymApp].[dbo].[Alumnos]
+                    ORDER BY apellido, nombre";
 
-                ArrayList parametros = new ArrayList();
-
-                DataTable dt = dal._686DPConsultar(consulta, parametros);
+                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
                 List<Alumno> alumnos = new List<Alumno>();
 
                 foreach (DataRow row in dt.Rows)
-                {
-                    Alumno alumno = new Alumno(
-                        Convert.ToInt32(row["dni"]),
-                        row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
-                        Convert.ToBoolean(row["tieneRutinas"]),
-                        Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
-                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
-                    );
-                    // Poblar datos personales desde USUARIOS (para visualización)
-                    alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
-                    alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
-                    alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
-                    alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
-                    alumnos.Add(alumno);
-                }
+                    alumnos.Add(MapearAlumno(row));
 
                 return alumnos;
             }
@@ -221,29 +181,13 @@ namespace MPP
         {
             try
             {
-                // Primero eliminar rutinas asociadas (cascada manual)
-                string eliminarRutinas = @"
-                    DELETE FROM [GymApp].[dbo].[Rutinas]
-                    WHERE dniAlumno = @DNI";
+                string eliminarRutinas = @"DELETE FROM [GymApp].[dbo].[Rutinas] WHERE dniAlumno = @DNI";
+                ArrayList p = new ArrayList { new SqlParameter("@DNI", dni) };
+                dal._686DPEscribir(eliminarRutinas, p);
 
-                ArrayList parametrosRutinas = new ArrayList
-                {
-                    new SqlParameter("@DNI", dni)
-                };
-
-                dal._686DPEscribir(eliminarRutinas, parametrosRutinas);
-
-                // Luego eliminar el alumno
-                string eliminarAlumno = @"
-                    DELETE FROM [GymApp].[dbo].[Alumnos]
-                    WHERE dni = @DNI";
-
-                ArrayList parametros = new ArrayList
-                {
-                    new SqlParameter("@DNI", dni)
-                };
-
-                dal._686DPEscribir(eliminarAlumno, parametros);
+                string eliminarAlumno = @"DELETE FROM [GymApp].[dbo].[Alumnos] WHERE dni = @DNI";
+                ArrayList p2 = new ArrayList { new SqlParameter("@DNI", dni) };
+                dal._686DPEscribir(eliminarAlumno, p2);
             }
             catch (Exception ex)
             {
@@ -255,47 +199,19 @@ namespace MPP
         {
             try
             {
-                // En esquema normalizado, buscar ALUMNOS sin usuario asociado
                 string consulta = @"
-                    SELECT
-                        a.dni,
-                        a.peso,
-                        a.activo,
-                        a.tieneRutinas,
-                        a.usr,
-                        a.dvv,
-                        a.dvh,
-                        u.nombre,
-                        u.apellido,
-                        u.telefono,
-                        u.fechaNacimiento
-                    FROM [GymApp].[dbo].[Alumnos] a
-                    LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
-                    WHERE (a.usr IS NULL OR a.usr = '')
-                    ORDER BY u.apellido, u.nombre";
+                    SELECT dni, nombre, apellido, telefono, fechaNacimiento,
+                           peso, activo, usr, dvv, dvh,
+                           diasRestantes, fechaVencimiento, idModalidad
+                    FROM [GymApp].[dbo].[Alumnos]
+                    WHERE (usr IS NULL OR usr = '')
+                    ORDER BY apellido, nombre";
 
-                ArrayList parametros = new ArrayList();
-                DataTable dt = dal._686DPConsultar(consulta, parametros);
+                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
                 List<Alumno> alumnos = new List<Alumno>();
 
                 foreach (DataRow row in dt.Rows)
-                {
-                    Alumno alumno = new Alumno(
-                        Convert.ToInt32(row["dni"]),
-                        row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
-                        Convert.ToBoolean(row["tieneRutinas"]),
-                        Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
-                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
-                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
-                    );
-                    // Poblar datos personales desde USUARIOS (para visualización)
-                    alumno.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
-                    alumno.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
-                    alumno.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
-                    alumno.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
-                    alumnos.Add(alumno);
-                }
+                    alumnos.Add(MapearAlumno(row));
 
                 return alumnos;
             }
@@ -310,23 +226,12 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT COUNT(*)
-                    FROM [GymApp].[dbo].[Alumnos]
-                    WHERE usr = @Usuario";
+                    SELECT COUNT(*) FROM [GymApp].[dbo].[Alumnos] WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
-                {
-                    new SqlParameter("@Usuario", usuario)
-                };
-
+                ArrayList parametros = new ArrayList { new SqlParameter("@Usuario", usuario) };
                 object resultado = dal._686DPEscalar(consulta, parametros);
 
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToInt32(resultado);
-                }
-
-                return 0;
+                return resultado != null && resultado != DBNull.Value ? Convert.ToInt32(resultado) : 0;
             }
             catch (Exception ex)
             {
@@ -338,10 +243,7 @@ namespace MPP
         {
             try
             {
-                string consulta = @"
-                    UPDATE [GymApp].[dbo].[Alumnos]
-                    SET usr = @Usuario
-                    WHERE dni = @DNI";
+                string consulta = @"UPDATE [GymApp].[dbo].[Alumnos] SET usr = @Usuario WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -354,6 +256,24 @@ namespace MPP
             catch (Exception ex)
             {
                 throw new Exception("Error al asociar usuario: " + ex.Message, ex);
+            }
+        }
+
+        public void RealizarCheckin(int dni)
+        {
+            try
+            {
+                string consulta = @"
+                    UPDATE [GymApp].[dbo].[Alumnos]
+                    SET diasRestantes = CASE WHEN diasRestantes IS NOT NULL THEN diasRestantes - 1 ELSE NULL END
+                    WHERE dni = @DNI";
+
+                ArrayList parametros = new ArrayList { new SqlParameter("@DNI", dni) };
+                dal._686DPEscribir(consulta, parametros);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al realizar check-in: " + ex.Message, ex);
             }
         }
     }

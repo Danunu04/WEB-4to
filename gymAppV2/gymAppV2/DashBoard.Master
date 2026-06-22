@@ -96,8 +96,8 @@
                         </a>
                     </li>
                     <li id="liEntrenadores" runat="server">
-                        <a href="/Entrenadores">
-                            <i class="bi bi-star"></i>
+                        <a href="/Entrenadores/Entrenadores.aspx">
+                            <i class="bi bi-person-badge"></i>
                             <span class="menu-text">Entrenadores</span>
                         </a>
                     </li>

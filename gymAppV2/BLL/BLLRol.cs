@@ -56,6 +56,7 @@ namespace BLL
                 case "GestionEntrenadores":
                 case "Bitacora":
                 case "PreciosCuota":
+                case "CheckIn":
                     return rol <= 2;
 
                 case "GestionAlumnos":

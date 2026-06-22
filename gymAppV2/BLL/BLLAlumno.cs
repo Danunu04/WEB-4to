@@ -370,5 +370,66 @@ namespace BLL
                 throw new Exception("Error al listar alumnos sin usuario: " + ex.Message, ex);
             }
         }
+
+        public Alumno RealizarCheckin(int dni)
+        {
+            try
+            {
+                Alumno alumno = mppAlumno.ObtenerAlumno(dni);
+
+                if (alumno == null)
+                    throw new Exception($"No existe ningún alumno con DNI {dni}");
+
+                if (!alumno.Activo)
+                    throw new Exception($"El alumno con DNI {dni} está inactivo en el sistema");
+
+                if (!alumno.FechaVencimiento.HasValue)
+                    throw new Exception($"El alumno con DNI {dni} no tiene una membresía activa");
+
+                if (DateTime.Today > alumno.FechaVencimiento.Value)
+                {
+                    RegistrarEventoCheckinFallido(alumno);
+                    throw new Exception($"La membresía del alumno venció el {alumno.FechaVencimiento.Value:dd/MM/yyyy}");
+                }
+
+                if (alumno.DiasRestantes.HasValue && alumno.DiasRestantes.Value <= 0)
+                {
+                    RegistrarEventoCheckinFallido(alumno);
+                    throw new Exception("La membresía del alumno está agotada (0 clases restantes)");
+                }
+
+                mppAlumno.RealizarCheckin(dni);
+
+                var usuarioSesion = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                if (usuarioSesion != null)
+                    bllEvento.RegistrarCheckin(usuarioSesion.USUARIO_Usuario, dni);
+
+                // Devuelve el alumno con el valor anterior de diasRestantes (antes del decremento)
+                return alumno;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
+        }
+
+        private void RegistrarEventoCheckinFallido(Alumno alumno)
+        {
+            try
+            {
+                var usuarioSesion = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                if (usuarioSesion == null) return;
+
+                string nombre = string.IsNullOrEmpty(alumno.Nombre) ? alumno.DNI.ToString() : $"{alumno.Apellido}, {alumno.Nombre}";
+                bllEvento.RegistrarEvento(
+                    BLLEvento.EVENTO_CHECKIN,
+                    usuarioSesion.USUARIO_Usuario,
+                    $"Check-in rechazado — alumno DNI: {alumno.DNI} ({nombre}) — membresía vencida o agotada",
+                    criticidad: 2,
+                    modulo: "CheckIn"
+                );
+            }
+            catch { }
+        }
     }
 }

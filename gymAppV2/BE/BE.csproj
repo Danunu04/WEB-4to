@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actividad.cs" />
     <Compile Include="Alumno.cs" />
     <Compile Include="Entrenador.cs" />
     <Compile Include="Evento.cs" />
@@ -51,6 +52,8 @@
     <Compile Include="UsuarioCrearDTO.cs" />
     <Compile Include="UsuarioGestion.cs" />
     <Compile Include="ConstantesSeguridad.cs" />
+    <Compile Include="ResultadoVerificacionDV.cs" />
+    <Compile Include="EstadoControlDV.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,29 +5,76 @@ using System.Data;
 using System.Data.SqlClient;
 using BE;
 using DAL;
+using SERVICIOS;
 
 namespace MPP
 {
     public class MPPAlumno
     {
         private DalGeneral dal;
+        private DigitoVerificadorManager dvManager;
 
         public MPPAlumno()
         {
             dal = new DalGeneral();
+            dvManager = new DigitoVerificadorManager();
+        }
+
+        /// <summary>
+        /// Calcula DVH y DVV de un alumno a partir de sus valores de persistencia.
+        /// </summary>
+        private void CalcularDigitosAlumno(Alumno alumno, out string dvh, out string dvv)
+        {
+            var valores = new Dictionary<string, object>
+            {
+                { "dni", alumno.DNI },
+                { "peso", alumno.Peso },
+                { "activo", alumno.Activo },
+                { "tieneRutinas", alumno.TieneRutinas },
+                { "usr", alumno.Usuario }
+            };
+
+            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+        }
+
+        /// <summary>
+        /// Vuelve a calcular y actualizar dvv/dvh de un alumno existente.
+        /// </summary>
+        private void RecalcularDigitosAlumno(int dni)
+        {
+            Alumno alumno = ObtenerAlumno(dni);
+            if (alumno == null) return;
+
+            CalcularDigitosAlumno(alumno, out string dvh, out string dvv);
+
+            string consulta = @"
+                UPDATE [GymApp].[dbo].[Alumnos]
+                SET dvv = @DVV, dvh = @DVH
+                WHERE dni = @DNI";
+
+            ArrayList parametros = new ArrayList
+            {
+                new SqlParameter("@DNI", dni),
+                new SqlParameter("@DVV", dvv),
+                new SqlParameter("@DVH", dvh)
+            };
+
+            dal._686DPEscribir(consulta, parametros);
         }
 
         public void CrearAlumno(Alumno alumno)
         {
             try
             {
-                // En esquema normalizado, ALUMNOS solo tiene dni, peso, activo, tieneRutinas, dvv, dvh
+                CalcularDigitosAlumno(alumno, out string dvh, out string dvv);
+
+                // En esquema normalizado, ALUMNOS solo tiene dni, peso, activo, tieneRutinas, usr, dvv, dvh
                 // Los datos personales están en USUARIOS
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Alumnos]
-                    (dni, peso, activo, tieneRutinas, dvv, dvh)
+                    (dni, peso, activo, tieneRutinas, usr, dvv, dvh)
                     VALUES
-                    (@DNI, @Peso, @Activo, @TieneRutinas, '', '')";
+                    (@DNI, @Peso, @Activo, @TieneRutinas, @Usuario, @DVV, @DVH)";
 
                 ArrayList parametros = new ArrayList
                 {
@@ -35,6 +82,9 @@ namespace MPP
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
                     new SqlParameter("@Activo", alumno.Activo),
                     new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
+                    new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value),
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -107,13 +157,17 @@ namespace MPP
         {
             try
             {
+                CalcularDigitosAlumno(alumno, out string dvh, out string dvv);
+
                 // En esquema normalizado, ALUMNOS solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Alumnos]
                     SET peso = @Peso,
                         activo = @Activo,
                         tieneRutinas = @TieneRutinas,
-                        usr = @Usuario
+                        usr = @Usuario,
+                        dvv = @DVV,
+                        dvh = @DVH
                     WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
@@ -122,7 +176,9 @@ namespace MPP
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
                     new SqlParameter("@Activo", alumno.Activo),
                     new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
-                    new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value)
+                    new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value),
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -350,6 +406,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+                RecalcularDigitosAlumno(dni);
             }
             catch (Exception ex)
             {

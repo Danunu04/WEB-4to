@@ -107,8 +107,8 @@
                             <span class="menu-text">Actividades</span>
                         </a>
                     </li>
-                    <li id="liRutinas" runat="server" class="not-implemented">
-                        <a href="/Rutinas">
+                    <li id="liRutinas" runat="server">
+                        <a href="/Rutinas/Rutinas.aspx">
                             <i class="bi bi-list-check"></i>
                             <span class="menu-text">Rutinas</span>
                         </a>
@@ -125,13 +125,19 @@
                             <span class="menu-text">Bitácora</span>
                         </a>
                     </li>
+                    <li id="liVerificacionDV" runat="server">
+                        <a href="/VerificacioDV/VerificacioDV.aspx">
+                            <i class="bi bi-shield-check"></i>
+                            <span class="menu-text">Verificación DV</span>
+                        </a>
+                    </li>
                     <li id="liPagos" runat="server" class="not-implemented">
                         <a href="/Pagos/PagosCliente.aspx">
                             <i class="bi bi-credit-card"></i>
                             <span class="menu-text">Pagos</span>
                         </a>
                     </li>
-                    <li id="liPerfil" runat="server" class="not-implemented">
+                    <li id="liPerfil" runat="server">
                         <a href="/Perfil/Perfil.aspx">
                             <i class="bi bi-person-circle"></i>
                             <span class="menu-text">Perfil</span>

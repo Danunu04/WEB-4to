@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -16,20 +17,23 @@ namespace DAL
         public SqlConnection conn;
         public SqlCommand cmd;
 
+        /// <summary>
+        /// Nombre de la cadena de conexión en <connectionStrings> de Web.config.
+        /// </summary>
+        private const string NOMBRE_CONNECTION_STRING = "GymAppConnection";
+
         public DalGeneral()
         {
             try
             {
-                //string server = Environment.GetEnvironmentVariable("DB_SERVER");
-                //string database = Environment.GetEnvironmentVariable("DB_DATABASE");
-                //string user = Environment.GetEnvironmentVariable("DB_USER");
-                //string password = Environment.GetEnvironmentVariable("DB_PASSWORD");
-                //string auth = Environment.GetEnvironmentVariable("DB_AUTH");
+                // La cadena de conexión se lee desde Web.config para evitar valores hardcodeados.
+                var settings = System.Configuration.ConfigurationManager.ConnectionStrings[NOMBRE_CONNECTION_STRING];
+                if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
+                {
+                    throw new System.Configuration.ConfigurationErrorsException($"La cadena de conexión '{NOMBRE_CONNECTION_STRING}' no está configurada en Web.config.");
+                }
 
-                //cadenaConexion = ConstruirConnectionString(server, database, user, password, auth);
-
-                cadenaConexion = "Data Source=.;Initial Catalog=GymApp;Integrated Security=True";
-
+                cadenaConexion = settings.ConnectionString;
                 conn = new SqlConnection(cadenaConexion);
             }
             catch (SqlException ex)

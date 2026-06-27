@@ -89,6 +89,24 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 
+        .cliente-info-panel {
+            margin-top: 1rem;
+            background: var(--color-accent-sky-light, #E5F0FF);
+            border: 1px solid var(--color-accent-sky, #B5D5FF);
+            border-radius: var(--radius-xl, 0.75rem);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-text, #2D2D2D);
+            font-size: 0.875rem;
+        }
+
+        .cliente-info-panel i {
+            color: var(--color-accent-sky, #B5D5FF);
+            font-size: 1rem;
+        }
+
         /* Highlight active nav link */
         .sidebar-menu li a[href*="Actividades"] {
             background: var(--color-accent-lavender);
@@ -119,14 +137,24 @@
                         <polyline points="9 18 15 12 9 6"/>
                     </svg>
                 </button>
-                <button type="button" id="btnNewActivity" class="btn-primary btn-transition">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    <span>Nueva Actividad</span>
-                </button>
+                <asp:Panel ID="pnlNuevaActividad" runat="server">
+                    <button type="button" id="btnNewActivity" class="btn-primary btn-transition">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span>Nueva Actividad</span>
+                    </button>
+                </asp:Panel>
+
+                <asp:HiddenField ID="hdnEsCliente" runat="server" Value="0" />
+                <asp:HiddenField ID="hdnActividadesJson" runat="server" Value="{}" />
             </div>
+        </div>
+
+        <div id="panelClienteInfo" class="cliente-info-panel" style="display: none;">
+            <i class="bi bi-info-circle"></i>
+            <span>Se muestran las actividades asociadas a tus alumnos. Si no ves clases, contactá a recepción.</span>
         </div>
 
         <div class="calendar-grid animate-fade-in">
@@ -193,27 +221,24 @@
     </div>
 
     <script>
-        // Datos de actividades por día (simulados)
-        const activitiesByDay = {
-            1: [{ name: 'Yoga Flow', time: '08:00', color: 'pink', instructor: 'Ana García' }, { name: 'CrossFit', time: '18:00', color: 'lavender', instructor: 'Carlos Ruiz' }],
-            3: [{ name: 'Pilates', time: '10:00', color: 'mint', instructor: 'María López' }],
-            5: [{ name: 'HIIT', time: '07:00', color: 'peach', instructor: 'David Chen' }, { name: 'Zumba', time: '19:00', color: 'sky', instructor: 'Sofía Martín' }],
-            7: [{ name: 'Yoga Flow', time: '09:00', color: 'pink', instructor: 'Ana García' }],
-            8: [{ name: 'Spinning', time: '17:00', color: 'mint', instructor: 'María López' }],
-            10: [{ name: 'CrossFit', time: '06:00', color: 'lavender', instructor: 'Carlos Ruiz' }, { name: 'Body Pump', time: '20:00', color: 'peach', instructor: 'David Chen' }],
-            12: [{ name: 'Pilates', time: '11:00', color: 'mint', instructor: 'María López' }],
-            14: [{ name: 'HIIT', time: '07:00', color: 'peach', instructor: 'David Chen' }],
-            15: [{ name: 'Yoga Flow', time: '08:00', color: 'pink', instructor: 'Ana García' }, { name: 'Zumba', time: '18:00', color: 'sky', instructor: 'Sofía Martín' }],
-            17: [{ name: 'Spinning', time: '17:00', color: 'mint', instructor: 'María López' }],
-            19: [{ name: 'CrossFit', time: '06:00', color: 'lavender', instructor: 'Carlos Ruiz' }],
-            21: [{ name: 'Body Pump', time: '19:00', color: 'peach', instructor: 'David Chen' }],
-            22: [{ name: 'Pilates', time: '10:00', color: 'mint', instructor: 'María López' }],
-            24: [{ name: 'HIIT', time: '07:00', color: 'peach', instructor: 'David Chen' }, { name: 'Yoga Flow', time: '20:00', color: 'pink', instructor: 'Ana García' }],
-            26: [{ name: 'Zumba', time: '18:00', color: 'sky', instructor: 'Sofía Martín' }],
-            28: [{ name: 'Spinning', time: '17:00', color: 'mint', instructor: 'María López' }],
-            29: [{ name: 'CrossFit', time: '06:00', color: 'lavender', instructor: 'Carlos Ruiz' }],
-            31: [{ name: 'Body Pump', time: '19:00', color: 'peach', instructor: 'David Chen' }],
-        };
+        // Actividades cargadas desde el servidor (serializadas en code-behind).
+        // Para clientes solo se incluyen las actividades de sus alumnos inscriptos.
+        const activitiesByDay = (function () {
+            try {
+                return JSON.parse(document.getElementById('hdnActividadesJson').value || '{}');
+            } catch (e) {
+                return {};
+            }
+        })();
+
+        // Mostrar mensaje informativo para usuarios Cliente.
+        (function () {
+            const esCliente = document.getElementById('hdnEsCliente').value === '1';
+            const panelInfo = document.getElementById('panelClienteInfo');
+            if (esCliente && panelInfo) {
+                panelInfo.style.display = 'flex';
+            }
+        })();
 
         const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 

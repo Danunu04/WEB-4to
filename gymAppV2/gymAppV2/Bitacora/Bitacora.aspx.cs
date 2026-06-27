@@ -110,7 +110,7 @@ namespace gymAppV2.Bitacora
                 pnlLoading.Visible = false;
                 pnlContent.Visible = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 lblError.Text = "Error al cargar la bitácora. Intente nuevamente.";
                 lblError.Visible = true;

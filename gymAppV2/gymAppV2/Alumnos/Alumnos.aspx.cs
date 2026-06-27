@@ -124,7 +124,7 @@ namespace gymAppV2.Alumnos
                 ddlUsuario.Items.Add(new ListItem("Con usuario", "con_usuario"));
                 ddlUsuario.Items.Add(new ListItem("Sin usuario", "sin_usuario"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Silencioso
             }
@@ -144,7 +144,7 @@ namespace gymAppV2.Alumnos
                     ddlUsuarioAsociar.Items.Add(new ListItem(texto, usuario.USUARIO_Usuario));
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Silencioso - el dropdown queda vacío
             }

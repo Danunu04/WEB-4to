@@ -71,6 +71,9 @@ namespace BLL
                 case "Perfil":
                     return rol == 4;
 
+                case "VerificacionDV":
+                    return rol == 1;
+
                 default:
                     return false;
             }

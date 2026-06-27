@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using BE;
@@ -12,11 +13,28 @@ namespace MPP
     {
         private DalGeneral dal;
         private CriptoManager criptoManager;
+        private DigitoVerificadorManager dvManager;
 
         public MPPPreguntaSeguridad()
         {
             dal = new DalGeneral();
             criptoManager = new CriptoManager();
+            dvManager = new DigitoVerificadorManager();
+        }
+
+        /// <summary>
+        /// Calcula DVH y DVV de una pregunta de seguridad a partir de valores en texto plano.
+        /// </summary>
+        private void CalcularDigitosPregunta(PreguntaSeguridad pregunta, out string dvh, out string dvv)
+        {
+            var valores = new Dictionary<string, object>
+            {
+                { "usr", pregunta.Usuario },
+                { "pregunta", pregunta.Pregunta },
+                { "respuesta", pregunta.Respuesta }
+            };
+
+            dvManager.CalcularAmbos(valores, out dvh, out dvv);
         }
 
         /// <summary>
@@ -87,20 +105,27 @@ namespace MPP
         {
             try
             {
+                CalcularDigitosPregunta(pregunta, out string dvh, out string dvv);
+
                 string consulta = @"
                     IF EXISTS (SELECT 1 FROM [GymApp].[dbo].[PreguntasSeguridad] WHERE usr = @Usuario)
                         UPDATE [GymApp].[dbo].[PreguntasSeguridad]
-                        SET pregunta = @Pregunta, respuesta = @Respuesta
+                        SET pregunta = @Pregunta,
+                            respuesta = @Respuesta,
+                            dvv = @DVV,
+                            dvh = @DVH
                         WHERE usr = @Usuario
                     ELSE
                         INSERT INTO [GymApp].[dbo].[PreguntasSeguridad] (pregunta, respuesta, usr, dvv, dvh)
-                        VALUES (@Pregunta, @Respuesta, @Usuario, '', '')";
+                        VALUES (@Pregunta, @Respuesta, @Usuario, @DVV, @DVH)";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@Usuario", pregunta.Usuario),
                     new SqlParameter("@Pregunta", EncriptarCampo(pregunta.Pregunta)),
-                    new SqlParameter("@Respuesta", EncriptarCampo(pregunta.Respuesta))
+                    new SqlParameter("@Respuesta", EncriptarCampo(pregunta.Respuesta)),
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -182,6 +207,136 @@ namespace MPP
             {
                 throw new Exception("Error al validar respuesta: " + ex.Message, ex);
             }
+        }
+
+        /// <summary>
+        /// Recalcula los dígitos verificadores de todas las preguntas de seguridad.
+        /// Necesario para la inicialización del control de integridad, ya que la
+        /// pregunta y respuesta se almacenan encriptadas.
+        /// </summary>
+        public void RecalcularDigitosTodasPreguntas()
+        {
+            try
+            {
+                string consulta = @"
+                    SELECT codPregunta, usr, pregunta, respuesta
+                    FROM [GymApp].[dbo].[PreguntasSeguridad]";
+
+                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    PreguntaSeguridad pregunta = new PreguntaSeguridad(
+                        Convert.ToInt32(row["codPregunta"]),
+                        DesencriptarCampo(row["pregunta"] != DBNull.Value ? row["pregunta"].ToString() : string.Empty),
+                        DesencriptarCampo(row["respuesta"] != DBNull.Value ? row["respuesta"].ToString() : string.Empty),
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        string.Empty,
+                        string.Empty
+                    );
+
+                    CalcularDigitosPregunta(pregunta, out string dvh, out string dvv);
+
+                    string actualizar = @"
+                        UPDATE [GymApp].[dbo].[PreguntasSeguridad]
+                        SET dvv = @DVV, dvh = @DVH
+                        WHERE codPregunta = @IdPregunta";
+
+                    ArrayList parametros = new ArrayList
+                    {
+                        new SqlParameter("@IdPregunta", pregunta.Id),
+                        new SqlParameter("@DVV", dvv),
+                        new SqlParameter("@DVH", dvh)
+                    };
+
+                    dal._686DPEscribir(actualizar, parametros);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al recalcular dígitos de preguntas de seguridad: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Verifica la integridad de la tabla PreguntasSeguridad desencriptando
+        /// la pregunta y respuesta antes de comparar DVH/DVV.
+        /// </summary>
+        public List<ResultadoVerificacionDV> VerificarIntegridadPreguntas()
+        {
+            var resultados = new List<ResultadoVerificacionDV>();
+
+            try
+            {
+                string consulta = @"
+                    SELECT codPregunta, usr, pregunta, respuesta, dvv, dvh
+                    FROM [GymApp].[dbo].[PreguntasSeguridad]";
+
+                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    int codPregunta = Convert.ToInt32(row["codPregunta"]);
+                    string usuario = row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty;
+                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
+                    string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
+
+                    PreguntaSeguridad pregunta = new PreguntaSeguridad(
+                        codPregunta,
+                        DesencriptarCampo(row["pregunta"] != DBNull.Value ? row["pregunta"].ToString() : string.Empty),
+                        DesencriptarCampo(row["respuesta"] != DBNull.Value ? row["respuesta"].ToString() : string.Empty),
+                        usuario,
+                        string.Empty,
+                        string.Empty
+                    );
+
+                    CalcularDigitosPregunta(pregunta, out string dvhCalculado, out string dvvCalculado);
+
+                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado) && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
+                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado) && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
+
+                    if (dvhOk && dvvOk)
+                        continue;
+
+                    resultados.Add(new ResultadoVerificacionDV
+                    {
+                        NombreTabla = "PreguntasSeguridad",
+                        ClaveFila = codPregunta.ToString(),
+                        Campo = "DVH/DVV (fila completa)",
+                        EsValido = false,
+                        Mensaje = $"Los dígitos verificadores de la pregunta del usuario {usuario} no coinciden.",
+                        DVHAlmacenado = dvhAlmacenado,
+                        DVHCalculado = dvhCalculado,
+                        DVVAlmacenado = dvvAlmacenado,
+                        DVVCalculado = dvvCalculado
+                    });
+                }
+
+                if (resultados.Count == 0)
+                {
+                    resultados.Add(new ResultadoVerificacionDV
+                    {
+                        NombreTabla = "PreguntasSeguridad",
+                        ClaveFila = "-",
+                        Campo = "-",
+                        EsValido = true,
+                        Mensaje = "Tabla PreguntasSeguridad verificada correctamente."
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                resultados.Add(new ResultadoVerificacionDV
+                {
+                    NombreTabla = "PreguntasSeguridad",
+                    ClaveFila = "-",
+                    Campo = "-",
+                    EsValido = false,
+                    Mensaje = "Error al verificar PreguntasSeguridad: " + ex.Message
+                });
+            }
+
+            return resultados;
         }
     }
 }

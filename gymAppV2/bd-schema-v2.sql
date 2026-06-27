@@ -116,8 +116,8 @@ CREATE TABLE [dbo].[USUARIOS](
     [fechaNacimiento]   VARCHAR(100)    NULL,           -- fecha encriptada como yyyy-MM-dd en Base64 + IV
     [rol]               INT             NOT NULL DEFAULT 4,  -- 1=Admin, 2=Recepcionista, 3=Entrenador, 4=Cliente
     [primerLogin]       BIT             NOT NULL DEFAULT 1,  -- 1=debe cambiar contraseña en primer login
-    [dvv]               VARCHAR(50)     NOT NULL,
-    [dvh]               VARCHAR(50)     NOT NULL,
+    [dvv]               VARCHAR(64)     NOT NULL,
+    [dvh]               VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_USUARIOS] PRIMARY KEY CLUSTERED ([usr] ASC),
     CONSTRAINT [UK_USUARIOS_DNI] UNIQUE ([dni] ASC),
     CONSTRAINT [CK_USUARIOS_Tipo] CHECK ([tipo] IN ('Empleado', 'Entrenador', 'Cliente', 'Familiar')),
@@ -134,8 +134,8 @@ CREATE TABLE [dbo].[ALUMNOS](
     [peso]          DECIMAL(5,2)    NULL,
     [tieneRutinas]  BIT             NOT NULL DEFAULT 0,
     [activo]        BIT             NOT NULL DEFAULT 1,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_ALUMNOS] PRIMARY KEY CLUSTERED ([dni] ASC),
     CONSTRAINT [FK_ALUMNOS_USUARIOS] FOREIGN KEY ([dni])
         REFERENCES [dbo].[USUARIOS] ([dni])
@@ -155,8 +155,8 @@ CREATE TABLE [dbo].[ENTRENADORES](
     [dni]           INT             NOT NULL,
     [alumnosCount]  INT             NOT NULL DEFAULT 0,
     [activo]        BIT             NOT NULL DEFAULT 1,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_ENTRENADORES] PRIMARY KEY CLUSTERED ([dni] ASC),
     CONSTRAINT [FK_ENTRENADORES_USUARIOS] FOREIGN KEY ([dni])
         REFERENCES [dbo].[USUARIOS] ([dni])
@@ -174,8 +174,8 @@ GO
 CREATE TABLE [dbo].[USUARIO_Intentos](
     [usr]           VARCHAR(50)     NOT NULL,
     [intentos]      INT             NOT NULL DEFAULT 0,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_USUARIO_Intentos] PRIMARY KEY CLUSTERED ([usr] ASC),
     CONSTRAINT [FK_UsuarioIntentos_Usuario] FOREIGN KEY ([usr])
         REFERENCES [dbo].[USUARIOS] ([usr])
@@ -193,8 +193,8 @@ GO
 CREATE TABLE [dbo].[USUARIO_Contras](
     [usr]       VARCHAR(50)     NOT NULL,
     [contra]    VARCHAR(255)    NOT NULL,    -- hash SHA256 de una contraseña anterior
-    [dvv]       VARCHAR(50)     NOT NULL,
-    [dvh]       VARCHAR(50)     NOT NULL,
+    [dvv]       VARCHAR(64)     NOT NULL,
+    [dvh]       VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_USUARIO_Contras] PRIMARY KEY CLUSTERED ([usr] ASC, [contra] ASC),
     CONSTRAINT [FK_UsuarioContras_Usuario] FOREIGN KEY ([usr])
         REFERENCES [dbo].[USUARIOS] ([usr])
@@ -216,8 +216,8 @@ CREATE TABLE [dbo].[PreguntasSeguridad](
     [usr]           VARCHAR(50)     NOT NULL,
     [pregunta]      VARCHAR(500)    NOT NULL,
     [respuesta]     VARCHAR(500)    NOT NULL,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_PreguntasSeguridad] PRIMARY KEY CLUSTERED ([codPregunta] ASC),
     CONSTRAINT [FK_PreguntasSeguridad_Usuario] FOREIGN KEY ([usr])
         REFERENCES [dbo].[USUARIOS] ([usr])
@@ -236,8 +236,8 @@ CREATE TABLE [dbo].[Perfiles](
     [idPerfil]      INT             IDENTITY(1,1) NOT NULL,
     [nombrePerfil]  VARCHAR(100)    NOT NULL,
     [activo]        BIT             NOT NULL DEFAULT 1,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Perfiles] PRIMARY KEY CLUSTERED ([idPerfil] ASC),
     CONSTRAINT [UK_Perfiles_Nombre] UNIQUE NONCLUSTERED ([nombrePerfil] ASC)
 ) ON [PRIMARY]
@@ -246,8 +246,8 @@ GO
 CREATE TABLE [dbo].[Usuario_Perfil](
     [usr]       VARCHAR(50) NOT NULL,
     [idPerfil]  INT         NOT NULL,
-    [dvv]       VARCHAR(50) NOT NULL,
-    [dvh]       VARCHAR(50) NOT NULL,
+    [dvv]       VARCHAR(64) NOT NULL,
+    [dvh]       VARCHAR(64) NOT NULL,
     CONSTRAINT [PK_Usuario_Perfil] PRIMARY KEY CLUSTERED ([usr] ASC, [idPerfil] ASC),
     CONSTRAINT [FK_UsuarioPerfil_Usuario] FOREIGN KEY ([usr]) REFERENCES [dbo].[USUARIOS] ([usr]),
     CONSTRAINT [FK_UsuarioPerfil_Perfil] FOREIGN KEY ([idPerfil]) REFERENCES [dbo].[Perfiles] ([idPerfil])
@@ -265,8 +265,8 @@ CREATE TABLE [dbo].[Actividades](
     [costoInterno]      DECIMAL(10,2)   NOT NULL,
     [precioAlumno]      DECIMAL(10,2)   NOT NULL,
     [activo]            BIT             NOT NULL DEFAULT 1,
-    [dvv]               VARCHAR(50)     NOT NULL,
-    [dvh]               VARCHAR(50)     NOT NULL,
+    [dvv]               VARCHAR(64)     NOT NULL,
+    [dvh]               VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Actividades] PRIMARY KEY CLUSTERED ([codActividad] ASC)
 ) ON [PRIMARY]
 GO
@@ -280,8 +280,8 @@ CREATE TABLE [dbo].[Ejercicio](
     [nombre]            VARCHAR(100)    NOT NULL,
     [grupoMuscular]     VARCHAR(100)    NOT NULL,
     [descripcion]       VARCHAR(500)    NULL,
-    [dvv]               VARCHAR(50)     NOT NULL,
-    [dvh]               VARCHAR(50)     NOT NULL,
+    [dvv]               VARCHAR(64)     NOT NULL,
+    [dvh]               VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Ejercicio] PRIMARY KEY CLUSTERED ([codEjercicio] ASC),
     CONSTRAINT [UK_Ejercicio_Nombre] UNIQUE NONCLUSTERED ([nombre] ASC)
 ) ON [PRIMARY]
@@ -298,8 +298,8 @@ CREATE TABLE [dbo].[Rutinas](
     [dniAlumno]        INT             NOT NULL,
     [dniEntrenador]    INT             NOT NULL,
     [codActividad]     INT             NOT NULL,
-    [dvv]              VARCHAR(50)     NOT NULL,
-    [dvh]              VARCHAR(50)     NOT NULL,
+    [dvv]              VARCHAR(64)     NOT NULL,
+    [dvh]              VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Rutinas] PRIMARY KEY CLUSTERED ([codRutina] ASC),
     CONSTRAINT [FK_Rutinas_Alumno] FOREIGN KEY ([dniAlumno]) REFERENCES [dbo].[ALUMNOS] ([dni]),
     CONSTRAINT [FK_Rutinas_Entrenador] FOREIGN KEY ([dniEntrenador]) REFERENCES [dbo].[ENTRENADORES] ([dni]),
@@ -320,8 +320,8 @@ CREATE TABLE [dbo].[RutinaEjercicio](
     [pesoLevantado]        DECIMAL(6,2)    NOT NULL,
     [porcentaje1RM]        DECIMAL(5,2)    NULL,
     [descansoSegundos]     INT             NULL,
-    [dvv]                  VARCHAR(50)     NOT NULL,
-    [dvh]                  VARCHAR(50)     NOT NULL,
+    [dvv]                  VARCHAR(64)     NOT NULL,
+    [dvh]                  VARCHAR(64)     NOT NULL,
     [volumen]              AS ((([series]*[repeticiones])*[pesoLevantado])),
     CONSTRAINT [PK_RutinaEjercicio] PRIMARY KEY CLUSTERED ([codRutinaEjercicio] ASC),
     CONSTRAINT [FK_RutinaEjercicio_Rutina] FOREIGN KEY ([codRutina]) REFERENCES [dbo].[Rutinas] ([codRutina]),
@@ -344,8 +344,8 @@ CREATE TABLE [dbo].[AlumnoRM](
     [codEjercicio]    INT             NOT NULL,
     [pesoRM]          DECIMAL(6,2)    NOT NULL,
     [fechaRM]         DATE            NOT NULL,
-    [dvv]             VARCHAR(50)     NOT NULL,
-    [dvh]             VARCHAR(50)     NOT NULL,
+    [dvv]             VARCHAR(64)     NOT NULL,
+    [dvh]             VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_AlumnoRM] PRIMARY KEY CLUSTERED ([codRM] ASC),
     CONSTRAINT [UK_AlumnoRM_DniEjercicioFecha] UNIQUE NONCLUSTERED ([dni] ASC, [codEjercicio] ASC, [fechaRM] ASC),
     CONSTRAINT [FK_AlumnoRM_Alumno] FOREIGN KEY ([dni]) REFERENCES [dbo].[ALUMNOS] ([dni]),
@@ -363,8 +363,8 @@ CREATE TABLE [dbo].[PesoHistorial](
     [dni]         INT             NOT NULL,
     [peso]        DECIMAL(5,2)    NOT NULL,
     [fecha]       DATE            NOT NULL,
-    [dvv]         VARCHAR(50)     NOT NULL,
-    [dvh]         VARCHAR(50)     NOT NULL,
+    [dvv]         VARCHAR(64)     NOT NULL,
+    [dvh]         VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_PesoHistorial] PRIMARY KEY CLUSTERED ([codPeso] ASC),
     CONSTRAINT [FK_PesoHistorial_Alumno] FOREIGN KEY ([dni]) REFERENCES [dbo].[ALUMNOS] ([dni]),
     CONSTRAINT [CK_PesoHistorial_Peso] CHECK (([peso] > 0 AND [peso] < 500))
@@ -378,8 +378,8 @@ GO
 CREATE TABLE [dbo].[Actividad_Alumno](
     [dni]           INT         NOT NULL,
     [codActividad]  INT         NOT NULL,
-    [dvv]           VARCHAR(50) NOT NULL,
-    [dvh]           VARCHAR(50) NOT NULL,
+    [dvv]           VARCHAR(64) NOT NULL,
+    [dvh]           VARCHAR(64) NOT NULL,
     CONSTRAINT [PK_Actividad_Alumno] PRIMARY KEY CLUSTERED ([dni] ASC, [codActividad] ASC),
     CONSTRAINT [FK_ActividadAlumno_Alumno] FOREIGN KEY ([dni]) REFERENCES [dbo].[ALUMNOS] ([dni]),
     CONSTRAINT [FK_ActividadAlumno_Actividad] FOREIGN KEY ([codActividad]) REFERENCES [dbo].[Actividades] ([codActividad])
@@ -393,8 +393,8 @@ GO
 CREATE TABLE [dbo].[Actividad_Entrenador](
     [codActividad]      INT         NOT NULL,
     [dniEntrenador]     INT         NOT NULL,
-    [dvv]               VARCHAR(50) NOT NULL,
-    [dvh]               VARCHAR(50) NOT NULL,
+    [dvv]               VARCHAR(64) NOT NULL,
+    [dvh]               VARCHAR(64) NOT NULL,
     CONSTRAINT [PK_Actividad_Entrenador] PRIMARY KEY CLUSTERED ([codActividad] ASC, [dniEntrenador] ASC),
     CONSTRAINT [FK_ActividadEntrenador_Actividad] FOREIGN KEY ([codActividad]) REFERENCES [dbo].[Actividades] ([codActividad]),
     CONSTRAINT [FK_ActividadEntrenador_Entrenador] FOREIGN KEY ([dniEntrenador]) REFERENCES [dbo].[ENTRENADORES] ([dni])
@@ -413,8 +413,8 @@ CREATE TABLE [dbo].[Evento](
     [descripcion]   VARCHAR(500)    NULL,
     [criticidad]    INT             NULL,
     [tipo]          VARCHAR(256)    NULL,
-    [dvv]           VARCHAR(50)     NULL,
-    [dvh]           VARCHAR(256)    NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Evento] PRIMARY KEY CLUSTERED ([codEvento] ASC),
     CONSTRAINT [FK_Evento_Usuario] FOREIGN KEY ([usr]) REFERENCES [dbo].[USUARIOS] ([usr]),
     CONSTRAINT [CK_Evento_Criticidad] CHECK (([criticidad] = 1 OR [criticidad] = 2 OR [criticidad] = 3 OR [criticidad] = 4))
@@ -434,8 +434,8 @@ CREATE TABLE [dbo].[Familia](
     [familiaId]     INT             IDENTITY(1,1) NOT NULL,
     [nombre]        VARCHAR(100)    NOT NULL,
     [profundidad]   BIT             NOT NULL DEFAULT 0,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Familia] PRIMARY KEY CLUSTERED ([familiaId] ASC)
 ) ON [PRIMARY]
 GO
@@ -447,8 +447,8 @@ GO
 CREATE TABLE [dbo].[Permiso](
     [permisoId]     INT             IDENTITY(1,1) NOT NULL,
     [nombre]        VARCHAR(100)    NOT NULL,
-    [dvv]           VARCHAR(50)     NOT NULL,
-    [dvh]           VARCHAR(50)     NOT NULL,
+    [dvv]           VARCHAR(64)     NOT NULL,
+    [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_Permiso] PRIMARY KEY CLUSTERED ([permisoId] ASC),
     CONSTRAINT [UK_Permiso_Nombre] UNIQUE NONCLUSTERED ([nombre] ASC)
 ) ON [PRIMARY]
@@ -461,8 +461,8 @@ GO
 CREATE TABLE [dbo].[PermisoFamilia](
     [permisoId]     INT         NOT NULL,
     [familiaId]     INT         NOT NULL,
-    [dvv]           VARCHAR(50) NOT NULL,
-    [dvh]           VARCHAR(50) NOT NULL,
+    [dvv]           VARCHAR(64) NOT NULL,
+    [dvh]           VARCHAR(64) NOT NULL,
     CONSTRAINT [PK_PermisoFamilia] PRIMARY KEY CLUSTERED ([permisoId] ASC, [familiaId] ASC),
     CONSTRAINT [FK_PermisoFamilia_Permiso] FOREIGN KEY ([permisoId]) REFERENCES [dbo].[Permiso] ([permisoId]),
     CONSTRAINT [FK_PermisoFamilia_Familia] FOREIGN KEY ([familiaId]) REFERENCES [dbo].[Familia] ([familiaId])
@@ -472,8 +472,8 @@ GO
 CREATE TABLE [dbo].[Perfil_Familia](
     [idPerfil]      INT         NOT NULL,
     [idFamilia]     INT         NOT NULL,
-    [dvv]           VARCHAR(50) NOT NULL,
-    [dvh]           VARCHAR(50) NOT NULL,
+    [dvv]           VARCHAR(64) NOT NULL,
+    [dvh]           VARCHAR(64) NOT NULL,
     CONSTRAINT [PK_Perfil_Familia] PRIMARY KEY CLUSTERED ([idPerfil] ASC, [idFamilia] ASC),
     CONSTRAINT [FK_PerfilFamilia_Perfil] FOREIGN KEY ([idPerfil]) REFERENCES [dbo].[Perfiles] ([idPerfil]),
     CONSTRAINT [FK_PerfilFamilia_Familia] FOREIGN KEY ([idFamilia]) REFERENCES [dbo].[Familia] ([familiaId])
@@ -483,8 +483,8 @@ GO
 CREATE TABLE [dbo].[Perfil_Permiso](
     [idPerfil]      INT         NOT NULL,
     [idPermiso]     INT         NOT NULL,
-    [dvv]           VARCHAR(50) NOT NULL,
-    [dvh]           VARCHAR(50) NOT NULL,
+    [dvv]           VARCHAR(64) NOT NULL,
+    [dvh]           VARCHAR(64) NOT NULL,
     CONSTRAINT [PK_Perfil_Permiso] PRIMARY KEY CLUSTERED ([idPerfil] ASC, [idPermiso] ASC),
     CONSTRAINT [FK_PerfilPermiso_Perfil] FOREIGN KEY ([idPerfil]) REFERENCES [dbo].[Perfiles] ([idPerfil]),
     CONSTRAINT [FK_PerfilPermiso_Permiso] FOREIGN KEY ([idPermiso]) REFERENCES [dbo].[Permiso] ([permisoId])
@@ -502,8 +502,8 @@ CREATE TABLE [dbo].[PrecioModalidad](
     [Precio]            DECIMAL(10,2)   NOT NULL,
     [Activo]            BIT             NOT NULL DEFAULT 1,
     [FechaModificacion] DATETIME        NOT NULL DEFAULT GETDATE(),
-    [dvv]               VARCHAR(50)     NOT NULL,
-    [dvh]               VARCHAR(50)     NOT NULL,
+    [dvv]               VARCHAR(64)     NOT NULL,
+    [dvh]               VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_PrecioModalidad] PRIMARY KEY CLUSTERED ([Id] ASC),
     CONSTRAINT [CK_PrecioModalidad_Dias] CHECK (
         ([EsDiario] = 1 AND [DiasPorSemana] = 0)
@@ -566,6 +566,26 @@ GO
 CREATE NONCLUSTERED INDEX [IX_RutinaEjercicio_Rutina] ON [dbo].[RutinaEjercicio] ([codRutina] ASC)
 GO
 CREATE NONCLUSTERED INDEX [IX_RutinaEjercicio_Ejercicio] ON [dbo].[RutinaEjercicio] ([codEjercicio] ASC)
+GO
+
+-- ============================================================================
+-- TABLA: DigitoVerificador (control global de DVH/DVV por tabla)
+-- ============================================================================
+-- NOTA DE SEGURIDAD:
+--   Almacena el hash agregado de todos los DVH y DVV de cada tabla.
+--   Permite detectar rápidamente si una tabla fue alterada sin verificar
+--   fila por fila en cada request.
+-- ============================================================================
+
+CREATE TABLE [dbo].[DigitoVerificador](
+    [idDigitoVerificador]   INT             IDENTITY(1,1) NOT NULL,
+    [nombreTabla]           VARCHAR(100)    NOT NULL,
+    [dvhTabla]              VARCHAR(64)     NOT NULL,
+    [dvvTabla]              VARCHAR(64)     NOT NULL,
+    [fechaCalculo]          DATETIME        NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT [PK_DigitoVerificador] PRIMARY KEY CLUSTERED ([idDigitoVerificador] ASC),
+    CONSTRAINT [UK_DigitoVerificador_NombreTabla] UNIQUE NONCLUSTERED ([nombreTabla] ASC)
+) ON [PRIMARY]
 GO
 
 -- ============================================================================

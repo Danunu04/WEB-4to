@@ -35,6 +35,7 @@ namespace gymAppV2
             liBitacora.Visible = bllRol.UsuarioActualTieneAcceso("Bitacora");
             liPagos.Visible = bllRol.UsuarioActualTieneAcceso("Pagos");
             liPerfil.Visible = bllRol.UsuarioActualTieneAcceso("Perfil");
+            liVerificacionDV.Visible = bllRol.UsuarioActualTieneAcceso("VerificacionDV");
 
             // El módulo de permisos no está implementado; se mantiene oculto hasta su desarrollo.
             liPermisos.Visible = false;

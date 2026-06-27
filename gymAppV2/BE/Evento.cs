@@ -10,7 +10,7 @@ namespace BE
         public string EVENTO_Accion { get; set; }
         public DateTime EVENTO_Timestamp { get; set; }
         public string EVENTO_DVV { get; set; }
-        public int EVENTO_DVH { get; set; }
+        public string EVENTO_DVH { get; set; }
         public bool Expandido { get; set; }
         public int EVENTO_Criticidad { get; set; }
         public string EVENTO_Modulo { get; set; }

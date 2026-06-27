@@ -5,16 +5,37 @@ using System.Data;
 using System.Data.SqlClient;
 using BE;
 using DAL;
+using SERVICIOS;
 
 namespace MPP
 {
     public class MPPPrecioModalidad
     {
         private DalGeneral dal;
+        private DigitoVerificadorManager dvManager;
 
         public MPPPrecioModalidad()
         {
             dal = new DalGeneral();
+            dvManager = new DigitoVerificadorManager();
+        }
+
+        /// <summary>
+        /// Calcula DVH y DVV de una modalidad de precio a partir de sus valores.
+        /// </summary>
+        private void CalcularDigitosPrecioModalidad(PrecioModalidad modalidad, out string dvh, out string dvv)
+        {
+            var valores = new Dictionary<string, object>
+            {
+                { "Id", modalidad.Id },
+                { "DiasPorSemana", modalidad.DiasPorSemana },
+                { "EsDiario", modalidad.EsDiario },
+                { "Precio", modalidad.Precio },
+                { "Activo", modalidad.Activo },
+                { "FechaModificacion", modalidad.FechaModificacion }
+            };
+
+            dvManager.CalcularAmbos(valores, out dvh, out dvv);
         }
 
         /// <summary>
@@ -123,16 +144,29 @@ namespace MPP
         {
             try
             {
+                PrecioModalidad modalidad = ObtenerModalidad(id);
+                if (modalidad == null)
+                    throw new Exception("No se encontró la modalidad de precio.");
+
+                modalidad.Precio = nuevoPrecio;
+                modalidad.FechaModificacion = DateTime.Now;
+
+                CalcularDigitosPrecioModalidad(modalidad, out string dvh, out string dvv);
+
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[PrecioModalidad]
                     SET Precio = @Precio,
-                        FechaModificacion = @FechaModificacion
+                        FechaModificacion = @FechaModificacion,
+                        dvv = @DVV,
+                        dvh = @DVH
                     WHERE Id = @Id";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@Precio", nuevoPrecio),
-                    new SqlParameter("@FechaModificacion", DateTime.Now),
+                    new SqlParameter("@FechaModificacion", modalidad.FechaModificacion),
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh),
                     new SqlParameter("@Id", id)
                 };
 

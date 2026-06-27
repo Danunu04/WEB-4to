@@ -167,6 +167,10 @@
     <Content Include="Content\bootstrap-grid.css.map" />
     <Content Include="Usuarios\Usuarios.css" />
     <Content Include="Usuarios\UsuariosModulo.aspx" />
+    <Content Include="Rutinas\Rutinas.aspx" />
+    <Content Include="Perfil\Perfil.aspx" />
+    <Content Include="VerificacioDV\VerificacioDV.aspx" />
+    <Content Include="VerificacioDV\VerificacioDV.css" />
     <Content Include="WebForm1.aspx" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
@@ -351,6 +355,27 @@
     </Compile>
     <Compile Include="WebForm1.aspx.designer.cs">
       <DependentUpon>WebForm1.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Rutinas\Rutinas.aspx.cs">
+      <DependentUpon>Rutinas.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Rutinas\Rutinas.aspx.designer.cs">
+      <DependentUpon>Rutinas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Perfil\Perfil.aspx.cs">
+      <DependentUpon>Perfil.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Perfil\Perfil.aspx.designer.cs">
+      <DependentUpon>Perfil.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="VerificacioDV\VerificacioDV.aspx.cs">
+      <DependentUpon>VerificacioDV.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="VerificacioDV\VerificacioDV.aspx.designer.cs">
+      <DependentUpon>VerificacioDV.aspx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="CriptoManager.cs" />
     <Compile Include="CriptoMigracion.cs" />
+    <Compile Include="DigitoVerificadorManager.cs" />
     <Compile Include="Excepciones\AccesoDenegadoException.cs" />
     <Compile Include="Singleton\Singleton.cs" />
     <Compile Include="Singleton\SesionUsuario.cs" />

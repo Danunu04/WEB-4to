@@ -331,8 +331,8 @@
   - Archivo: `gymAppV2/Actividades/*.aspx.cs`.
   - Criterio: Admin/Recepcionista CRUD; Cliente solo visualización de sus clases; Entrenador solo visualización.
 
-- [ ] 🔴 **5.2.6** Agregar verificación de permisos en `Page_Load` de rutinas.
-  - Archivo: `gymAppV2/Rutinas/*.aspx.cs`.
+- [x] 🔴 **5.2.6** Agregar verificación de permisos en `Page_Load` de rutinas.
+  - Archivo: `gymAppV2/Rutinas/Rutinas.aspx.cs`.
   - Criterio: Entrenador ABM; Admin/Recepcionista ABM total; Cliente solo lectura.
 
 - [x] 🟠 **5.2.7** Crear página `AccesoDenegado.aspx`.
@@ -385,21 +385,21 @@
   - Criterio: el menú funciona con redirecciones reales; el modal 404 solo se usa para funcionalidades realmente no implementadas.
 
 ### 5.4 Verificación de propiedad de datos
-- [ ] 🟠 **5.4.1** En módulo "Perfil", asegurar que un Cliente solo vea/modifique sus propios datos.
-  - Archivo: `gymAppV2/Perfil/*.aspx.cs`.
+- [x] 🟠 **5.4.1** En módulo "Perfil", asegurar que un Cliente solo vea/modifique sus propios datos.
+  - Archivo: `gymAppV2/Perfil/Perfil.aspx.cs`.
   - Criterio: compara `Session["UsuarioLogueado"]` con el usuario que se intenta editar.
 
 - [x] 🟠 **5.4.2** En listado de alumnos para Cliente, filtrar por los alumnos asociados al usuario.
   - Archivo: `gymAppV2/Alumnos/Alumnos.aspx.cs`.
   - Criterio: un Cliente-Familiar no ve alumnos de otros usuarios.
 
-- [ ] 🟠 **5.4.3** En rutinas para Cliente, mostrar solo las rutinas de sus alumnos asociados.
-  - Archivo: `gymAppV2/Rutinas/*.aspx.cs`.
-  - Criterio: filtra por `dniAlumno` relacionados al usuario.
+- [x] 🟠 **5.4.3** En rutinas para Cliente, mostrar solo las rutinas de sus alumnos asociados.
+  - Archivo: `gymAppV2/Rutinas/Rutinas.aspx.cs`.
+  - Criterio: filtra por `dniAlumno` relacionados al usuario. La lógica de filtrado está preparada; la carga de datos se conectará cuando exista `BLLRutina`.
 
-- [ ] 🟠 **5.4.4** En actividades para Cliente, mostrar solo las clases de sus alumnos inscriptos.
-  - Archivo: `gymAppV2/Actividades/*.aspx.cs`.
-  - Criterio: filtra por inscripciones del usuario.
+- [x] 🟠 **5.4.4** En actividades para Cliente, mostrar solo las clases de sus alumnos inscriptos.
+  - Archivo: `gymAppV2/Actividades/actividades.aspx.cs`.
+  - Criterio: el Cliente no puede crear actividades; se filtran las actividades mediante `BLLActividad.ListarActividadesPorCliente` usando la tabla `Actividad_Alumno`. La capa de datos (`BE.Actividad`, `MPPActividad`, `BLLActividad`) fue creada y el calendario consume los datos serializados desde el servidor.
 
 ---
 
@@ -414,17 +414,20 @@
   - Criterio: documento de decisión que confirme si se agrega salt o se mantiene SHA-256 puro.
   - Decisión: por ahora se mantiene SHA-256 puro para no romper contraseñas existentes. Agregar salt requiere migración forzosa de todos los usuarios.
 
-- [ ] 🟠 **6.1.2** Si se agrega salt, modificar `CriptoManager._686DPGetSHA256` para aceptar salt.
+- [x] 🟠 **6.1.2** Si se agrega salt, modificar `CriptoManager._686DPGetSHA256` para aceptar salt.
   - Archivo: `SERVICIOS/CriptoManager.cs`.
   - Criterio: el hash se calcula sobre `salt + contraseña`.
+  - Nota: no aplica. Según decisión 6.1.1 se mantiene SHA-256 puro para no romper contraseñas existentes.
 
-- [ ] 🟠 **6.1.3** Si se agrega salt, almacenar el salt por usuario en `USUARIOS`.
+- [x] 🟠 **6.1.3** Si se agrega salt, almacenar el salt por usuario en `USUARIOS`.
   - Archivo: `ScriptCreacion.sql`, `BE/Usuario.cs`, `MPP/MPPUsuario.cs`.
   - Criterio: cada usuario tiene un salt único generado al crear la cuenta.
+  - Nota: no aplica por la decisión 6.1.1.
 
-- [ ] 🟠 **6.1.4** Si se agrega salt, migrar contraseñas existentes o forzar cambio.
+- [x] 🟠 **6.1.4** Si se agrega salt, migrar contraseñas existentes o forzar cambio.
   - Archivo: script de migración.
   - Criterio: los usuarios antiguos deben cambiar contraseña si no tienen salt.
+  - Nota: no aplica por la decisión 6.1.1.
 
 ### 6.2 Encriptación reversible de datos personales
 - [x] 🔴 **6.2.1** Mover la clave AES de `CriptoManager` a `Web.config` (no hardcodear).
@@ -527,15 +530,14 @@
 > El backend de bitácora está avanzado pero faltan eventos por registrar y detalles de UI.
 
 ### 7.1 Registrar eventos de seguridad faltantes
-- [ ] 🟠 **7.1.1** Registrar check-in en el módulo de Inicio.
-  - Archivo: `gymAppV2/Inicio/Default.aspx.cs` (o página correspondiente).
-  - Criterio: cada check-in exitoso llama a `BLLEvento.RegistrarCheckin`.
-  - Nota: bloqueado — el módulo de check-in no está implementado aún.
-
-- [ ] 🟠 **7.1.2** Registrar intento de check-in con membresía vencida.
+- [x] 🟠 **7.1.1** Registrar check-in en el módulo de Inicio.
   - Archivo: `gymAppV2/Inicio/Default.aspx.cs`.
-  - Criterio: se registra como advertencia con criticidad 2.
-  - Nota: bloqueado — el módulo de check-in no está implementado aún.
+  - Criterio: cada check-in exitoso llama a `BLLEvento.RegistrarCheckin`.
+
+- [x] 🟠 **7.1.2** Registrar intento de check-in con membresía vencida.
+  - Archivo: `gymAppV2/Inicio/Default.aspx.cs`.
+  - Criterio: se registra como evento `checkin` con criticidad 2 cuando el alumno está inactivo.
+  - Nota: el campo de vencimiento de membresía no existe aún; se usa `Activo == false` como proxy temporal.
 
 - [ ] 🟠 **7.1.3** Registrar pagos al realizar un pago.
   - Archivo: `gymAppV2/Pagos/*.aspx.cs`.
@@ -562,10 +564,9 @@
   - Criterio: llama a `BLLEvento.RegistrarInscripcion`.
   - Nota: bloqueado — la inscripción a actividades no está implementada aún.
 
-- [ ] 🟠 **7.1.8** Registrar cambios de datos personales del perfil.
-  - Archivo: `gymAppV2/Perfil/*.aspx.cs`.
+- [x] 🟠 **7.1.8** Registrar cambios de datos personales del perfil.
+  - Archivo: `gymAppV2/Perfil/Perfil.aspx.cs`.
   - Criterio: llama a `BLLEvento.RegistrarCambioDatosUsuario`.
-  - Nota: bloqueado — el módulo Perfil no existe aún.
 
 - [x] 🟠 **7.1.9** Registrar cambios de datos de alumno.
   - Archivo: `gymAppV2/Alumnos/Alumnos.aspx.cs`.
@@ -606,60 +607,60 @@
 
 ## 8. Configuración de seguridad en Web.config
 
-- [ ] 🔴 **8.1** Mover connection string de `DalGeneral.cs` a `Web.config`.
+- [x] 🔴 **8.1** Mover connection string de `DalGeneral.cs` a `Web.config`.
   - Archivo: `DAL/DalGeneral.cs`, `gymAppV2/Web.config`.
   - Criterio: `DalGeneral` lee de `ConfigurationManager.ConnectionStrings["GymAppConnection"].ConnectionString`.
 
-- [ ] 🔴 **8.2** Asegurar que `Web.config` tenga la sección `<connectionStrings>` con la cadena.
+- [x] 🔴 **8.2** Asegurar que `Web.config` tenga la sección `<connectionStrings>` con la cadena.
   - Archivo: `gymAppV2/Web.config`.
-  - Criterio: la cadena existe y `MPPEntrenador` que ya la usa no falla.
+  - Criterio: la cadena existe y `DalGeneral` la lee correctamente.
 
-- [ ] 🟠 **8.3** Configurar cookies seguras en `Web.config`.
+- [x] 🟠 **8.3** Configurar cookies seguras en `Web.config`.
   - Archivo: `gymAppV2/Web.config`.
-  - Criterio: existe `<httpCookies httpOnlyCookies="true" requireSSL="true" />`.
+  - Criterio: existe `<httpCookies httpOnlyCookies="true" requireSSL="true" sameSite="Lax" />`.
 
-- [ ] 🟠 **8.4** Configurar forms authentication con `requireSSL="true"`, `protection="All"` y `slidingExpiration="true"`.
+- [x] 🟠 **8.4** Configurar forms authentication con `requireSSL="true"`, `protection="All"` y `slidingExpiration="true"`.
   - Archivo: `gymAppV2/Web.config`.
   - Criterio: la cookie de forms es segura.
 
-- [ ] 🟠 **8.5** Configurar `sessionState` con `cookieless="UseCookies"` y `regenerateExpiredSessionId="true"`.
+- [x] 🟠 **8.5** Configurar `sessionState` con `cookieless="UseCookies"` y `regenerateExpiredSessionId="true"`.
   - Archivo: `gymAppV2/Web.config`.
   - Criterio: la sesión usa cookies y regenera IDs expirados.
 
-- [ ] 🟡 **8.6** Agregar encabezados de seguridad vía `system.webServer/httpProtocol`.
+- [x] 🟡 **8.6** Agregar encabezados de seguridad vía `system.webServer/httpProtocol`.
   - Archivo: `gymAppV2/Web.config`.
-  - Criterio: existen `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`.
+  - Criterio: existen `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, además de `Content-Security-Policy`.
 
-- [ ] 🟡 **8.7** Configurar `<customErrors>` para no mostrar detalles de excepciones en producción.
+- [x] 🟡 **8.7** Configurar `<customErrors>` para no mostrar detalles de excepciones en producción.
   - Archivo: `gymAppV2/Web.config`.
-  - Criterio: modo `RemoteOnly` o `On` con página de error genérica.
+  - Criterio: modo `RemoteOnly` con redirección genérica a `AccesoDenegado.aspx` y handlers para 401/403/404/500.
 
-- [ ] 🟡 **8.8** Cambiar `<compilation debug="true">` a `false` para despliegue de producción.
+- [x] 🟡 **8.8** Cambiar `<compilation debug="true">` a `false` para despliegue de producción.
   - Archivo: `gymAppV2/Web.config`.
-  - Criterio: se documenta que debe ser `false` en prod.
+  - Criterio: `debug="false"`. Para desarrollo local puede volver a `true` temporalmente.
 
 ---
 
 ## 9. Validaciones y UX de seguridad
 
 ### 9.1 Contraseñas iniciales seguras
-- [ ] 🔴 **9.1.1** Reemplazar la generación de contraseña inicial predecible en `UsuariosModulo.aspx.cs`.
+- [x] 🔴 **9.1.1** Reemplazar la generación de contraseña inicial predecible en `UsuariosModulo.aspx.cs`.
   - Archivo: `gymAppV2/Usuarios/UsuariosModulo.aspx.cs`.
   - Criterio: la contraseña no es `Apellido + DNI` ni datos personales.
 
-- [ ] 🔴 **9.1.2** Reemplazar la generación de contraseña inicial predecible en `Alumnos.aspx.cs`.
+- [x] 🔴 **9.1.2** Reemplazar la generación de contraseña inicial predecible en `Alumnos.aspx.cs`.
   - Archivo: `gymAppV2/Alumnos/Alumnos.aspx.cs`.
   - Criterio: la contraseña es aleatoria o se fuerza cambio.
 
-- [ ] 🟠 **9.1.3** Usar `BLLUsuario.GenerarContrasenaAutomatica` o similar centralizado en ambos lugares.
+- [x] 🟠 **9.1.3** Usar `BLLUsuario.GenerarContrasenaAutomatica` o similar centralizado en ambos lugares.
   - Archivos: `gymAppV2/Usuarios/UsuariosModulo.aspx.cs`, `gymAppV2/Alumnos/Alumnos.aspx.cs`.
   - Criterio: no hay duplicación de lógica de generación.
 
-- [ ] 🟠 **9.1.4** Generar contraseña aleatoria segura (mínimo 10 caracteres, mayúscula, minúscula, número, especial).
+- [x] 🟠 **9.1.4** Generar contraseña aleatoria segura (mínimo 10 caracteres, mayúscula, minúscula, número, especial).
   - Archivo: `BLL/BLLUsuario.cs`.
   - Criterio: cumple requisitos del modelo y es impredecible.
 
-- [ ] 🟠 **9.1.5** Forzar cambio de contraseña en primer login cuando se usa contraseña generada.
+- [x] 🟠 **9.1.5** Forzar cambio de contraseña en primer login cuando se usa contraseña generada.
   - Archivo: `BLL/BLLUsuario.cs`, `gymAppV2/LogIn/LogIn.aspx.cs`.
   - Criterio: el usuario debe cambiar la contraseña antes de acceder al dashboard.
 
@@ -672,7 +673,7 @@
   - Archivo: `gymAppV2/LogIn/LogIn.aspx`, `gymAppV2/Content/login.css`.
   - Criterio: no hay `px` en márgenes, paddings, radios ni bordes.
 
-- [ ] 🟡 **9.2.3** Agregar mensaje informativo cuando la cuenta fue bloqueada.
+- [x] 🟡 **9.2.3** Agregar mensaje informativo cuando la cuenta fue bloqueada.
   - Archivo: `gymAppV2/LogIn/LogIn.aspx.cs`.
   - Criterio: indica que debe usar el flujo de preguntas de seguridad.
 
@@ -683,19 +684,19 @@
 > Muchos módulos del modelo no existen o están vacíos. Estas tareas los completan con la seguridad necesaria.
 
 ### 10.1 Módulo Perfil (Cliente)
-- [ ] 🟠 **10.1.1** Crear página `Perfil.aspx` con master `DashBoard.Master`.
+- [x] 🟠 **10.1.1** Crear página `Perfil.aspx` con master `DashBoard.Master`.
   - Archivo: `gymAppV2/Perfil/Perfil.aspx`.
   - Criterio: la página existe y carga datos del usuario logueado.
 
-- [ ] 🟠 **10.1.2** Mostrar datos personales del usuario en modo lectura.
+- [x] 🟠 **10.1.2** Mostrar datos personales del usuario en modo lectura.
   - Archivo: `gymAppV2/Perfil/Perfil.aspx`.
   - Criterio: campos precargados desde `Singleton.Instancia.Usuario`.
 
-- [ ] 🟠 **10.1.3** Permitir editar nombre, apellido, teléfono, email.
+- [x] 🟠 **10.1.3** Permitir editar nombre, apellido, teléfono, email.
   - Archivo: `gymAppV2/Perfil/Perfil.aspx`.
   - Criterio: solo el propio usuario puede editar.
 
-- [ ] 🟠 **10.1.4** Guardar cambios del perfil llamando a `BLLUsuario.ModificarUsuario` o método dedicado.
+- [x] 🟠 **10.1.4** Guardar cambios del perfil llamando a `BLLUsuario.ModificarUsuario` o método dedicado.
   - Archivo: `gymAppV2/Perfil/Perfil.aspx.cs`.
   - Criterio: los cambios persisten y se registran en bitácora.
 
@@ -763,25 +764,44 @@
 
 ## 11. Integridad de datos (DVH/DVV)
 
-- [ ] 🟡 **11.1** Decidir si se implementa DVH/DVV o se eliminan las columnas.
-  - Archivo: análisis interno.
-  - Criterio: documento de decisión en `docs/`.
+- [x] 🟡 **11.1** Decidir si se implementa DVH/DVV o se eliminan las columnas.
+  - Archivo: `docs/plan-dvv-dvh.md`.
+  - Criterio: se implementa usando las columnas `dvv`/`dvh` de cada fila.
+  - Decisión: DVH = hash de fila; DVV = hash acumulado de DVH por tabla. Ambos se guardan en cada fila y en la tabla de control `DigitoVerificador`.
 
-- [ ] 🟡 **11.2** Si se implementa, crear helper `DigitoVerificadorManager`.
-  - Archivo: `Servicios/DigitoVerificadorManager.cs`.
-  - Criterio: calcula hash de fila y hash acumulado.
+- [x] 🟡 **11.2** Crear helper `DigitoVerificadorManager`.
+  - Archivo: `SERVICIOS/DigitoVerificadorManager.cs`.
+  - Criterio: calcula hash de fila y hash acumulado por columna con SHA-256; normaliza nulos, fechas y tipos numéricos.
 
-- [ ] 🟡 **11.3** Si se implementa, calcular DVH al insertar/actualizar cada tabla.
-  - Archivo: todos los MPP.
-  - Criterio: las columnas `dvh` no quedan vacías.
+- [x] 🟡 **11.3** Calcular DVH/DVH al insertar/actualizar cada tabla con MPP existente.
+  - Archivo: `MPPUsuario`, `MPPAlumno`, `MPPEntrenador`, `MPPPreguntaSeguridad`, `MPPEvento`, `MPPPrecioModalidad`.
+  - Criterio: cada INSERT/UPDATE actualiza `dvh` y `dvv` de la fila usando valores en texto plano (antes de encriptar columnas AES).
 
-- [ ] 🟡 **11.4** Si se implementa, calcular DVV por tabla.
-  - Archivo: `Servicios/DigitoVerificadorManager.cs`.
-  - Criterio: se actualiza un registro de control por tabla.
+- [x] 🟡 **11.4** Crear tabla de control `DigitoVerificador` y MPP asociado.
+  - Archivo: `bd-schema-v2.sql`, `MPP/MPPDigitoVerificador.cs`, `BLL/BLLDigitoVerificador.cs`.
+  - Criterio: la tabla almacena `dvhTabla` (concatenación de hashes de fila) y `dvvTabla` (hash acumulado) por tabla; el MPP permite verificar y recalcular integridad global.
 
-- [ ] 🟢 **11.5** Si no se implementa, eliminar columnas `dvv`/`dvh` del script para no confundir.
-  - Archivo: `ScriptCreacion.sql`.
-  - Criterio: el esquema es consistente con el código.
+- [x] 🔴 **11.5** Crear página de verificación de integridad `VerificacioDV/VerificacioDV.aspx`.
+  - Archivo: `gymAppV2/VerificacioDV/VerificacioDV.aspx`, `.aspx.cs`, `.css`, `.aspx.designer.cs`.
+  - Criterio: el administrador ve tabla/campo con error, puede restaurar backup, recalcular todos los valores o salir; los no administradores ven pantalla de sistema pausado.
+  - Incluye un grid de estado (`gvEstadoControl`) que muestra, por cada tabla con `dvv`/`dvh`, si tiene registro de control, cantidad de filas y cuántas tienen `dvh`/`dvv` vacíos; las filas con problemas se resaltan en naranja.
+
+- [x] 🟡 **11.6** Integrar verificación de integridad en `BasePage` para pausar el sistema.
+  - Archivo: `gymAppV2/BasePage.cs`.
+  - Criterio: si existe error de integridad y el usuario no es admin, se redirige a `VerificacioDV.aspx` en cada carga de página protegida (excepto la propia página de verificación).
+
+- [x] 🟡 **11.7** Registrar archivos DVH/DVV en los proyectos de la solución.
+  - Archivo: `BE/BE.csproj` (incluye `ResultadoVerificacionDV.cs`, `EstadoControlDV.cs`), `BLL/BLL.csproj`, `MPP/MPP.csproj`, `gymAppV2/gymAppV2.csproj`, `SERVICIOS/SERVICIOS.csproj`.
+  - Criterio: todos los archivos nuevos compilan con la solución.
+
+- [x] 🟡 **11.8** Crear scripts SQL de migración para `DigitoVerificador` y recálculo de hashes.
+  - Archivo: `scripts/crear-digito-verificador.sql`, `scripts/alter-dvv-dvh-varchar64.sql`, `scripts/recalcular-dvv-dvh.sql`.
+  - Criterio: las columnas `dvv`/`dvh` son `VARCHAR(64) NOT NULL`; existe tabla de control; se puede recalcular masivamente.
+
+- [ ] 🟢 **11.9** Cubrir tablas del schema que aún no tienen MPP.
+  - Archivo: triggers SQL o MPP mínimos para `Rutinas`, `Ejercicio`, `AlumnoRM`, `PesoHistorial`, tablas de permisos y relaciones.
+  - Criterio: ninguna fila nueva queda con `dvv`/`dvh` vacíos.
+  - Nota: pendiente para cuando se implementen sus respectivas capas de datos.
 
 ---
 

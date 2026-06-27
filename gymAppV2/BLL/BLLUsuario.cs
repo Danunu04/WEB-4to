@@ -701,7 +701,8 @@ namespace BLL
                     email,
                     fechaNacimiento,
                     usuarioExistente.USUARIO_DVV,
-                    usuarioExistente.USUARIO_DVH
+                    usuarioExistente.USUARIO_DVH,
+                    usuarioExistente.USUARIO_PrimerLogin // Mantener estado de primer login
                 );
 
                 mppUsuario.ActualizarUsuario(usuarioActualizado);

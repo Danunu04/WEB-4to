@@ -13,11 +13,31 @@ namespace MPP
     {
         private DalGeneral dal;
         private CriptoManager criptoManager;
+        private DigitoVerificadorManager dvManager;
 
         public MPPEvento()
         {
             dal = new DalGeneral();
             criptoManager = new CriptoManager();
+            dvManager = new DigitoVerificadorManager();
+        }
+
+        /// <summary>
+        /// Calcula DVH y DVV de un evento a partir de sus valores de persistencia.
+        /// </summary>
+        private void CalcularDigitosEvento(Evento evento, int criticidad, out string dvh, out string dvv)
+        {
+            var valores = new Dictionary<string, object>
+            {
+                { "tipo", evento.EVENTO_Tipo },
+                { "usr", evento.EVENTO_Usuario },
+                { "descripcion", evento.EVENTO_Accion },
+                { "fecha", evento.EVENTO_Timestamp },
+                { "criticidad", criticidad },
+                { "modulo", evento.EVENTO_Modulo }
+            };
+
+            dvManager.CalcularAmbos(valores, out dvh, out dvv);
         }
 
         public int RegistrarEvento(Evento evento, int criticidad = 1)
@@ -30,6 +50,8 @@ namespace MPP
                 {
                     throw new Exception("No se puede registrar un evento sin usuario válido");
                 }
+
+                CalcularDigitosEvento(evento, criticidad, out string dvh, out string dvv);
 
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Evento]
@@ -46,8 +68,8 @@ namespace MPP
                     new SqlParameter("@Timestamp", evento.EVENTO_Timestamp),
                     new SqlParameter("@Criticidad", criticidad),
                     new SqlParameter("@Modulo", string.IsNullOrEmpty(evento.EVENTO_Modulo) ? (object)DBNull.Value : evento.EVENTO_Modulo),
-                    new SqlParameter("@DVV", ""),
-                    new SqlParameter("@DVH", "")
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);

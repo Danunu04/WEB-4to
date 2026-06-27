@@ -183,7 +183,7 @@ namespace gymAppV2.LogIn
                 // ThreadAbortException es esperado al usar Response.Redirect
                 // No hacer nada, dejar que el proceso continúe
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Ignorar errores menores de redirección.
             }

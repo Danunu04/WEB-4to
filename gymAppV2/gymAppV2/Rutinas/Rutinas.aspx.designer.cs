@@ -7,38 +7,29 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace gymAppV2.Actividades
+namespace gymAppV2.Rutinas
 {
 
 
-    public partial class actividades
+    public partial class Rutinas
     {
 
         /// <summary>
-        /// pnlNuevaActividad control.
+        /// pnlCliente control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlNuevaActividad;
+        protected global::System.Web.UI.WebControls.Panel pnlCliente;
 
         /// <summary>
-        /// hdnEsCliente control.
+        /// pnlAdmin control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hdnEsCliente;
-
-        /// <summary>
-        /// hdnActividadesJson control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hdnActividadesJson;
+        protected global::System.Web.UI.WebControls.Panel pnlAdmin;
     }
 }

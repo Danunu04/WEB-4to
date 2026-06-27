@@ -6,16 +6,35 @@ using System.Data.SqlClient;
 using BE;
 using DAL;
 using System.Configuration;
+using SERVICIOS;
 
 namespace MPP
 {
     public class MPPEntrenador
     {
         private DalGeneral dal;
+        private DigitoVerificadorManager dvManager;
 
         public MPPEntrenador()
         {
             dal = new DalGeneral();
+            dvManager = new DigitoVerificadorManager();
+        }
+
+        /// <summary>
+        /// Calcula DVH y DVV de un entrenador a partir de sus valores de persistencia.
+        /// </summary>
+        private void CalcularDigitosEntrenador(Entrenador entrenador, out string dvh, out string dvv)
+        {
+            var valores = new Dictionary<string, object>
+            {
+                { "dni", entrenador.DNI },
+                { "alumnosCount", entrenador.AlumnosCount },
+                { "activo", entrenador.Activo },
+                { "usr", entrenador.Usuario }
+            };
+
+            dvManager.CalcularAmbos(valores, out dvh, out dvv);
         }
 
         public List<Entrenador> ListarEntrenadores()
@@ -74,19 +93,23 @@ namespace MPP
         {
             try
             {
+                CalcularDigitosEntrenador(entrenador, out string dvh, out string dvv);
+
                 // En esquema normalizado, ENTRENADORES solo tiene dni, alumnosCount, activo, usr, dvv, dvh
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Entrenadores]
                     (dni, alumnosCount, activo, usr, dvv, dvh)
                     VALUES
-                    (@DNI, @AlumnosCount, @Activo, @Usuario, '', '')";
+                    (@DNI, @AlumnosCount, @Activo, @Usuario, @DVV, @DVH)";
 
                 ArrayList parametros = new ArrayList
                 {
                     new SqlParameter("@DNI", entrenador.DNI),
                     new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
                     new SqlParameter("@Activo", entrenador.Activo),
-                    new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value)
+                    new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value),
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -185,12 +208,16 @@ namespace MPP
         {
             try
             {
+                CalcularDigitosEntrenador(entrenador, out string dvh, out string dvv);
+
                 // En esquema normalizado, ENTRENADORES solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Entrenadores]
                     SET alumnosCount = @AlumnosCount,
                         activo = @Activo,
-                        usr = @Usuario
+                        usr = @Usuario,
+                        dvv = @DVV,
+                        dvh = @DVH
                     WHERE dni = @DNI";
 
                 ArrayList parametros = new ArrayList
@@ -198,7 +225,9 @@ namespace MPP
                     new SqlParameter("@DNI", entrenador.DNI),
                     new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
                     new SqlParameter("@Activo", entrenador.Activo),
-                    new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value)
+                    new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value),
+                    new SqlParameter("@DVV", dvv),
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 dal._686DPEscribir(consulta, parametros);

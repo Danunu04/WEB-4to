@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using BE;
 using MPP;
+using SERVICIOS;
+using Servicios;
+using Servicios.Singleton;
 
 namespace BLL
 {
@@ -61,6 +64,16 @@ namespace BLL
 
         private MPPEvento mppEvento;
 
+        /// <summary>
+        /// Determina si un tipo de evento puede registrarse con el usuario "sistema".
+        /// Se usa para operaciones de kiosco donde el alumno/cliente no inicia sesión
+        /// pero se identifica por DNI (check-in, pago).
+        /// </summary>
+        private bool PermiteUsuarioSistema(string tipo)
+        {
+            return tipo == EVENTO_CHECKIN || tipo == EVENTO_PAGO;
+        }
+
         public BLLEvento()
         {
             mppEvento = new MPPEvento();
@@ -84,15 +97,21 @@ namespace BLL
                     throw new Exception("La criticidad debe estar entre 1 (Alta) y 4 (Baja)");
                 }
 
-                // Validar que el usuario no sea vacío o "sistema"
-                // Todos los eventos deben estar atados a un usuario válido
-                if (string.IsNullOrEmpty(usuario) || usuario == USUARIO_SISTEMA)
+                // Validar que el usuario no sea vacío.
+                // "sistema" se permite solo para eventos automáticos/kiosco (check-in, pago).
+                if (string.IsNullOrEmpty(usuario))
                 {
                     throw new Exception("No se puede registrar un evento sin usuario válido");
                 }
 
+                if (usuario == USUARIO_SISTEMA && !PermiteUsuarioSistema(tipo))
+                {
+                    throw new Exception("No se puede registrar un evento con usuario 'sistema' salvo para operaciones de kiosco autorizadas");
+                }
+
                 // Eventos que pueden ocurrir antes de autenticar (login, bloqueo, error)
-                bool esEventoPreAuth = tipo == EVENTO_LOGIN || tipo == EVENTO_ERROR || tipo == EVENTO_BLOQUEO_USUARIO;
+                bool esEventoPreAuth = tipo == EVENTO_LOGIN || tipo == EVENTO_ERROR || tipo == EVENTO_BLOQUEO_USUARIO ||
+                                       (usuario == USUARIO_SISTEMA && PermiteUsuarioSistema(tipo));
 
                 if (!esEventoPreAuth)
                 {

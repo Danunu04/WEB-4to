@@ -3,6 +3,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using BE;
 using BLL;
+using Servicios.Singleton;
 
 namespace gymAppV2
 {
@@ -16,6 +17,52 @@ namespace gymAppV2
         {
             bllAlumno = new BLLAlumno();
             bllEvento = new BLLEvento();
+
+            // Si un usuario logueado no administrador llega a la home durante una pausa
+            // de integridad, se redirige a la pantalla de bloqueo.
+            VerificarPausaIntegridad();
+        }
+
+        /// <summary>
+        /// Redirige a la pantalla de verificación de integridad si el sistema está pausado
+        /// y el usuario logueado no es administrador.
+        /// </summary>
+        private void VerificarPausaIntegridad()
+        {
+            try
+            {
+                var sesion = Singleton.Instancia;
+                if (sesion == null || !sesion.IsLogged())
+                    return;
+
+                var bllDV = new BLLDigitoVerificador();
+                if (!bllDV.ExisteErrorIntegridad())
+                    return;
+
+                var bllRol = new BLLRol();
+                if (bllRol.UsuarioActualEsAdmin())
+                    return;
+
+                Redirigir("~/VerificacioDV/VerificacioDV.aspx");
+            }
+            catch
+            {
+                // Si no se puede verificar, se asume pausa y se redirige.
+                Redirigir("~/VerificacioDV/VerificacioDV.aspx");
+            }
+        }
+
+        private void Redirigir(string url)
+        {
+            try
+            {
+                Response.Redirect(ResolveUrl(url), false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            catch
+            {
+                // Ignorar errores de redirección.
+            }
         }
 
         protected void Button1_Click(object sender, EventArgs e)

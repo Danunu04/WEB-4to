@@ -20,7 +20,65 @@ namespace gymAppV2
                 }
             }
 
-            ConfigurarMenuSegunRol();
+            if (SistemaEnPausa() && !UsuarioActualEsAdmin())
+            {
+                ConfigurarMenuPausa();
+                string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
+                if (!string.IsNullOrEmpty(paginaActual)
+                    && !paginaActual.Replace("~/", "").Equals("VerificacioDV/VerificacioDV.aspx", StringComparison.OrdinalIgnoreCase))
+                {
+                    RedirigirSeguro("~/VerificacioDV/VerificacioDV.aspx");
+                    return;
+                }
+            }
+            else
+            {
+                ConfigurarMenuSegunRol();
+            }
+        }
+
+        /// <summary>
+        /// Indica si el sistema está pausado por un error de integridad de datos.
+        /// </summary>
+        private bool SistemaEnPausa()
+        {
+            try
+            {
+                var bllDV = new BLLDigitoVerificador();
+                return bllDV.ExisteErrorIntegridad();
+            }
+            catch
+            {
+                // Si no se puede verificar, se asume pausa para no continuar con datos dudosos.
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Indica si el usuario logueado actualmente es administrador.
+        /// </summary>
+        private bool UsuarioActualEsAdmin()
+        {
+            try
+            {
+                var bllRol = new BLLRol();
+                return bllRol.UsuarioActualEsAdmin();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Durante una pausa de integridad para usuarios no administradores,
+        /// oculta todo el menú de navegación excepto la opción de cerrar sesión.
+        /// </summary>
+        private void ConfigurarMenuPausa()
+        {
+            ulMenuNavegacion.Visible = false;
+            ulCambiarContra.Visible = false;
+            divDivider.Visible = false;
         }
 
         /// <summary>

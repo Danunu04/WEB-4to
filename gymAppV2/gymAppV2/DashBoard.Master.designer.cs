@@ -49,6 +49,33 @@ namespace gymAppV2 {
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl sidebar;
 
         /// <summary>
+        /// Control ulMenuNavegacion.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl ulMenuNavegacion;
+
+        /// <summary>
+        /// Control divDivider.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divDivider;
+
+        /// <summary>
+        /// Control ulCambiarContra.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl ulCambiarContra;
+
+        /// <summary>
         /// Control liDashboard.
         /// </summary>
         /// <remarks>

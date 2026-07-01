@@ -76,7 +76,7 @@
                         <i class="bi bi-list"></i>
                     </button>
                 </div>
-                <ul class="sidebar-menu">
+                <ul class="sidebar-menu" id="ulMenuNavegacion" runat="server">
                     <li id="liDashboard" runat="server">
                         <a href="/DashBoard/WebForm1.aspx">
                             <i class="bi bi-house"></i>
@@ -162,8 +162,8 @@
                         </a>
                     </li>
                 </ul>
-                <div class="sidebar-divider"></div>
-                <ul class="sidebar-menu">
+                <div class="sidebar-divider" id="divDivider" runat="server"></div>
+                <ul class="sidebar-menu" id="ulCambiarContra" runat="server">
                     <li>
                         <a href="<%= ResolveUrl("~/CambiarContra/Cambiar-contra.aspx") %>">
                             <i class="bi bi-key"></i>

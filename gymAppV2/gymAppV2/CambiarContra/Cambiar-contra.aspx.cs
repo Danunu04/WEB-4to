@@ -58,6 +58,14 @@ namespace gymAppV2.CambiarContra
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            // Durante una pausa de integridad, los usuarios no administradores no pueden
+            // operar ni siquiera en esta página de cambio de contraseña.
+            if (SistemaEnPausa() && !UsuarioActualEsAdmin())
+            {
+                Redirigir("~/VerificacioDV/VerificacioDV.aspx");
+                return;
+            }
+
             if (!IsPostBack)
             {
                 string usuarioQuery = Request.QueryString["usuario"];
@@ -393,6 +401,42 @@ namespace gymAppV2.CambiarContra
                 "setTimeout(function(){window.location.href='" + urlResuelta + "';}," + delayMs + ");" +
                 "})();</script>";
             ClientScript.RegisterStartupScript(this.GetType(), "redirect_" + DateTime.Now.Ticks, script);
+        }
+
+        /// <summary>
+        /// Indica si el sistema está pausado por un error de integridad de datos.
+        /// </summary>
+        private bool SistemaEnPausa()
+        {
+            try
+            {
+                var bllDV = new BLLDigitoVerificador();
+                return bllDV.ExisteErrorIntegridad();
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Indica si el usuario logueado actualmente es administrador.
+        /// </summary>
+        private bool UsuarioActualEsAdmin()
+        {
+            try
+            {
+                var sesion = Singleton.Instancia;
+                if (sesion == null || sesion.Usuario == null)
+                    return false;
+
+                var bllRol = new BLLRol();
+                return bllRol.UsuarioActualEsAdmin();
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

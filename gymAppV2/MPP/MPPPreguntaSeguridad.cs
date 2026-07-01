@@ -73,7 +73,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[PreguntasSeguridad]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -119,7 +119,7 @@ namespace MPP
                         INSERT INTO [GymApp].[dbo].[PreguntasSeguridad] (pregunta, respuesta, usr, dvv, dvh)
                         VALUES (@Pregunta, @Respuesta, @Usuario, @DVV, @DVH)";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", pregunta.Usuario),
                     new SqlParameter("@Pregunta", EncriptarCampo(pregunta.Pregunta)),
@@ -145,7 +145,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[PreguntasSeguridad]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -187,7 +187,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[PreguntasSeguridad]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -222,7 +222,7 @@ namespace MPP
                     SELECT codPregunta, usr, pregunta, respuesta
                     FROM [GymApp].[dbo].[PreguntasSeguridad]";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 foreach (DataRow row in dt.Rows)
                 {
@@ -242,7 +242,7 @@ namespace MPP
                         SET dvv = @DVV, dvh = @DVH
                         WHERE codPregunta = @IdPregunta";
 
-                    ArrayList parametros = new ArrayList
+                    List<SqlParameter> parametros = new List<SqlParameter>
                     {
                         new SqlParameter("@IdPregunta", pregunta.Id),
                         new SqlParameter("@DVV", dvv),
@@ -272,7 +272,7 @@ namespace MPP
                     SELECT codPregunta, usr, pregunta, respuesta, dvv, dvh
                     FROM [GymApp].[dbo].[PreguntasSeguridad]";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 foreach (DataRow row in dt.Rows)
                 {

@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Web;
 using System.Web.Security;
 using System.Web.UI;
 using Servicios.Singleton;
@@ -44,7 +45,7 @@ namespace gymAppV2.LogIn
             {
                 if (BllUsuario.UsuarioEstaLogueado())
                 {
-                    Response.Redirect("~/DashBoard/WebForm1.aspx");
+                    RedirigirSeguro("~/DashBoard/WebForm1.aspx");
                 }
             }
         }
@@ -113,8 +114,8 @@ namespace gymAppV2.LogIn
                         // No impedir el flujo si falla el registro del evento.
                     }
 
-                    RedirigirConToast("Usuario bloqueado.",
-                        $"~/CambiarContra/Cambiar-contra.aspx?usuario={Server.UrlEncode(usuario)}&modo=recuperacion",
+                    RedirigirConToast("Usuario bloqueado. Responda su pregunta de seguridad para recuperar el acceso.",
+                        $"~/LogIn/PreguntasSeguridad.aspx?usuario={Server.UrlEncode(usuario)}",
                         "error");
                     return;
                 }
@@ -194,6 +195,14 @@ namespace gymAppV2.LogIn
         /// </summary>
         private void Redirigir(string url)
         {
+            RedirigirSeguro(url);
+        }
+
+        /// <summary>
+        /// Redirige de forma segura evitando ThreadAbortException.
+        /// </summary>
+        private void RedirigirSeguro(string url)
+        {
             try
             {
                 Response.Redirect(ResolveUrl(url), false);
@@ -202,6 +211,14 @@ namespace gymAppV2.LogIn
             catch (ThreadAbortException)
             {
                 // ThreadAbortException es esperado al usar Response.Redirect.
+            }
+            catch (HttpException)
+            {
+                // Contexto no disponible.
+            }
+            catch (Exception)
+            {
+                // Ignorar errores menores de redirección.
             }
         }
 

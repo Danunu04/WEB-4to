@@ -129,7 +129,7 @@ namespace MPP
                 SET dvv = @DVV, dvh = @DVH
                 WHERE usr = @Usuario";
 
-            ArrayList parametros = new ArrayList
+            List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@Usuario", usuario),
                 new SqlParameter("@DVV", dvv),
@@ -153,7 +153,7 @@ namespace MPP
                     SELECT usr
                     FROM [GymApp].[dbo].[USUARIOS]";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 foreach (DataRow row in dt.Rows)
                 {
@@ -187,7 +187,7 @@ namespace MPP
                     SELECT usr, dvv, dvh
                     FROM [GymApp].[dbo].[USUARIOS]";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 foreach (DataRow row in dt.Rows)
                 {
@@ -274,7 +274,7 @@ namespace MPP
             FROM [GymApp].[dbo].[USUARIOS] as us
             WHERE us.usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -321,7 +321,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -351,7 +351,7 @@ namespace MPP
                         bloqueado = CASE WHEN intentos + 1 >= {MAX_INTENTOS_LOGIN} THEN 1 ELSE 0 END
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -375,7 +375,7 @@ namespace MPP
                         bloqueado = 0
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -398,7 +398,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -427,7 +427,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -456,7 +456,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -485,7 +485,7 @@ namespace MPP
             FROM [GymApp].[dbo].[USUARIO_Contras]
             WHERE usr = @Usuario AND contra = @Contrasena";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@Contrasena", contrasenaHash)
@@ -522,7 +522,7 @@ namespace MPP
             INSERT INTO [GymApp].[dbo].[USUARIO_Contras] (usr, contra, dvv, dvh)
             VALUES (@Usuario, @Contrasena, @DVV, @DVH)";
 
-                ArrayList parametrosInsertar = new ArrayList
+                List<SqlParameter> parametrosInsertar = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@Contrasena", contrasenaHash),
@@ -543,7 +543,7 @@ namespace MPP
             DELETE FROM ContrasOrdenadas
             WHERE rn > @MaxHistorial";
 
-                ArrayList parametrosLimpiar = new ArrayList
+                List<SqlParameter> parametrosLimpiar = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@MaxHistorial", MAX_HISTORIAL_CONTRASENAS)
@@ -566,7 +566,7 @@ namespace MPP
             SET contra = @Contrasena
             WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@Contrasena", nuevaContrasenaHash)
@@ -590,7 +590,7 @@ namespace MPP
             SET primerLogin = 0
             WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -616,7 +616,7 @@ namespace MPP
             VALUES
             (@Usuario, @Contrasena, @Activo, @Bloqueado, @Intentos, @Rol, @PrimerLogin, @Tipo, @DNI, @Nombre, @Apellido, @Telefono, @Email, @FechaNacimiento, @DVV, @DVH)";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario.USUARIO_Usuario),
                     new SqlParameter("@Contrasena", usuario.USUARIO_Contras),
@@ -666,7 +666,7 @@ namespace MPP
             FROM [GymApp].[dbo].[USUARIOS] u
             ORDER BY u.tipo, u.usr";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
 
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
                 List<BE.UsuarioGestion> usuarios = new List<BE.UsuarioGestion>();
@@ -710,7 +710,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -757,7 +757,7 @@ namespace MPP
                       AND a.dni IS NULL
                     ORDER BY u.usr";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
                 List<BE.UsuarioGestion> usuarios = new List<BE.UsuarioGestion>();
 
@@ -800,7 +800,7 @@ namespace MPP
                     SET activo = @Activo
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@Activo", activo)
@@ -824,7 +824,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -861,7 +861,7 @@ namespace MPP
                         dvh = @DVH
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario.USUARIO_Usuario),
                     new SqlParameter("@Tipo", usuario.USUARIO_Tipo),

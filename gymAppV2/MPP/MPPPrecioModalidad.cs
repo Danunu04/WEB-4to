@@ -58,7 +58,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[PrecioModalidad]
                     ORDER BY Id";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
 
                 List<PrecioModalidad> modalidades = new List<PrecioModalidad>();
@@ -106,7 +106,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[PrecioModalidad]
                     WHERE Id = @Id";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Id", id)
                 };
@@ -161,7 +161,7 @@ namespace MPP
                         dvh = @DVH
                     WHERE Id = @Id";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Precio", nuevoPrecio),
                     new SqlParameter("@FechaModificacion", modalidad.FechaModificacion),
@@ -191,7 +191,7 @@ namespace MPP
                     WHERE (DiasPorSemana = @Dias OR (DiasPorSemana = 0 AND EsDiario = 1))
                       AND Activo = 1";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Dias", diasPorSemana)
                 };

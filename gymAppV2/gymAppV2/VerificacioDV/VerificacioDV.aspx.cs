@@ -195,13 +195,23 @@ namespace gymAppV2.VerificacioDV
 
         protected void btnSalir_Click(object sender, EventArgs e)
         {
-            Response.Redirect("~/Inicio/Default.aspx");
+            RedirigirSeguro("~/Inicio/Default.aspx");
         }
 
         protected void btnLogoutBloqueo_Click(object sender, EventArgs e)
         {
-            Singleton.Instancia.LogOut();
-            Response.Redirect("~/LogIn/LogIn.aspx");
+            try
+            {
+                var sesion = Singleton.Instancia;
+                if (sesion != null)
+                    sesion.LogOut();
+            }
+            catch
+            {
+                // No impedir la redirección si el logout falla.
+            }
+
+            RedirigirSeguro("~/LogIn/LogIn.aspx");
         }
 
         /// <summary>

@@ -54,6 +54,8 @@
     <Compile Include="ConstantesSeguridad.cs" />
     <Compile Include="ResultadoVerificacionDV.cs" />
     <Compile Include="EstadoControlDV.cs" />
+    <Compile Include="PermisosSistema.cs" />
+    <Compile Include="PerfilesSistema.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

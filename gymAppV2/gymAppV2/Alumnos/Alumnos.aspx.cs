@@ -25,7 +25,7 @@ namespace gymAppV2.Alumnos
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso("GestionAlumnos");
+            VerificarAcceso(BE.PermisosSistema.GestionAlumnos);
 
             bllAlumno = new BLLAlumno();
             bllUsuario = new BLLUsuario();
@@ -654,21 +654,6 @@ namespace gymAppV2.Alumnos
             chkActivo.Checked = true;
             ddlUsuarioAsociar.Items.Clear();
             ddlUsuarioAsociar.Items.Add(new ListItem("-- Sin asociar --", ""));
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
-        }
-
-        private void MostrarExito(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
-        }
-
-        private void MostrarAdvertencia(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
         }
 
         private void MostrarInfo(string mensaje)

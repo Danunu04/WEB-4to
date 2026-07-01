@@ -665,12 +665,12 @@
   - Criterio: el usuario debe cambiar la contraseña antes de acceder al dashboard.
 
 ### 9.2 UX del login
-- [ ] 🟡 **9.2.1** Agregar botón para mostrar/ocultar contraseña.
+- [x] 🟡 **9.2.1** Agregar botón para mostrar/ocultar contraseña.
   - Archivo: `gymAppV2/LogIn/LogIn.aspx`.
   - Criterio: el usuario puede alternar visibilidad.
 
-- [ ] 🟡 **9.2.2** Alinear estilos del login con las guías de CSS (usar `rem`).
-  - Archivo: `gymAppV2/LogIn/LogIn.aspx`, `gymAppV2/Content/login.css`.
+- [x] 🟡 **9.2.2** Alinear estilos del login con las guías de CSS (usar `rem`).
+  - Archivo: `gymAppV2/LogIn/LogIn.aspx`, `gymAppV2/LogIn/StyleSheet1.css`.
   - Criterio: no hay `px` en márgenes, paddings, radios ni bordes.
 
 - [x] 🟡 **9.2.3** Agregar mensaje informativo cuando la cuenta fue bloqueada.
@@ -827,7 +827,7 @@
 
 ## 13. Pruebas y hardening
 
-- [ ] 🟠 **13.1** Crear lista de casos de prueba de seguridad.
+- [x] 🟠 **13.1** Crear lista de casos de prueba de seguridad.
   - Archivo: `docs/PRUEBAS_SEGURIDAD.md`.
   - Criterio: cubre login, bloqueo, preguntas, cambio de contraseña, permisos por rol.
 
@@ -843,16 +843,16 @@
 - [ ] 🟠 **13.5** Probar cambio de contraseña con una contraseña usada anteriormente.
   - Criterio: el sistema rechaza la operación.
 
-- [ ] 🟡 **13.6** Revisar que no haya contraseñas en texto plano en comentarios o scripts.
+- [x] 🟡 **13.6** Revisar que no haya contraseñas en texto plano en comentarios o scripts.
   - Criterio: no se encuentran contraseñas hardcodeadas.
 
-- [ ] 🟡 **13.7** Auditar todos los queries SQL para confirmar que usan parámetros.
+- [x] 🟡 **13.7** Auditar todos los queries SQL para confirmar que usan parámetros.
   - Criterio: no hay concatenación de strings en queries.
 
-- [ ] 🟢 **13.8** Revisar que `ViewState` no guarde objetos sensibles (contraseñas, tokens).
+- [x] 🟢 **13.8** Revisar que `ViewState` no guarde objetos sensibles (contraseñas, tokens).
   - Criterio: no se persiste información sensible en ViewState.
 
-- [ ] 🟢 **13.9** Agregar comentarios de seguridad en cada método crítico de `BLLUsuario`.
+- [x] 🟢 **13.9** Agregar comentarios de seguridad en cada método crítico de `BLLUsuario`.
   - Archivo: `BLL/BLLUsuario.cs`.
   - Criterio: cada método de autenticación tiene un comentario breve explicando su propósito.
 
@@ -864,19 +864,19 @@
   - Archivo: `gymAppV2/BasePage.cs`.
   - Criterio: todas las páginas protegidas heredan de `BasePage`.
 
-- [ ] 🟢 **14.2** Mover métodos `MostrarError`/`MostrarExito` duplicados a `BasePage`.
+- [x] 🟢 **14.2** Mover métodos `MostrarError`/`MostrarExito` duplicados a `BasePage`.
   - Archivo: `gymAppV2/BasePage.cs`.
-  - Criterio: se eliminan duplicados de `UsuariosModulo.aspx.cs`, `Alumnos.aspx.cs`, etc.
+  - Criterio: se eliminan duplicados de `UsuariosModulo.aspx.cs`, `Alumnos.aspx.cs`, `Bitacora.aspx.cs`, `Entrenadores.aspx.cs`, `Actividades/actividades.aspx.cs`, etc.
 
-- [ ] 🟢 **14.3** Implementar `IDisposable` en `DalGeneral` para cerrar conexiones correctamente.
+- [x] 🟢 **14.3** Implementar `IDisposable` en `DalGeneral` para cerrar conexiones correctamente.
   - Archivo: `DAL/DalGeneral.cs`.
-  - Criterio: no quedan conexiones abiertas ni campos públicos compartidos.
+  - Criterio: no quedan conexiones abiertas ni campos públicos compartidos; conexión privada, cierre automático en finally/Dispose.
 
-- [ ] 🟢 **14.4** Reemplazar `ArrayList` por `List<SqlParameter>` en todos los MPP.
+- [x] 🟢 **14.4** Reemplazar `ArrayList` por `List<SqlParameter>` en todos los MPP.
   - Archivo: todos los `MPP/*.cs`.
   - Criterio: no hay `ArrayList` en capa MPP.
 
-- [ ] 🟢 **14.5** En `DashBoard.Master.cs`, agregar `!IsPostBack` a la redirección de sesión.
+- [x] 🟢 **14.5** En `DashBoard.Master.cs`, agregar `!IsPostBack` a la redirección de sesión.
   - Archivo: `gymAppV2/DashBoard.Master.cs`.
   - Criterio: evita loops de redirección.
 

@@ -1,6 +1,9 @@
 using System;
+using System.Web;
+using BE;
 using Servicios.Singleton;
 using BLL;
+using System.Web.UI;
 
 namespace gymAppV2
 {
@@ -12,7 +15,8 @@ namespace gymAppV2
             {
                 if (!Singleton.Instancia.IsLogged())
                 {
-                    Response.Redirect("~/LogIn/LogIn.aspx");
+                    RedirigirSeguro("~/LogIn/LogIn.aspx");
+                    return;
                 }
             }
 
@@ -20,7 +24,7 @@ namespace gymAppV2
         }
 
         /// <summary>
-        /// Muestra u oculta las opciones del menú lateral según el rol del usuario logueado.
+        /// Muestra u oculta las opciones del menú lateral según el perfil del usuario logueado.
         /// </summary>
         private void ConfigurarMenuSegunRol()
         {
@@ -33,9 +37,12 @@ namespace gymAppV2
             liActividades.Visible = bllRol.UsuarioActualTieneAcceso("ActividadesCalendario");
             liRutinas.Visible = bllRol.UsuarioActualTieneAcceso("GestionRutinas");
             liBitacora.Visible = bllRol.UsuarioActualTieneAcceso("Bitacora");
-            liPagos.Visible = bllRol.UsuarioActualTieneAcceso("Pagos");
-            liPerfil.Visible = bllRol.UsuarioActualTieneAcceso("Perfil");
-            liVerificacionDV.Visible = bllRol.UsuarioActualTieneAcceso("VerificacionDV");
+            liPagos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Pagos);
+            liPerfil.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Perfil);
+            liVerificacionDV.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.VerificacionDV);
+            liBackup.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Backup);
+            liRestore.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Restore);
+            liEncriptarDatos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.EncriptarDatos);
 
             // El módulo de permisos no está implementado; se mantiene oculto hasta su desarrollo.
             liPermisos.Visible = false;
@@ -50,7 +57,7 @@ namespace gymAppV2
             // El orden es importante: primero la cookie, luego la sesión.
             System.Web.Security.FormsAuthentication.SignOut();
 
-            // Registrar evento de logout antes de cerrar sesión
+            // Registrar evento de logout antes de cerrar sesión.
             try
             {
                 var bllEvento = new BLLEvento();
@@ -58,12 +65,39 @@ namespace gymAppV2
             }
             catch
             {
-                // No impedir el logout si falla el log
+                // No impedir el logout si falla el log.
             }
 
-            Singleton.Instancia.LogOut();
-            Response.Redirect("~/LogIn/LogIn.aspx", false);
-            Context.ApplicationInstance.CompleteRequest();
+            try
+            {
+                Singleton.Instancia.LogOut();
+            }
+            catch
+            {
+                // Si el logout falla, al menos la cookie de forms ya fue invalidada.
+            }
+
+            RedirigirSeguro("~/LogIn/LogIn.aspx");
+        }
+
+        /// <summary>
+        /// Redirige de forma segura terminando la request correctamente.
+        /// </summary>
+        private void RedirigirSeguro(string url)
+        {
+            try
+            {
+                Response.Redirect(ResolveUrl(url), false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            catch (HttpException)
+            {
+                // Contexto no disponible.
+            }
+            catch (Exception)
+            {
+                // Ignorar errores menores de redirección.
+            }
         }
     }
 }

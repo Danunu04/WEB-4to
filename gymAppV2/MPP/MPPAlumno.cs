@@ -52,7 +52,7 @@ namespace MPP
                 SET dvv = @DVV, dvh = @DVH
                 WHERE dni = @DNI";
 
-            ArrayList parametros = new ArrayList
+            List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@DNI", dni),
                 new SqlParameter("@DVV", dvv),
@@ -76,7 +76,7 @@ namespace MPP
                     VALUES
                     (@DNI, @Peso, @Activo, @TieneRutinas, @Usuario, @DVV, @DVH)";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", alumno.DNI),
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
@@ -118,7 +118,7 @@ namespace MPP
                     LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
                     WHERE a.dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni)
                 };
@@ -170,7 +170,7 @@ namespace MPP
                         dvh = @DVH
                     WHERE dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", alumno.DNI),
                     new SqlParameter("@Peso", alumno.Peso ?? (object)DBNull.Value),
@@ -198,7 +198,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[Alumnos]
                     WHERE dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni)
                 };
@@ -241,7 +241,7 @@ namespace MPP
                     LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON a.dni = u.dni
                     ORDER BY u.apellido, u.nombre";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
 
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
                 List<Alumno> alumnos = new List<Alumno>();
@@ -282,7 +282,7 @@ namespace MPP
                     DELETE FROM [GymApp].[dbo].[Rutinas]
                     WHERE dniAlumno = @DNI";
 
-                ArrayList parametrosRutinas = new ArrayList
+                List<SqlParameter> parametrosRutinas = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni)
                 };
@@ -294,7 +294,7 @@ namespace MPP
                     DELETE FROM [GymApp].[dbo].[Alumnos]
                     WHERE dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni)
                 };
@@ -330,7 +330,7 @@ namespace MPP
                     WHERE (a.usr IS NULL OR a.usr = '')
                     ORDER BY u.apellido, u.nombre";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
                 List<Alumno> alumnos = new List<Alumno>();
 
@@ -370,7 +370,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[Alumnos]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -399,7 +399,7 @@ namespace MPP
                     SET usr = @Usuario
                     WHERE dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni),
                     new SqlParameter("@Usuario", string.IsNullOrEmpty(usuario) ? (object)DBNull.Value : usuario)

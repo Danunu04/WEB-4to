@@ -90,8 +90,8 @@
     gap: 0.75rem;
     padding: 1rem 1.25rem;
     border-radius: 0.875rem;
-    border: 1.5px solid;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border: 0.09375rem solid;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
     font-family: 'DM Sans', system-ui, sans-serif;
     font-size: 0.88rem;
     animation: slideIn 0.3s ease-out;

@@ -41,7 +41,7 @@ namespace MPP
                     WHERE activo = 1
                     ORDER BY descripcion";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
                 return MapearActividades(dt);
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace MPP
                       AND a.activo = 1
                     ORDER BY a.descripcion";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };

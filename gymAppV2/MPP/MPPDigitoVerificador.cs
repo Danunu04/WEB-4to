@@ -44,7 +44,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[DigitoVerificador]
                     WHERE nombreTabla = @NombreTabla";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@NombreTabla", nombreTabla)
                 };
@@ -76,7 +76,7 @@ namespace MPP
                         INSERT INTO [GymApp].[dbo].[DigitoVerificador] (nombreTabla, dvhTabla, dvvTabla)
                         VALUES (@NombreTabla, @DVHTabla, @DVVTabla)";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@NombreTabla", nombreTabla),
                     new SqlParameter("@DVHTabla", dvhTabla),
@@ -329,7 +329,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[DigitoVerificador]
                     ORDER BY nombreTabla";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
                 List<string> tablas = new List<string>();
 
                 foreach (DataRow row in dt.Rows)
@@ -370,7 +370,7 @@ namespace MPP
                           WHERE dv.nombreTabla = t.TABLE_NAME)
                     ORDER BY t.TABLE_NAME";
 
-                DataTable dt = dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
                 List<string> tablas = new List<string>();
 
                 foreach (DataRow row in dt.Rows)
@@ -409,7 +409,7 @@ namespace MPP
                     WHERE t.TABLE_TYPE = 'BASE TABLE'
                     ORDER BY t.TABLE_NAME";
 
-                DataTable dtControl = dal._686DPConsultar(consultaControl, new ArrayList());
+                DataTable dtControl = dal._686DPConsultar(consultaControl, new List<SqlParameter>());
                 List<EstadoControlDV> estado = new List<EstadoControlDV>();
 
                 foreach (DataRow row in dtControl.Rows)
@@ -431,7 +431,7 @@ namespace MPP
                                 SUM(CASE WHEN [dvv] = '' OR [dvv] IS NULL THEN 1 ELSE 0 END) AS FilasDVVVacio
                             FROM [GymApp].[dbo].[{nombreTabla}]";
 
-                        DataTable dtConteo = dal._686DPConsultar(consultaConteo, new ArrayList());
+                        DataTable dtConteo = dal._686DPConsultar(consultaConteo, new List<SqlParameter>());
 
                         if (dtConteo.Rows.Count > 0)
                         {
@@ -554,7 +554,7 @@ namespace MPP
                     return;
 
                 StringBuilder where = new StringBuilder();
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DVH", dvh),
                     new SqlParameter("@DVV", dvv)
@@ -680,7 +680,7 @@ namespace MPP
                     SELECT *
                     FROM [GymApp].[dbo].[{nombreTabla}]";
 
-                return dal._686DPConsultar(consulta, new ArrayList());
+                return dal._686DPConsultar(consulta, new List<SqlParameter>());
             }
             catch (Exception ex)
             {
@@ -703,7 +703,7 @@ namespace MPP
                       AND TABLE_NAME = @NombreTabla
                     ORDER BY ORDINAL_POSITION";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@NombreTabla", nombreTabla)
                 };

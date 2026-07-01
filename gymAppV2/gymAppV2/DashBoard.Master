@@ -131,6 +131,24 @@
                             <span class="menu-text">Verificación DV</span>
                         </a>
                     </li>
+                    <li id="liBackup" runat="server" class="not-implemented">
+                        <a href="/Admin/Backup.aspx">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span class="menu-text">Backup</span>
+                        </a>
+                    </li>
+                    <li id="liRestore" runat="server" class="not-implemented">
+                        <a href="/Admin/Restore.aspx">
+                            <i class="bi bi-cloud-arrow-down"></i>
+                            <span class="menu-text">Restore</span>
+                        </a>
+                    </li>
+                    <li id="liEncriptarDatos" runat="server">
+                        <a href="/Admin/EncriptarDatos.aspx">
+                            <i class="bi bi-lock"></i>
+                            <span class="menu-text">Encriptar datos</span>
+                        </a>
+                    </li>
                     <li id="liPagos" runat="server" class="not-implemented">
                         <a href="/Pagos/PagosCliente.aspx">
                             <i class="bi bi-credit-card"></i>

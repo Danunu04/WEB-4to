@@ -3,10 +3,18 @@ using System.Web;
 
 namespace Servicios.Singleton
 {
+    /// <summary>
+    /// Singleton de sesión para ASP.NET Web Forms.
+    /// Garantiza una única instancia de SesionUsuario por sesión HTTP.
+    /// </summary>
     public class Singleton
     {
         private const string SESSION_KEY = "SesionUsuario_Instancia";
 
+        /// <summary>
+        /// Devuelve la instancia de SesionUsuario asociada a la sesión HTTP actual.
+        /// Si no hay sesión disponible, devuelve null en lugar de propagar una excepción técnica.
+        /// </summary>
         public static SesionUsuario Instancia
         {
             get
@@ -21,14 +29,15 @@ namespace Servicios.Singleton
 
                     return (SesionUsuario)HttpContext.Current.Session[SESSION_KEY];
                 }
-                catch (HttpException ex)
+                catch (HttpException)
                 {
-                    // Session puede haber expirado o no estar disponible
-                    throw new Exception("Error al acceder a la sesión HTTP: " + ex.Message, ex);
+                    // Session no disponible (expirada o contexto inválido).
+                    return null;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    throw new Exception("Error inesperado al obtener instancia de sesión: " + ex.Message, ex);
+                    // Cualquier otro error inesperado: no exponer al usuario.
+                    return null;
                 }
             }
         }

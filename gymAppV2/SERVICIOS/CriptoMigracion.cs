@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
@@ -114,7 +114,7 @@ namespace SERVICIOS
                 }
 
                 string consulta = $@"SELECT [{clavePrimaria}], [{campo}] FROM [GymApp].[dbo].[{tabla}] WHERE [{campo}] IS NOT NULL";
-                DataTable dt = _dal._686DPConsultar(consulta, new ArrayList());
+                DataTable dt = _dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 resultado.TotalFilas = dt.Rows.Count;
 
@@ -175,7 +175,7 @@ namespace SERVICIOS
                     }
 
                     string update = $@"UPDATE [GymApp].[dbo].[{tabla}] SET [{campo}] = @Valor WHERE [{clavePrimaria}] = @Id";
-                    ArrayList parametros = new ArrayList
+                    List<SqlParameter> parametros = new List<SqlParameter>
                     {
                         new SqlParameter("@Valor", encriptado),
                         new SqlParameter("@Id", id)
@@ -213,7 +213,7 @@ namespace SERVICIOS
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = @Tabla";
 
-            ArrayList parametros = new ArrayList
+            List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@Tabla", tabla)
             };
@@ -231,7 +231,7 @@ namespace SERVICIOS
                   AND TABLE_NAME = @Tabla
                   AND COLUMN_NAME = @Columna";
 
-            ArrayList parametros = new ArrayList
+            List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@Tabla", tabla),
                 new SqlParameter("@Columna", columna)
@@ -250,7 +250,7 @@ namespace SERVICIOS
                   AND TABLE_SCHEMA = 'dbo'
                   AND TABLE_NAME = @Tabla";
 
-            ArrayList parametros = new ArrayList
+            List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@Tabla", tabla)
             };

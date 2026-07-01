@@ -49,6 +49,11 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Valida las credenciales de un usuario sin exponer si el usuario existe.
+        /// Trata usuarios inactivos como credenciales inválidas para evitar enumeración.
+        /// Bloquea la cuenta tras el máximo de intentos fallidos.
+        /// </summary>
         public bool ValidarLogin(string usuario, string contrasena)
         {
             try
@@ -105,6 +110,10 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Incrementa el contador de intentos fallidos de login.
+        /// Si se alcanza el límite, bloquea la cuenta y registra el evento.
+        /// </summary>
         public void RegistrarIntentoFallido(string usuario)
         {
             try
@@ -129,6 +138,9 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Devuelve la cantidad de intentos de login restantes antes del bloqueo.
+        /// </summary>
         public int ObtenerIntentosRestantes(string usuario)
         {
             try
@@ -142,6 +154,9 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Reinicia el contador de intentos fallidos tras un login exitoso o desbloqueo.
+        /// </summary>
         public void ReestablecerIntentos(string usuario)
         {
             try
@@ -178,11 +193,18 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Carga el usuario en el singleton de sesión tras una autenticación exitosa.
+        /// </summary>
         public void LogearUsuario(Usuario usuario)
         {
             try
             {
-                Singleton.Instancia.LogIn(usuario);
+                var sesion = Singleton.Instancia;
+                if (sesion == null)
+                    throw new Exception("No se pudo acceder a la sesión HTTP.");
+
+                sesion.LogIn(usuario);
             }
             catch (Exception ex)
             {
@@ -190,11 +212,18 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Limpia el singleton de sesión. No invalida la cookie de forms; usar FormsAuthentication.SignOut por separado.
+        /// </summary>
         public void DeslogearUsuario()
         {
             try
             {
-                Singleton.Instancia.LogOut();
+                var sesion = Singleton.Instancia;
+                if (sesion == null)
+                    throw new Exception("No se pudo acceder a la sesión HTTP.");
+
+                sesion.LogOut();
             }
             catch (Exception ex)
             {
@@ -202,11 +231,15 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Indica si existe una sesión activa en el singleton. Es tolerante a fallos de sesión HTTP.
+        /// </summary>
         public bool UsuarioEstaLogueado()
         {
             try
             {
-                return Singleton.Instancia.IsLogged();
+                var sesion = Singleton.Instancia;
+                return sesion != null && sesion.IsLogged();
             }
             catch
             {
@@ -226,6 +259,9 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Verifica que la contraseña cumpla los requisitos mínimos de seguridad.
+        /// </summary>
         public void ValidarRequisitosContrasena(string contrasena)
         {
             if (string.IsNullOrEmpty(contrasena))
@@ -265,6 +301,10 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Cambia la contraseña de un usuario validando complejidad y evitando reutilización.
+        /// Guarda el nuevo hash en el historial de contraseñas.
+        /// </summary>
         public void CambiarContrasena(string usuario, string nuevaContrasena)
         {
             try

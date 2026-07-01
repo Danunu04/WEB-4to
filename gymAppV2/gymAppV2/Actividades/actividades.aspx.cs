@@ -27,7 +27,7 @@ namespace gymAppV2.Actividades
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso("ActividadesCalendario");
+            VerificarAcceso(BE.PermisosSistema.ActividadesCalendario);
 
             bllActividad = new BLLActividad();
 
@@ -107,21 +107,6 @@ namespace gymAppV2.Actividades
             }
 
             return JsonConvert.SerializeObject(actividadesPorDia);
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
-        }
-
-        private void MostrarExito(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
-        }
-
-        private void MostrarAdvertencia(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
         }
 
         private void MostrarInfo(string mensaje)

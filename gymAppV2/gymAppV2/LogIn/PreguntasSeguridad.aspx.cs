@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Web.Security;
 using System.Web.UI;
 using BE;
 using BLL;
@@ -156,14 +157,26 @@ namespace gymAppV2.LogIn
                 {
                     try
                     {
-                        BllEvento.RegistrarEvento(BLLEvento.EVENTO_CAMBIO_CONTRASENA, usuario, "Respuesta de seguridad correcta - redirige a cambio de contraseña", 1, "Autenticación");
+                        BllEvento.RegistrarEvento(BLLEvento.EVENTO_CAMBIO_CONTRASENA, usuario, "Respuesta de seguridad correcta - inicia sesión de recuperación", 1, "Autenticación");
                     }
                     catch
                     {
                         // No bloquear el flujo si falla el log.
                     }
 
-                    Redirigir("~/CambiarContra/Cambiar-contra.aspx?usuario=" + Server.UrlEncode(usuario) + "&modo=recuperacion");
+                    // Autenticar al usuario de forma temporal mediante la pregunta de seguridad.
+                    Usuario usuarioBD = BllUsuario.ObtenerUsuario(usuario);
+                    if (usuarioBD != null)
+                    {
+                        BllUsuario.LogearUsuario(usuarioBD);
+                        FormsAuthentication.SetAuthCookie(usuarioBD.USUARIO_Usuario, false);
+                    }
+
+                    // Generar token de un solo uso para el flujo de recuperación.
+                    string token = Guid.NewGuid().ToString("N");
+                    Session["Recuperacion_" + usuario] = token;
+
+                    Redirigir("~/CambiarContra/Cambiar-contra.aspx?usuario=" + Server.UrlEncode(usuario) + "&modo=recuperacion&token=" + Server.UrlEncode(token));
                 }
                 else
                 {

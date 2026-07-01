@@ -32,7 +32,7 @@ namespace gymAppV2.Bitacora
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso("Bitacora");
+            VerificarAcceso(BE.PermisosSistema.Bitacora);
 
             if (!IsPostBack)
             {
@@ -265,21 +265,6 @@ namespace gymAppV2.Bitacora
                 default:
                     return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></svg>";
             }
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
-        }
-
-        private void MostrarExito(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
-        }
-
-        private void MostrarAdvertencia(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
         }
 
         private void MostrarInfo(string mensaje)

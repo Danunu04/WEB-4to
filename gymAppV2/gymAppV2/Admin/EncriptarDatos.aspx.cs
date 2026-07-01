@@ -24,7 +24,7 @@ namespace gymAppV2.Admin
         protected void Page_Load(object sender, EventArgs e)
         {
             // Solo administradores pueden ejecutar migración de encriptación
-            VerificarAcceso("GestionUsuarios");
+            VerificarAcceso(BE.PermisosSistema.EncriptarDatos);
 
             if (!IsPostBack)
             {

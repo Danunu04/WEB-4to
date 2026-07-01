@@ -60,6 +60,8 @@ namespace BLL
 
         /// <summary>
         /// Indica si existe al menos un error de integridad en las tablas registradas.
+        /// Si no se puede verificar (por ejemplo, tabla inexistente), se asume que hay error
+        /// para forzar revisión y no continuar con datos dudosos.
         /// </summary>
         public bool ExisteErrorIntegridad()
         {
@@ -70,9 +72,18 @@ namespace BLL
             }
             catch
             {
-                // Si no se puede verificar, se asume que hay error para forzar revisión.
+                // Si no se puede verificar, se asume error crítico.
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Indica si el sistema debe pausarse por error de integridad.
+        /// Equivale a ExisteErrorIntegridad pero con nombre semántico para la capa UI.
+        /// </summary>
+        public bool SistemaDebePausarse()
+        {
+            return ExisteErrorIntegridad();
         }
 
         /// <summary>

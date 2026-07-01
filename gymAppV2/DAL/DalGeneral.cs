@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -10,15 +9,20 @@ using System.Threading.Tasks;
 
 namespace DAL
 {
-    public class DalGeneral
+    /// <summary>
+    /// Capa de acceso a datos genérica para SQL Server.
+    /// Implementa IDisposable para garantizar el cierre correcto de conexiones.
+    /// Todos los métodos públicos usan List&lt;SqlParameter&gt; y cierran la conexión
+    /// automáticamente tras cada operación.
+    /// </summary>
+    public class DalGeneral : IDisposable
     {
         private string cadenaConexion;
-
-        public SqlConnection conn;
-        public SqlCommand cmd;
+        private SqlConnection conn;
+        private bool disposed = false;
 
         /// <summary>
-        /// Nombre de la cadena de conexión en <connectionStrings> de Web.config.
+        /// Nombre de la cadena de conexión en &lt;connectionStrings&gt; de Web.config.
         /// </summary>
         private const string NOMBRE_CONNECTION_STRING = "GymAppConnection";
 
@@ -27,10 +31,10 @@ namespace DAL
             try
             {
                 // La cadena de conexión se lee desde Web.config para evitar valores hardcodeados.
-                var settings = System.Configuration.ConfigurationManager.ConnectionStrings[NOMBRE_CONNECTION_STRING];
+                var settings = ConfigurationManager.ConnectionStrings[NOMBRE_CONNECTION_STRING];
                 if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
                 {
-                    throw new System.Configuration.ConfigurationErrorsException($"La cadena de conexión '{NOMBRE_CONNECTION_STRING}' no está configurada en Web.config.");
+                    throw new ConfigurationErrorsException($"La cadena de conexión '{NOMBRE_CONNECTION_STRING}' no está configurada en Web.config.");
                 }
 
                 cadenaConexion = settings.ConnectionString;
@@ -46,11 +50,43 @@ namespace DAL
             }
         }
 
-        private string ConstruirConnectionString(string server, string database, string user, string password, string auth)
+        /// <summary>
+        /// Agrega parámetros a un comando SQL.
+        /// </summary>
+        private void AgregarParametros(SqlCommand cmd, List<SqlParameter> parametros)
         {
-            bool windowsAuth = !string.IsNullOrEmpty(auth) && auth == "1";
+            if (parametros == null)
+                return;
 
-            return $"Data Source={server};Initial Catalog={database};Integrated Security=True;";
+            foreach (SqlParameter dato in parametros)
+            {
+                if (dato == null)
+                    continue;
+
+                cmd.Parameters.AddWithValue(dato.ParameterName, dato.Value ?? DBNull.Value);
+            }
+        }
+
+        /// <summary>
+        /// Abre la conexión si no está abierta.
+        /// </summary>
+        private void AbrirConexion()
+        {
+            if (conn != null && conn.State != ConnectionState.Open)
+            {
+                conn.Open();
+            }
+        }
+
+        /// <summary>
+        /// Cierra la conexión si está abierta.
+        /// </summary>
+        private void CerrarConexion()
+        {
+            if (conn != null && conn.State == ConnectionState.Open)
+            {
+                conn.Close();
+            }
         }
 
         /// <summary>
@@ -85,7 +121,11 @@ namespace DAL
             return new Exception(mensajeUsuario, ex);
         }
 
-        public DataTable _686DPConsultar(string consulta, ArrayList parametros)
+        /// <summary>
+        /// ADO Desconectado: ejecuta una consulta y devuelve un DataTable.
+        /// La conexión se abre solo durante el Fill y se cierra inmediatamente.
+        /// </summary>
+        public DataTable _686DPConsultar(string consulta, List<SqlParameter> parametros)
         {
             DataTable dt = new DataTable();
 
@@ -94,19 +134,9 @@ namespace DAL
                 using (SqlCommand cmd = new SqlCommand(consulta, conn))
                 {
                     cmd.CommandType = CommandType.Text;
+                    AgregarParametros(cmd, parametros);
 
-                    if (parametros != null)
-                    {
-                        foreach (SqlParameter dato in parametros)
-                        {
-                            cmd.Parameters.AddWithValue(dato.ParameterName, dato.Value ?? DBNull.Value);
-                        }
-                    }
-
-                    if (conn.State != ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
+                    AbrirConexion();
 
                     using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
                     {
@@ -124,16 +154,17 @@ namespace DAL
             }
             finally
             {
-                if (conn.State == ConnectionState.Open)
-                {
-                    conn.Close();
-                }
+                CerrarConexion();
             }
 
             return dt;
         }
 
-        public DataTable _686DPConsultarSP(string nombreSP, ArrayList parametros)
+        /// <summary>
+        /// ADO Desconectado: ejecuta un stored procedure de lectura y devuelve un DataTable.
+        /// La conexión se abre solo durante el Fill y se cierra inmediatamente.
+        /// </summary>
+        public DataTable _686DPConsultarSP(string nombreSP, List<SqlParameter> parametros)
         {
             DataTable dt = new DataTable();
 
@@ -142,19 +173,9 @@ namespace DAL
                 using (SqlCommand cmd = new SqlCommand(nombreSP, conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+                    AgregarParametros(cmd, parametros);
 
-                    if (parametros != null)
-                    {
-                        foreach (SqlParameter dato in parametros)
-                        {
-                            cmd.Parameters.AddWithValue(dato.ParameterName, dato.Value ?? DBNull.Value);
-                        }
-                    }
-
-                    if (conn.State != ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
+                    AbrirConexion();
 
                     using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
                     {
@@ -172,36 +193,26 @@ namespace DAL
             }
             finally
             {
-                if (conn.State == ConnectionState.Open)
-                {
-                    conn.Close();
-                }
+                CerrarConexion();
             }
 
             return dt;
         }
 
-        public void _686DPEjecutar(string nombreSP, ArrayList parametros)
+        /// <summary>
+        /// ADO Conectado: ejecuta un stored procedure que modifica datos.
+        /// Usa ExecuteNonQuery para INSERT/UPDATE/DELETE y control transaccional.
+        /// </summary>
+        public void _686DPEjecutar(string nombreSP, List<SqlParameter> parametros)
         {
             try
             {
                 using (SqlCommand cmd = new SqlCommand(nombreSP, conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
+                    AgregarParametros(cmd, parametros);
 
-                    if (parametros != null)
-                    {
-                        foreach (SqlParameter dato in parametros)
-                        {
-                            cmd.Parameters.AddWithValue(dato.ParameterName, dato.Value ?? DBNull.Value);
-                        }
-                    }
-
-                    if (conn.State != ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
-
+                    AbrirConexion();
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -215,34 +226,24 @@ namespace DAL
             }
             finally
             {
-                if (conn.State == ConnectionState.Open)
-                {
-                    conn.Close();
-                }
+                CerrarConexion();
             }
         }
 
-        public object _686DPEscalar(string consulta, ArrayList parametros)
+        /// <summary>
+        /// ADO Conectado: ejecuta una consulta escalar (COUNT, MAX, etc.).
+        /// Usa ExecuteScalar para valores únicos atómicos.
+        /// </summary>
+        public object _686DPEscalar(string consulta, List<SqlParameter> parametros)
         {
             try
             {
                 using (SqlCommand cmd = new SqlCommand(consulta, conn))
                 {
                     cmd.CommandType = CommandType.Text;
+                    AgregarParametros(cmd, parametros);
 
-                    if (parametros != null)
-                    {
-                        foreach (SqlParameter dato in parametros)
-                        {
-                            cmd.Parameters.AddWithValue(dato.ParameterName, dato.Value ?? DBNull.Value);
-                        }
-                    }
-
-                    if (conn.State != ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
-
+                    AbrirConexion();
                     return cmd.ExecuteScalar();
                 }
             }
@@ -256,34 +257,24 @@ namespace DAL
             }
             finally
             {
-                if (conn.State == ConnectionState.Open)
-                {
-                    conn.Close();
-                }
+                CerrarConexion();
             }
         }
 
-        public void _686DPEscribir(string consulta, ArrayList parametros)
+        /// <summary>
+        /// ADO Conectado: ejecuta una sentencia SQL que modifica datos.
+        /// Usa ExecuteNonQuery para INSERT/UPDATE/DELETE directos.
+        /// </summary>
+        public void _686DPEscribir(string consulta, List<SqlParameter> parametros)
         {
             try
             {
                 using (SqlCommand cmd = new SqlCommand(consulta, conn))
                 {
                     cmd.CommandType = CommandType.Text;
+                    AgregarParametros(cmd, parametros);
 
-                    if (parametros != null)
-                    {
-                        foreach (SqlParameter dato in parametros)
-                        {
-                            cmd.Parameters.AddWithValue(dato.ParameterName, dato.Value ?? DBNull.Value);
-                        }
-                    }
-
-                    if (conn.State != ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
-
+                    AbrirConexion();
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -297,12 +288,36 @@ namespace DAL
             }
             finally
             {
-                if (conn.State == ConnectionState.Open)
-                {
-                    conn.Close();
-                }
+                CerrarConexion();
             }
         }
 
+        /// <summary>
+        /// Libera los recursos no administrados, cerrando la conexión si está abierta.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return;
+
+            if (disposing)
+            {
+                CerrarConexion();
+                conn?.Dispose();
+            }
+
+            disposed = true;
+        }
+
+        ~DalGeneral()
+        {
+            Dispose(false);
+        }
     }
 }

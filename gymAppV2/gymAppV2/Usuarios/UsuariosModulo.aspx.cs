@@ -37,7 +37,7 @@ namespace gymAppV2.Usuarios
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso("GestionUsuarios");
+            VerificarAcceso(BE.PermisosSistema.GestionUsuarios);
 
             bllUsuario = new BLLUsuario();
 
@@ -175,21 +175,6 @@ namespace gymAppV2.Usuarios
                 lblMensajeForm.CssClass = cssClass;
                 lblMensajeForm.Visible = true;
             }
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            MostrarMensaje(mensaje, "error", "mensaje-error");
-        }
-
-        private void MostrarExito(string mensaje)
-        {
-            MostrarMensaje(mensaje, "success", "mensaje-exito");
-        }
-
-        private void MostrarAdvertencia(string mensaje)
-        {
-            MostrarMensaje(mensaje, "warning", "mensaje-advertencia");
         }
 
         private void MostrarInfo(string mensaje)

@@ -58,7 +58,7 @@ namespace MPP
                     LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.dni = u.dni
                     ORDER BY u.apellido, u.nombre";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
 
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
                 List<Entrenador> entrenadores = new List<Entrenador>();
@@ -102,7 +102,7 @@ namespace MPP
                     VALUES
                     (@DNI, @AlumnosCount, @Activo, @Usuario, @DVV, @DVH)";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", entrenador.DNI),
                     new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
@@ -129,7 +129,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[Entrenadores]
                     WHERE dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni)
                 };
@@ -170,7 +170,7 @@ namespace MPP
                     LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.dni = u.dni
                     WHERE e.dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", dni)
                 };
@@ -220,7 +220,7 @@ namespace MPP
                         dvh = @DVH
                     WHERE dni = @DNI";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@DNI", entrenador.DNI),
                     new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
@@ -317,7 +317,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[Entrenadores] e
                     LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON e.dni = u.dni";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
 
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
 

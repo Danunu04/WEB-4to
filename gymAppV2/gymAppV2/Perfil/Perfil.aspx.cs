@@ -22,7 +22,7 @@ namespace gymAppV2.Perfil
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso("Perfil");
+            VerificarAcceso(BE.PermisosSistema.Perfil);
 
             bllUsuario = new BLLUsuario();
             bllEvento = new BLLEvento();

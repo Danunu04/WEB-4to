@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using BE;
@@ -25,7 +25,7 @@ namespace MPP
                     FROM [GymApp].[dbo].[USUARIOS]
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario)
                 };
@@ -55,7 +55,7 @@ namespace MPP
                     SET rol = @Rol
                     WHERE usr = @Usuario";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@Rol", (int)rol)

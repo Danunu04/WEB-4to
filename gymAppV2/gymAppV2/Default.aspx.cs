@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace gymAppV2
 {
@@ -8,42 +7,12 @@ namespace gymAppV2
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-        }
-
-        protected void Button1_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/LogIn/LogIn.aspx");
-        }
-
-        protected void Button2_Click(object sender, EventArgs e)
-        {
-            string dni = txtDni.Value.Trim();
-            if (string.IsNullOrEmpty(dni))
+            if (!IsPostBack)
             {
-                MostrarError("Por favor ingresa tu DNI");
-                return;
+                // La página raíz ya no se usa; redirigir al inicio público.
+                Response.Redirect("~/Inicio/Default.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
             }
-            MostrarExito("DNI ingresado: " + dni);
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
-        }
-
-        private void MostrarExito(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
-        }
-
-        private void MostrarAdvertencia(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
-        }
-
-        private void MostrarInfo(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "info", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'info');", true);
         }
     }
 }

@@ -60,7 +60,7 @@ namespace MPP
 
                     SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Tipo", evento.EVENTO_Tipo),
                     new SqlParameter("@Usuario", evento.EVENTO_Usuario),
@@ -100,7 +100,7 @@ namespace MPP
                     AND (@FiltroModulo IS NULL OR modulo = @FiltroModulo OR @FiltroModulo = 'all')
                     ORDER BY fecha DESC";
 
-                ArrayList parametros = new ArrayList
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Filtro", filtro ?? "all"),
                     new SqlParameter("@Busqueda", busqueda ?? ""),
@@ -150,7 +150,7 @@ namespace MPP
                     SUM(CASE WHEN criticidad = 4 THEN 1 ELSE 0 END) as Baja
                     FROM [GymApp].[dbo].[Evento]";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
 
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
 
@@ -198,7 +198,7 @@ namespace MPP
                     WHERE modulo IS NOT NULL AND modulo <> ''
                     ORDER BY modulo";
 
-                ArrayList parametros = new ArrayList();
+                List<SqlParameter> parametros = new List<SqlParameter>();
                 DataTable dt = dal._686DPConsultar(consulta, parametros);
                 List<string> modulos = new List<string>();
 

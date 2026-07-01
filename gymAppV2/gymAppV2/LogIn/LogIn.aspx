@@ -14,6 +14,22 @@
      <style>
          @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
          @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+
+         .position-relative { position: relative; }
+         .btn-toggle-password {
+             position: absolute;
+             right: 0.75rem;
+             top: 50%;
+             transform: translateY(-50%);
+             background: transparent;
+             border: none;
+             color: #FF736B;
+             cursor: pointer;
+             font-size: 1.25rem;
+             padding: 0.25rem;
+             margin-top: 0.75rem;
+         }
+         .btn-toggle-password:focus { outline: none; }
      </style>
      <link rel="preconnect" href="https://fonts.googleapis.com">
      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
@@ -38,7 +54,12 @@
                     ValidationGroup="LoginGroup"
                     CssClass="text-danger"
                     Display="Dynamic"></asp:RequiredFieldValidator>
-                    <asp:TextBox ID="txtContrasena" runat="server" CssClass="form-control form-control-lg mt-5" placeholder="Password" TextMode="Password" MaxLength="128" />
+                    <div class="position-relative">
+                        <asp:TextBox ID="txtContrasena" runat="server" CssClass="form-control form-control-lg mt-5" placeholder="Password" TextMode="Password" MaxLength="128" />
+                        <button type="button" id="btnTogglePassword" class="btn-toggle-password" onclick="togglePasswordVisibility()" aria-label="Mostrar u ocultar contraseña">
+                            <i id="iconTogglePassword" class="bi bi-eye"></i>
+                        </button>
+                    </div>
                     <asp:RequiredFieldValidator
                     ID="RequiredFieldValidator2"
                     runat="server"
@@ -63,5 +84,20 @@
         </div>
     </form>
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script>
+        function togglePasswordVisibility() {
+            var input = document.getElementById('<%= txtContrasena.ClientID %>');
+            var icon = document.getElementById('iconTogglePassword');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    </script>
 </body>
 </html>

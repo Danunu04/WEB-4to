@@ -21,7 +21,7 @@ namespace gymAppV2.Rutinas
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso("GestionRutinas");
+            VerificarAcceso(BE.PermisosSistema.GestionRutinas);
 
             if (!IsPostBack)
             {

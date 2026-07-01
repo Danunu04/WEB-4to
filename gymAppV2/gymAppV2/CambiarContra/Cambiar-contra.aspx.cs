@@ -62,42 +62,60 @@ namespace gymAppV2.CambiarContra
             {
                 string usuarioQuery = Request.QueryString["usuario"];
                 string modoQuery = Request.QueryString["modo"];
+                bool sesionActiva = BllUsuario.UsuarioEstaLogueado();
 
-                // Modo recuperación: viene del login bloqueado o de responder la pregunta de seguridad.
                 if (!string.IsNullOrWhiteSpace(usuarioQuery) &&
-                    string.Equals(modoQuery, "recuperacion", StringComparison.OrdinalIgnoreCase))
+                    string.Equals(modoQuery, "primerLogin", StringComparison.OrdinalIgnoreCase))
                 {
-                    txtUsuario.Text = usuarioQuery.Trim();
-                    txtUsuario.ReadOnly = true;
-                    txtUsuario.CssClass += " bg-surface-2";
-                    ModoRecuperacion = true;
-                    ModoPrimerLogin = false;
-                }
-                // Modo primer login: viene del login normal cuando primerLogin = 1.
-                else if (!string.IsNullOrWhiteSpace(usuarioQuery) &&
-                         string.Equals(modoQuery, "primerLogin", StringComparison.OrdinalIgnoreCase))
-                {
-                    txtUsuario.Text = usuarioQuery.Trim();
-                    txtUsuario.ReadOnly = true;
-                    txtUsuario.CssClass += " bg-surface-2";
-                    ModoRecuperacion = false;
-                    ModoPrimerLogin = true;
-                }
-                else if (BllUsuario.UsuarioEstaLogueado())
-                {
-                    // Modo normal: usuario logueado.
-                    Usuario usuarioLogueado = Singleton.Instancia.Usuario;
-                    if (usuarioLogueado == null)
+                    // El modo primer login solo es válido si el usuario acaba de iniciar sesión
+                    // y la marca primerLogin está activa en la base de datos.
+                    if (!sesionActiva)
                     {
                         Redirigir("~/LogIn/LogIn.aspx");
                         return;
                     }
 
-                    txtUsuario.Text = usuarioLogueado.USUARIO_Usuario;
-                    txtUsuario.ReadOnly = true;
-                    txtUsuario.CssClass += " bg-surface-2";
-                    ModoRecuperacion = false;
-                    ModoPrimerLogin = false;
+                    string usuario = usuarioQuery.Trim();
+                    if (!EsUsuarioEnSesion(usuario))
+                    {
+                        Redirigir("~/LogIn/LogIn.aspx");
+                        return;
+                    }
+
+                    Usuario usuarioBD = BllUsuario.ObtenerUsuario(usuario);
+                    if (usuarioBD == null || !usuarioBD.USUARIO_PrimerLogin)
+                    {
+                        Redirigir("~/LogIn/LogIn.aspx");
+                        return;
+                    }
+
+                    ConfigurarModo(usuario, true, false);
+                }
+                else if (!string.IsNullOrWhiteSpace(usuarioQuery) &&
+                         string.Equals(modoQuery, "recuperacion", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Modo recuperación: solo válido si se presenta el token generado por
+                    // PreguntasSeguridad.aspx, la cuenta está bloqueada y el usuario autenticado
+                    // coincide con el que inició el flujo.
+                    string usuario = usuarioQuery.Trim();
+
+                    if (sesionActiva && !EsUsuarioEnSesion(usuario))
+                    {
+                        Redirigir("~/LogIn/LogIn.aspx");
+                        return;
+                    }
+
+                    if (!ValidarFlujoRecuperacion(usuario))
+                    {
+                        Redirigir("~/LogIn/LogIn.aspx");
+                        return;
+                    }
+
+                    ConfigurarModo(usuario, false, true);
+                }
+                else if (sesionActiva)
+                {
+                    ConfigurarModoNormal();
                 }
                 else
                 {
@@ -107,7 +125,78 @@ namespace gymAppV2.CambiarContra
                 }
 
                 ConfigurarVisibilidadContrasenaActual();
+            }
+        }
 
+        /// <summary>
+        /// Devuelve true si el usuario indicado coincide con el usuario logueado en el singleton.
+        /// </summary>
+        private bool EsUsuarioEnSesion(string usuario)
+        {
+            try
+            {
+                var sesion = Singleton.Instancia;
+                return sesion != null && sesion.Usuario != null
+                    && string.Equals(sesion.Usuario.USUARIO_Usuario, usuario, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Configura la pantalla en modo cambio normal para el usuario logueado.
+        /// </summary>
+        private void ConfigurarModoNormal()
+        {
+            Usuario usuarioLogueado = Singleton.Instancia.Usuario;
+            if (usuarioLogueado == null)
+            {
+                Redirigir("~/LogIn/LogIn.aspx");
+                return;
+            }
+
+            ConfigurarModo(usuarioLogueado.USUARIO_Usuario, false, false);
+        }
+
+        /// <summary>
+        /// Configura los campos para el modo indicado.
+        /// </summary>
+        private void ConfigurarModo(string usuario, bool primerLogin, bool recuperacion)
+        {
+            txtUsuario.Text = usuario;
+            txtUsuario.ReadOnly = true;
+            txtUsuario.CssClass += " bg-surface-2";
+            ModoPrimerLogin = primerLogin;
+            ModoRecuperacion = recuperacion;
+        }
+
+        /// <summary>
+        /// Valida que el flujo de recuperación provenga realmente de PreguntasSeguridad.aspx
+        /// verificando el token de un solo uso y que la cuenta esté bloqueada.
+        /// </summary>
+        private bool ValidarFlujoRecuperacion(string usuario)
+        {
+            string token = Request.QueryString["token"];
+            if (string.IsNullOrWhiteSpace(token))
+                return false;
+
+            string expectedToken = Session["Recuperacion_" + usuario] as string;
+            if (!string.Equals(token, expectedToken, StringComparison.Ordinal))
+                return false;
+
+            try
+            {
+                Usuario usuarioBD = BllUsuario.ObtenerUsuario(usuario);
+                if (usuarioBD == null || !usuarioBD.USUARIO_Activo)
+                    return false;
+
+                return usuarioBD.USUARIO_Bloqueado || usuarioBD.USUARIO_PrimerLogin;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -146,12 +235,15 @@ namespace gymAppV2.CambiarContra
 
                 BllUsuario.CambiarContrasena(usuario, nuevaContrasena);
 
-                // En modo recuperación, asegurar que se reestablezcan los intentos y se desbloquee el usuario.
+                // En modo recuperación, asegurar que se desbloquee el usuario y se reinicien los intentos.
                 if (ModoRecuperacion)
                 {
                     try
                     {
+                        BllUsuario.DesbloquearUsuario(usuario);
                         BllUsuario.ReestablecerIntentos(usuario);
+                        // Invalidar el token de recuperación para evitar reuso.
+                        Session.Remove("Recuperacion_" + usuario);
                     }
                     catch (Exception exRestablecer)
                     {

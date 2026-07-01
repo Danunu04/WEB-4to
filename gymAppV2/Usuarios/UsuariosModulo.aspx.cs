@@ -9,7 +9,11 @@ namespace gymAppV2.Usuarios
 {
     public partial class UsuariosModulo : System.Web.UI.Page
     {
-        private string SelectedUsuario { get; set; }
+        private string SelectedUsuario
+        {
+            get { return ViewState["SelectedUsuario"] as string; }
+            set { ViewState["SelectedUsuario"] = value; }
+        }
         private List<BE.UsuarioGestion> Usuarios { get; set; }
         private BLLUsuario bllUsuario;
 
@@ -299,11 +303,11 @@ namespace gymAppV2.Usuarios
                     return;
                 }
 
-                // TODO: Llamar a la capa BLL para desbloquear usuario
+                bllUsuario.DesbloquearUsuario(SelectedUsuario);
+
                 var usuario = Usuarios.FirstOrDefault(u => u.USUARIO_Usuario == SelectedUsuario);
                 if (usuario != null)
                 {
-                    usuario.USUARIO_Bloqueado = false;
                     MostrarExito($"✅ {usuario.USUARIO_Tipo} desbloqueado/a");
                 }
 
@@ -383,6 +387,27 @@ namespace gymAppV2.Usuarios
                 int rol = int.Parse(ddlRolForm.SelectedValue);
                 string contrasena = string.IsNullOrEmpty(txtContrasena.Text) ? "" : txtContrasena.Text;
 
+                // Datos personales comunes
+                if (string.IsNullOrEmpty(txtDNI.Text) || !int.TryParse(txtDNI.Text, out int dni))
+                {
+                    MostrarError("El DNI es obligatorio y debe ser numérico");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(txtNombre.Text) ||
+                    string.IsNullOrEmpty(txtApellido.Text) ||
+                    string.IsNullOrEmpty(txtFechaNacimiento.Text) ||
+                    !DateTime.TryParse(txtFechaNacimiento.Text, out DateTime fechaNacimiento))
+                {
+                    MostrarError("El nombre, apellido y fecha de nacimiento son obligatorios");
+                    return;
+                }
+
+                string nombre = txtNombre.Text.Trim();
+                string apellido = txtApellido.Text.Trim();
+                string telefono = string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text.Trim();
+                string email = string.IsNullOrEmpty(txtEmail.Text) ? null : txtEmail.Text.Trim();
+
                 bool esModificacion = !string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == "Modificar usuario";
 
                 if (!esModificacion)
@@ -397,34 +422,20 @@ namespace gymAppV2.Usuarios
 
                     if (rol == 3)
                     {
-                        // Datos de entrenador
-                        if (string.IsNullOrEmpty(txtDNIEntrenador.Text) ||
-                            !int.TryParse(txtDNIEntrenador.Text, out int dniEntrenador) ||
-                            string.IsNullOrEmpty(txtApellido.Text) ||
-                            string.IsNullOrEmpty(txtNombre.Text))
-                        {
-                            MostrarError("Para crear un entrenador, el DNI, nombre y apellido son obligatorios");
-                            return;
-                        }
-
-                        dto.EntrenadorDNI = dniEntrenador;
-                        dto.EntrenadorNombre = txtNombre.Text.Trim();
-                        dto.EntrenadorApellido = txtApellido.Text.Trim();
-                        dto.EntrenadorFechaNacimiento = string.IsNullOrEmpty(txtFechaNacimientoEntrenador.Text) ?
-                            (DateTime?)null : DateTime.Parse(txtFechaNacimientoEntrenador.Text);
-                        dto.EntrenadorTelefono = string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text;
+                        dto.EntrenadorDNI = dni;
+                        dto.EntrenadorNombre = nombre;
+                        dto.EntrenadorApellido = apellido;
+                        dto.EntrenadorFechaNacimiento = fechaNacimiento;
+                        dto.EntrenadorTelefono = telefono;
                     }
                     else if (rol == 4)
                     {
-                        // Datos de cliente - asociar alumno existente
-                        if (string.IsNullOrEmpty(txtDNIAlumno.Text) ||
-                            !int.TryParse(txtDNIAlumno.Text, out int dniAlumno))
-                        {
-                            MostrarError("Para crear un cliente, el DNI del alumno es obligatorio");
-                            return;
-                        }
-
-                        dto.AlumnoDNI = dniAlumno;
+                        dto.AlumnoDNI = dni;
+                        dto.AlumnoNombre = nombre;
+                        dto.AlumnoApellido = apellido;
+                        dto.AlumnoFechaNacimiento = fechaNacimiento;
+                        dto.AlumnoTelefono = telefono;
+                        dto.AlumnoEmail = email;
                     }
 
                     bllUsuario.CrearUsuario(dto);
@@ -433,8 +444,20 @@ namespace gymAppV2.Usuarios
                 else
                 {
                     // Modificar usuario existente
-                    // TODO: Implementar lógica de modificación
-                    MostrarExito("✅ Usuario modificado correctamente");
+                    bool activo = ddlEstadoForm.SelectedValue == "1";
+                    bllUsuario.ModificarUsuario(
+                        SelectedUsuario,
+                        txtUsuario.Text.Trim(),
+                        nombre,
+                        apellido,
+                        telefono,
+                        email,
+                        fechaNacimiento,
+                        rol,
+                        activo,
+                        dni);
+
+                    MostrarExito($"✅ Usuario '{txtUsuario.Text}' modificado correctamente");
                 }
 
                 CerrarFormulario();
@@ -495,35 +518,46 @@ namespace gymAppV2.Usuarios
             txtEmail.Text = string.Empty;
             txtUsuario.Text = string.Empty;
             txtContrasena.Text = string.Empty;
+            txtFechaNacimiento.Text = string.Empty;
             ddlRolForm.SelectedIndex = 0;
-            txtDNIEntrenador.Text = string.Empty;
-            txtFechaNacimientoEntrenador.Text = string.Empty;
-            txtDNIAlumno.Text = string.Empty;
+            ddlEstadoForm.SelectedIndex = 0;
         }
 
         private void CargarUsuarioEnFormulario(BE.UsuarioGestion usuario)
         {
             txtUsuario.Text = usuario.USUARIO_Usuario;
-            ddlRolForm.SelectedValue = usuario.USUARIO_Tipo;
-            // Los demás campos se cargarían de las tablas correspondientes (Alumnos, Entrenadores, etc.)
+            ddlRolForm.SelectedValue = ObtenerRolValue(usuario.USUARIO_Tipo);
+            ddlEstadoForm.SelectedValue = usuario.USUARIO_Activo ? "1" : "0";
+
+            txtDNI.Text = usuario.DNI.HasValue ? usuario.DNI.Value.ToString() : string.Empty;
+            txtNombre.Text = usuario.Nombre ?? string.Empty;
+            txtApellido.Text = usuario.Apellido ?? string.Empty;
+            txtTelefono.Text = usuario.Telefono ?? string.Empty;
+            txtEmail.Text = usuario.Email ?? string.Empty;
+            txtFechaNacimiento.Text = usuario.FechaNacimiento.HasValue
+                ? usuario.FechaNacimiento.Value.ToString("yyyy-MM-dd")
+                : string.Empty;
         }
 
         private void CerrarFormulario()
         {
             pnlForm.Visible = false;
             LimpiarFormulario();
+            SelectedUsuario = null;
         }
 
         private void CambiarEstadoUsuario(string usuario, bool activo)
         {
             try
             {
-                // TODO: Llamar a la capa BLL para cambiar estado de usuario
+                if (activo)
+                    bllUsuario.ActivarUsuario(usuario);
+                else
+                    bllUsuario.DesactivarUsuario(usuario);
 
                 var user = Usuarios.FirstOrDefault(u => u.USUARIO_Usuario == usuario);
                 if (user != null)
                 {
-                    user.USUARIO_Activo = activo;
                     MostrarExito($"✅ {user.USUARIO_Tipo} {(activo ? "activado/a" : "desactivado/a")}");
                 }
 
@@ -559,6 +593,18 @@ namespace gymAppV2.Usuarios
         {
             string[] classes = { "av-teal", "av-orange", "av-yellow" };
             return classes[index % 3];
+        }
+
+        private string ObtenerRolValue(string tipo)
+        {
+            switch (tipo)
+            {
+                case "Administrador": return "1";
+                case "Recepcionista": return "2";
+                case "Entrenador": return "3";
+                case "Cliente": return "4";
+                default: return "";
+            }
         }
 
         protected string GetRolClass(object tipo)

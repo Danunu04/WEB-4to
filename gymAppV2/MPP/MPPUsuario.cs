@@ -839,7 +839,7 @@ namespace MPP
             }
         }
 
-        public void ActualizarUsuario(Usuario usuario)
+        public void ActualizarUsuario(Usuario usuario, string usuarioOriginal = null)
         {
             try
             {
@@ -848,6 +848,7 @@ namespace MPP
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[USUARIOS]
                     SET
+                        usr = @Usuario,
                         tipo = @Tipo,
                         dni = @DNI,
                         nombre = @Nombre,
@@ -859,11 +860,12 @@ namespace MPP
                         primerLogin = @PrimerLogin,
                         dvv = @DVV,
                         dvh = @DVH
-                    WHERE usr = @Usuario";
+                    WHERE usr = @UsuarioOriginal";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario.USUARIO_Usuario),
+                    new SqlParameter("@UsuarioOriginal", usuarioOriginal ?? usuario.USUARIO_Usuario),
                     new SqlParameter("@Tipo", usuario.USUARIO_Tipo),
                     new SqlParameter("@DNI", usuario.USUARIO_DNI),
                     new SqlParameter("@Nombre", EncriptarCampoPersonal(usuario.Nombre) ?? (object)DBNull.Value),

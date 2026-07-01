@@ -745,7 +745,7 @@ namespace BLL
                     usuarioExistente.USUARIO_PrimerLogin // Mantener estado de primer login
                 );
 
-                mppUsuario.ActualizarUsuario(usuarioActualizado);
+                mppUsuario.ActualizarUsuario(usuarioActualizado, usuarioOriginal);
 
                 // Si es entrenador, crear/actualizar registro específico
                 if (rol == 3)

@@ -115,9 +115,9 @@ namespace BLL
 
                 if (!esEventoPreAuth)
                 {
-                    // Validar que el usuario corresponda al de la sesión activa.
-                    // Si la sesión expiró, se lanza una excepción controlada para no perder
-                    // la trazabilidad sin romper silenciosamente la operación.
+                    // Validar que haya una sesión activa para operaciones post-autenticación.
+                    // El parámetro 'usuario' puede ser el actor o el usuario afectado según el
+                    // contexto; la trazabilidad se garantiza validando la sesión del operador.
                     var contexto = System.Web.HttpContext.Current;
                     if (contexto?.Session == null)
                     {
@@ -128,12 +128,6 @@ namespace BLL
                     if (usuarioSesion == null)
                     {
                         throw new Exception("No hay sesión activa para registrar el evento post-autenticación.");
-                    }
-
-                    string usuarioEsperado = usuarioSesion.USUARIO_Usuario;
-                    if (!string.Equals(usuario, usuarioEsperado, StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new Exception($"El usuario '{usuario}' no corresponde al usuario de la sesión activa ('{usuarioEsperado}')");
                     }
                 }
                 else

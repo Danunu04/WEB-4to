@@ -129,7 +129,11 @@ namespace SERVICIOS
                 return (bool)valor ? "1" : "0";
 
             if (tipo == typeof(DateTime))
-                return ((DateTime)valor).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            {
+                DateTime fecha = (DateTime)valor;
+                DateTime truncada = new DateTime(fecha.Year, fecha.Month, fecha.Day, fecha.Hour, fecha.Minute, fecha.Second);
+                return truncada.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            }
 
             if (tipo == typeof(decimal))
                 return ((decimal)valor).ToString(CultureInfo.InvariantCulture);

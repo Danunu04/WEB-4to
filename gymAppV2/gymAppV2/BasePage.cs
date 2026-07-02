@@ -23,6 +23,24 @@ namespace gymAppV2
         /// </summary>
         private const string PAGINA_VERIFICACION_DV = "VerificacioDV/VerificacioDV.aspx";
 
+        /// <summary>
+        /// Páginas que solo deben accederse cuando el sistema tiene un error de integridad.
+        /// En condiciones normales se redirige al dashboard.
+        /// </summary>
+        private static readonly string[] PAGINAS_SOLO_CON_ERROR_INTEGRIDAD =
+        {
+            "VerificacioDV/VerificacioDV.aspx"
+        };
+
+        /// <summary>
+        /// Páginas de mantenimiento del sistema que no se exponen en el menú de navegación
+        /// y solo deben accederse mediante URL directa cuando el administrador lo requiera.
+        /// </summary>
+        private static readonly string[] PAGINAS_MANTENIMIENTO_SISTEMA =
+        {
+            "Admin/EncriptarDatos.aspx"
+        };
+
         protected override void OnInit(EventArgs e)
         {
             base.OnInit(e);
@@ -37,6 +55,8 @@ namespace gymAppV2
             }
 
             VerificarIntegridadSiAplica();
+            VerificarPaginasSoloErrorIntegridad();
+            VerificarPaginasMantenimientoSistema();
         }
 
         /// <summary>
@@ -82,6 +102,63 @@ namespace gymAppV2
                     RedirigirSeguro("~/VerificacioDV/VerificacioDV.aspx");
                 }
             }
+        }
+
+        /// <summary>
+        /// Páginas como VerificacioDV solo tienen sentido cuando hay un error de integridad.
+        /// Si no hay error, redirige al dashboard.
+        /// </summary>
+        private void VerificarPaginasSoloErrorIntegridad()
+        {
+            string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
+            if (string.IsNullOrEmpty(paginaActual))
+                return;
+
+            string pagina = paginaActual.Replace("~/", "");
+            if (!EsPaginaEnLista(pagina, PAGINAS_SOLO_CON_ERROR_INTEGRIDAD))
+                return;
+
+            try
+            {
+                if (!BllDV.ExisteErrorIntegridad())
+                {
+                    RedirigirSeguro("~/DashBoard/WebForm1.aspx");
+                }
+            }
+            catch
+            {
+                // Si no se puede verificar, se permite el acceso para no bloquear al admin.
+            }
+        }
+
+        /// <summary>
+        /// Páginas de mantenimiento del sistema (ej. encriptación masiva) no se muestran
+        /// en el menú y no deben accederse en navegación normal. Se redirige al dashboard.
+        /// </summary>
+        private void VerificarPaginasMantenimientoSistema()
+        {
+            string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
+            if (string.IsNullOrEmpty(paginaActual))
+                return;
+
+            string pagina = paginaActual.Replace("~/", "");
+            if (EsPaginaEnLista(pagina, PAGINAS_MANTENIMIENTO_SISTEMA))
+            {
+                RedirigirSeguro("~/DashBoard/WebForm1.aspx");
+            }
+        }
+
+        /// <summary>
+        /// Indica si la página actual coincide con alguna de la lista.
+        /// </summary>
+        private bool EsPaginaEnLista(string paginaActual, string[] paginas)
+        {
+            foreach (string pagina in paginas)
+            {
+                if (paginaActual.Equals(pagina, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>

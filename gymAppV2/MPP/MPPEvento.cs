@@ -23,20 +23,42 @@ namespace MPP
         }
 
         /// <summary>
-        /// Calcula DVH y DVV de un evento a partir de sus valores de persistencia.
+        /// Trunca la fecha a segundos para evitar diferencias de milisegundos
+        /// entre el valor insertado y el valor leído de SQL Server.
         /// </summary>
-        private void CalcularDigitosEvento(Evento evento, int criticidad, out string dvh, out string dvv)
+        private DateTime TruncarFecha(DateTime fecha)
+        {
+            return new DateTime(fecha.Year, fecha.Month, fecha.Day, fecha.Hour, fecha.Minute, fecha.Second);
+        }
+
+        /// <summary>
+        /// Arma el diccionario de valores usado para calcular DVH/DVV de un evento.
+        /// No incluye codEvento porque es autogenerado por la base de datos y no se conoce
+        /// en el momento del INSERT. Al no formar parte del cálculo, la verificación es
+        /// coherente entre inserción y lectura.
+        /// </summary>
+        private Dictionary<string, object> ArmarValoresDV(Evento evento, int criticidad)
         {
             var valores = new Dictionary<string, object>
             {
                 { "tipo", evento.EVENTO_Tipo },
                 { "usr", evento.EVENTO_Usuario },
                 { "descripcion", evento.EVENTO_Accion },
-                { "fecha", evento.EVENTO_Timestamp },
+                { "fecha", TruncarFecha(evento.EVENTO_Timestamp) },
                 { "criticidad", criticidad },
                 { "modulo", evento.EVENTO_Modulo }
             };
 
+            return valores;
+        }
+
+        /// <summary>
+        /// Calcula DVH y DVV de un evento a partir de sus valores de persistencia.
+        /// La fecha se trunca a segundos para coincidir con lo almacenado en SQL Server.
+        /// </summary>
+        private void CalcularDigitosEvento(Evento evento, int criticidad, out string dvh, out string dvv)
+        {
+            var valores = ArmarValoresDV(evento, criticidad);
             dvManager.CalcularAmbos(valores, out dvh, out dvv);
         }
 
@@ -51,6 +73,7 @@ namespace MPP
                     throw new Exception("No se puede registrar un evento sin usuario válido");
                 }
 
+                DateTime fechaTruncada = TruncarFecha(evento.EVENTO_Timestamp);
                 CalcularDigitosEvento(evento, criticidad, out string dvh, out string dvv);
 
                 string consulta = @"
@@ -65,7 +88,7 @@ namespace MPP
                     new SqlParameter("@Tipo", evento.EVENTO_Tipo),
                     new SqlParameter("@Usuario", evento.EVENTO_Usuario),
                     new SqlParameter("@Accion", evento.EVENTO_Accion),
-                    new SqlParameter("@Timestamp", evento.EVENTO_Timestamp),
+                    new SqlParameter("@Timestamp", fechaTruncada),
                     new SqlParameter("@Criticidad", criticidad),
                     new SqlParameter("@Modulo", string.IsNullOrEmpty(evento.EVENTO_Modulo) ? (object)DBNull.Value : evento.EVENTO_Modulo),
                     new SqlParameter("@DVV", dvv),
@@ -85,6 +108,144 @@ namespace MPP
             {
                 throw new Exception("Error al registrar el evento: " + ex.Message, ex);
             }
+        }
+
+        /// <summary>
+        /// Verifica la integridad de la tabla Evento.
+        /// Se lee fila por fila con codEvento y se comparan DVH/DVV.
+        /// </summary>
+        public List<ResultadoVerificacionDV> VerificarIntegridadEventos()
+        {
+            var resultados = new List<ResultadoVerificacionDV>();
+
+            try
+            {
+                string consulta = @"
+                    SELECT codEvento, tipo, usr, descripcion, fecha, criticidad, modulo, dvv, dvh
+                    FROM [GymApp].[dbo].[Evento]";
+
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    int codEvento = Convert.ToInt32(row["codEvento"]);
+                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
+                    string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
+
+                    Evento evento = new Evento
+                    {
+                        EVENTO_Id = codEvento,
+                        EVENTO_Tipo = row["tipo"] != DBNull.Value ? row["tipo"].ToString() : string.Empty,
+                        EVENTO_Usuario = row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        EVENTO_Accion = row["descripcion"] != DBNull.Value ? row["descripcion"].ToString() : string.Empty,
+                        EVENTO_Timestamp = row["fecha"] != DBNull.Value ? Convert.ToDateTime(row["fecha"]) : DateTime.MinValue,
+                        EVENTO_Criticidad = row["criticidad"] != DBNull.Value ? Convert.ToInt32(row["criticidad"]) : 1,
+                        EVENTO_Modulo = row["modulo"] != DBNull.Value ? row["modulo"].ToString() : string.Empty
+                    };
+
+                    CalcularDigitosEvento(evento, evento.EVENTO_Criticidad, out string dvhCalculado, out string dvvCalculado);
+
+                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado) && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
+                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado) && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
+
+                    if (dvhOk && dvvOk)
+                        continue;
+
+                    resultados.Add(new ResultadoVerificacionDV
+                    {
+                        NombreTabla = "Evento",
+                        ClaveFila = codEvento.ToString(),
+                        Campo = "DVH/DVV (fila completa)",
+                        EsValido = false,
+                        Mensaje = "Los dígitos verificadores del evento no coinciden.",
+                        DVHAlmacenado = dvhAlmacenado,
+                        DVHCalculado = dvhCalculado,
+                        DVVAlmacenado = dvvAlmacenado,
+                        DVVCalculado = dvvCalculado
+                    });
+                }
+
+                if (resultados.Count == 0)
+                {
+                    resultados.Add(new ResultadoVerificacionDV
+                    {
+                        NombreTabla = "Evento",
+                        ClaveFila = "-",
+                        Campo = "-",
+                        EsValido = true,
+                        Mensaje = "Tabla Evento verificada correctamente."
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                resultados.Add(new ResultadoVerificacionDV
+                {
+                    NombreTabla = "Evento",
+                    ClaveFila = "-",
+                    Campo = "-",
+                    EsValido = false,
+                    Mensaje = "Error al verificar Evento: " + ex.Message
+                });
+            }
+
+            return resultados;
+        }
+
+        /// <summary>
+        /// Recalcula y actualiza los dígitos verificadores de todos los eventos.
+        /// </summary>
+        public void RecalcularDigitosTodosEventos()
+        {
+            try
+            {
+                string consulta = @"
+                    SELECT codEvento, tipo, usr, descripcion, fecha, criticidad, modulo
+                    FROM [GymApp].[dbo].[Evento]";
+
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    Evento evento = new Evento
+                    {
+                        EVENTO_Id = Convert.ToInt32(row["codEvento"]),
+                        EVENTO_Tipo = row["tipo"] != DBNull.Value ? row["tipo"].ToString() : string.Empty,
+                        EVENTO_Usuario = row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        EVENTO_Accion = row["descripcion"] != DBNull.Value ? row["descripcion"].ToString() : string.Empty,
+                        EVENTO_Timestamp = row["fecha"] != DBNull.Value ? Convert.ToDateTime(row["fecha"]) : DateTime.MinValue,
+                        EVENTO_Criticidad = row["criticidad"] != DBNull.Value ? Convert.ToInt32(row["criticidad"]) : 1,
+                        EVENTO_Modulo = row["modulo"] != DBNull.Value ? row["modulo"].ToString() : string.Empty
+                    };
+
+                    CalcularDigitosEvento(evento, evento.EVENTO_Criticidad, out string dvh, out string dvv);
+                    ActualizarDigitosEvento(evento.EVENTO_Id, dvh, dvv);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al recalcular dígitos de todos los eventos: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Actualiza los dígitos verificadores de un evento por su codEvento.
+        /// </summary>
+        private void ActualizarDigitosEvento(int codEvento, string dvh, string dvv)
+        {
+            string consulta = @"
+                UPDATE [GymApp].[dbo].[Evento]
+                SET dvv = @DVV, dvh = @DVH
+                WHERE codEvento = @CodEvento";
+
+            List<SqlParameter> parametros = new List<SqlParameter>
+            {
+                new SqlParameter("@CodEvento", codEvento),
+                new SqlParameter("@DVV", dvv),
+                new SqlParameter("@DVH", dvh)
+            };
+
+            dal._686DPEscribir(consulta, parametros);
         }
 
         public List<Evento> ObtenerEventos(string filtro, string busqueda, int? filtroCriticidad = null, string filtroModulo = null)

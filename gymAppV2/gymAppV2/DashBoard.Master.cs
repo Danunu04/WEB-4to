@@ -95,15 +95,11 @@ namespace gymAppV2
             liActividades.Visible = bllRol.UsuarioActualTieneAcceso("ActividadesCalendario");
             liRutinas.Visible = bllRol.UsuarioActualTieneAcceso("GestionRutinas");
             liBitacora.Visible = bllRol.UsuarioActualTieneAcceso("Bitacora");
+            liRespaldo.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Backup)
+                             || bllRol.UsuarioActualTieneAcceso(PermisosSistema.Restore);
             liPagos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Pagos);
             liPerfil.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Perfil);
-            liVerificacionDV.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.VerificacionDV);
-            liBackup.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Backup);
-            liRestore.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Restore);
-            liEncriptarDatos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.EncriptarDatos);
 
-            // El módulo de permisos no está implementado; se mantiene oculto hasta su desarrollo.
-            liPermisos.Visible = false;
         }
 
         protected void LnkLogout_Click(object sender, EventArgs e)

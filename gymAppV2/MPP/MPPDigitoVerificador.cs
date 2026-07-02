@@ -5,6 +5,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using BE;
@@ -586,38 +587,139 @@ namespace MPP
         #region Backup
 
         /// <summary>
+        /// Realiza un backup completo de la base de datos en la ruta indicada.
+        /// Requiere permisos de sysadmin, dbcreator o miembro del rol db_backupoperator.
+        /// La operación se ejecuta conectado a master para evitar conflictos con la base destino.
+        /// </summary>
+        public void RealizarBackup(string rutaDestino)
+        {
+            if (string.IsNullOrWhiteSpace(rutaDestino))
+                throw new ArgumentException("La ruta de destino no puede estar vacía.", nameof(rutaDestino));
+
+            string extension = Path.GetExtension(rutaDestino);
+            if (!string.Equals(extension, ".bak", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("La ruta del backup debe tener extensión .bak.");
+
+            string directorio = Path.GetDirectoryName(rutaDestino);
+            if (string.IsNullOrWhiteSpace(directorio))
+                throw new ArgumentException("La ruta de destino no es válida.");
+
+            try
+            {
+                string nombreBase = ObtenerNombreBaseDatos();
+                string consulta = $@"
+                    BACKUP DATABASE [{nombreBase}]
+                    TO DISK = @Ruta
+                    WITH INIT;";
+
+                using (SqlConnection connMaster = new SqlConnection(ObtenerCadenaConexionMaster()))
+                {
+                    connMaster.Open();
+
+                    using (SqlCommand cmd = new SqlCommand(consulta, connMaster))
+                    {
+                        cmd.Parameters.AddWithValue("@Ruta", rutaDestino);
+                        cmd.CommandTimeout = 300;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al realizar el backup. Verifique permisos y ruta: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
         /// Restaura la base de datos desde un backup previo.
         /// ADVERTENCIA: operación destructiva. Requiere permisos de sysadmin o dbcreator.
-        /// La restauración se ejecuta conectado a la base master para poder reemplazar GymApp.
+        /// La restauración se ejecuta conectado a master, lee los nombres lógicos del backup
+        /// y los mueve a las rutas por defecto de la instancia.
         /// </summary>
         public void RestaurarBackup(string rutaBackup)
         {
             if (string.IsNullOrWhiteSpace(rutaBackup))
                 throw new ArgumentException("La ruta del backup no puede estar vacía.", nameof(rutaBackup));
 
+            if (!File.Exists(rutaBackup))
+                throw new ArgumentException("No se encontró el archivo de backup especificado.");
+
             try
             {
-                string consulta = @"
-                    ALTER DATABASE [GymApp] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                    RESTORE DATABASE [GymApp] FROM DISK = @RutaBackup WITH REPLACE;
-                    ALTER DATABASE [GymApp] SET MULTI_USER;";
+                string nombreBase = ObtenerNombreBaseDatos();
 
-                var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
-                if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
-                    throw new Exception("No se encontró la cadena de conexión 'GymAppConnection' en Web.config.");
-
-                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(settings.ConnectionString)
-                {
-                    InitialCatalog = "master"
-                };
-
-                using (SqlConnection connMaster = new SqlConnection(builder.ConnectionString))
+                using (SqlConnection connMaster = new SqlConnection(ObtenerCadenaConexionMaster()))
                 {
                     connMaster.Open();
 
+                    // Leer los nombres lógicos de datos y log del backup.
+                    string logicalData;
+                    string logicalLog;
+                    using (SqlCommand cmd = new SqlCommand("RESTORE FILELISTONLY FROM DISK = @Ruta", connMaster))
+                    {
+                        cmd.Parameters.AddWithValue("@Ruta", rutaBackup);
+                        DataTable dt = new DataTable();
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            dt.Load(reader);
+                        }
+
+                        if (dt.Rows.Count < 2)
+                            throw new Exception("El backup no contiene los archivos de datos y log esperados.");
+
+                        logicalData = dt.Rows[0]["LogicalName"].ToString();
+                        logicalLog = dt.Rows[1]["LogicalName"].ToString();
+                    }
+
+                    // Determinar las rutas por defecto de la instancia para los archivos.
+                    string mdfPath;
+                    string ldfPath;
+                    using (SqlCommand cmd = new SqlCommand(@"
+                        SELECT SERVERPROPERTY('InstanceDefaultDataPath') AS DataPath,
+                               SERVERPROPERTY('InstanceDefaultLogPath') AS LogPath;", connMaster))
+                    {
+                        DataTable dtPath = new DataTable();
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            dtPath.Load(reader);
+                        }
+
+                        if (dtPath.Rows.Count == 0)
+                            throw new Exception("No se pudieron obtener las rutas por defecto de la instancia SQL Server.");
+
+                        string dataPath = dtPath.Rows[0]["DataPath"]?.ToString();
+                        string logPath = dtPath.Rows[0]["LogPath"]?.ToString();
+
+                        if (string.IsNullOrWhiteSpace(dataPath) || string.IsNullOrWhiteSpace(logPath))
+                            throw new Exception("La instancia SQL Server no tiene configuradas las rutas por defecto de datos y/o log.");
+
+                        mdfPath = Path.Combine(dataPath, $"{nombreBase}.mdf");
+                        ldfPath = Path.Combine(logPath, $"{nombreBase}_log.ldf");
+                    }
+
+                    // Limpiar el pool de conexiones para evitar que conexiones abiertas
+                    // impidan poner la base en SINGLE_USER.
+                    SqlConnection.ClearAllPools();
+
+                    string consulta = $@"
+                        ALTER DATABASE [{nombreBase}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                        RESTORE DATABASE [{nombreBase}]
+                        FROM DISK = @Ruta
+                        WITH
+                            MOVE @LogicalData TO @Mdf,
+                            MOVE @LogicalLog TO @Ldf,
+                            REPLACE,
+                            STATS = 5;
+                        ALTER DATABASE [{nombreBase}] SET MULTI_USER;";
+
                     using (SqlCommand cmd = new SqlCommand(consulta, connMaster))
                     {
-                        cmd.Parameters.AddWithValue("@RutaBackup", rutaBackup);
+                        cmd.Parameters.AddWithValue("@Ruta", rutaBackup);
+                        cmd.Parameters.AddWithValue("@LogicalData", logicalData);
+                        cmd.Parameters.AddWithValue("@LogicalLog", logicalLog);
+                        cmd.Parameters.AddWithValue("@Mdf", mdfPath);
+                        cmd.Parameters.AddWithValue("@Ldf", ldfPath);
+                        cmd.CommandTimeout = 300;
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -626,6 +728,42 @@ namespace MPP
             {
                 throw new Exception("Error al restaurar el backup. Verifique permisos y ruta: " + ex.Message, ex);
             }
+        }
+
+        /// <summary>
+        /// Devuelve el nombre de la base de datos configurada en Web.config.
+        /// </summary>
+        private string ObtenerNombreBaseDatos()
+        {
+            var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
+            if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
+                throw new Exception("No se encontró la cadena de conexión 'GymAppConnection' en Web.config.");
+
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(settings.ConnectionString);
+            string nombreBase = builder.InitialCatalog;
+
+            if (string.IsNullOrWhiteSpace(nombreBase))
+                throw new Exception("La cadena de conexión no especifica un Initial Catalog.");
+
+            return nombreBase;
+        }
+
+        /// <summary>
+        /// Devuelve una cadena de conexión apuntando a la base master,
+        /// tomando como base la configuración de GymAppConnection.
+        /// </summary>
+        private string ObtenerCadenaConexionMaster()
+        {
+            var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
+            if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
+                throw new Exception("No se encontró la cadena de conexión 'GymAppConnection' en Web.config.");
+
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(settings.ConnectionString)
+            {
+                InitialCatalog = "master"
+            };
+
+            return builder.ConnectionString;
         }
 
         #endregion

@@ -14,12 +14,14 @@ namespace BLL
         private MPPDigitoVerificador mppDigitoVerificador;
         private MPPUsuario mppUsuario;
         private MPPPreguntaSeguridad mppPregunta;
+        private MPPEvento mppEvento;
 
         public BLLDigitoVerificador()
         {
             mppDigitoVerificador = new MPPDigitoVerificador();
             mppUsuario = new MPPUsuario();
             mppPregunta = new MPPPreguntaSeguridad();
+            mppEvento = new MPPEvento();
         }
 
         /// <summary>
@@ -43,6 +45,10 @@ namespace BLL
                     else if (tabla.Equals("PreguntasSeguridad", StringComparison.OrdinalIgnoreCase))
                     {
                         resultados.AddRange(mppPregunta.VerificarIntegridadPreguntas());
+                    }
+                    else if (tabla.Equals("Evento", StringComparison.OrdinalIgnoreCase))
+                    {
+                        resultados.AddRange(mppEvento.VerificarIntegridadEventos());
                     }
                     else
                     {
@@ -206,7 +212,30 @@ namespace BLL
                 return;
             }
 
+            if (tabla.Equals("Evento", StringComparison.OrdinalIgnoreCase))
+            {
+                mppEvento.RecalcularDigitosTodosEventos();
+                mppDigitoVerificador.RecalcularDigitosTabla(tabla, actualizarFilas: false);
+                return;
+            }
+
             mppDigitoVerificador.RecalcularDigitosTabla(tabla);
+        }
+
+        /// <summary>
+        /// Realiza un backup completo de la base de datos en la ruta indicada.
+        /// Requiere permisos de sysadmin, dbcreator o miembro del rol db_backupoperator.
+        /// </summary>
+        public void RealizarBackup(string rutaDestino)
+        {
+            try
+            {
+                mppDigitoVerificador.RealizarBackup(rutaDestino);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al realizar el backup. Verifique permisos y ruta: " + ex.Message, ex);
+            }
         }
 
         /// <summary>

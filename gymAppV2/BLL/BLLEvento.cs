@@ -57,6 +57,7 @@ namespace BLL
         public const string EVENTO_CAMBIO_IDIOMA = "cambio_idioma";
         public const string EVENTO_CONFIGURACION = "configuracion";
         public const string EVENTO_BACKUP = "backup";
+        public const string EVENTO_RESTORE = "restore";
         public const string EVENTO_ACTUALIZACION = "update";
         public const string EVENTO_NUEVO_USUARIO = "new_user";
 
@@ -372,6 +373,11 @@ namespace BLL
         public int RegistrarBackup(string usuario)
         {
             return RegistrarEvento(EVENTO_BACKUP, usuario, "Backup realizado", 4, "Sistema");
+        }
+
+        public int RegistrarRestore(string usuario)
+        {
+            return RegistrarEvento(EVENTO_RESTORE, usuario, "Restore realizado", 4, "Sistema");
         }
 
         public int RegistrarActualizacion(string usuario, string accion)

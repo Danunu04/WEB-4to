@@ -166,22 +166,13 @@ namespace gymAppV2 {
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liPagos;
 
         /// <summary>
-        /// Control liBackup.
+        /// Control liRespaldo.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liBackup;
-
-        /// <summary>
-        /// Control liRestore.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liRestore;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liRespaldo;
 
         /// <summary>
         /// Control liEncriptarDatos.

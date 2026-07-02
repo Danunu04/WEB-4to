@@ -1,0 +1,135 @@
+:root {
+    --color-accent-lavender: #C7B5FF;
+    --color-accent-lavender-light: #F0EBFF;
+    --color-accent-peach: #FFD5B5;
+    --color-accent-peach-light: #FFF0E5;
+    --color-accent-mint: #B5EAD7;
+    --color-danger: #EF4444;
+    --color-danger-light: #FEE2E2;
+}
+
+.backuprestore-container {
+    width: 100%;
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.backuprestore-header {
+    margin-bottom: 1.5rem;
+}
+
+.backuprestore-title {
+    font-family: 'Fraunces', system-ui, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 0.5rem 0;
+}
+
+.backuprestore-subtitle {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    margin: 0;
+}
+
+.backuprestore-section {
+    background-color: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.section-icon {
+    font-size: 1.25rem;
+    color: var(--color-accent-lavender);
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--color-text);
+}
+
+.backuprestore-ayuda {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    margin: 0 0 1rem 0;
+}
+
+.backuprestore-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+}
+
+.input-row .form-control {
+    flex: 1;
+}
+
+.advertencia-box {
+    background-color: #FFFBEB;
+    border: 0.0625rem solid #FDE68A;
+    color: #92400E;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.12s ease, transform 0.12s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-accent-lavender);
+    color: var(--color-text);
+}
+
+.btn-primary:hover {
+    background-color: #B5A0FF;
+    transform: translateY(-0.0625rem);
+}
+
+.btn-secondary {
+    background-color: var(--color-accent-mint);
+    color: var(--color-text);
+}
+
+.btn-secondary:hover {
+    background-color: #9FDAC4;
+    transform: translateY(-0.0625rem);
+}
+
+.btn-danger {
+    background-color: var(--color-danger);
+    color: #FFFFFF;
+}
+
+.btn-danger:hover {
+    background-color: #DC2626;
+    transform: translateY(-0.0625rem);
+}

@@ -101,6 +101,8 @@
   <ItemGroup>
     <Content Include="About.aspx" />
     <Content Include="AccesoDenegado.aspx" />
+    <Content Include="Admin\BackupRestore.aspx" />
+    <Content Include="Admin\BackupRestore.css" />
     <Content Include="Admin\EncriptarDatos.aspx" />
     <Content Include="Admin\EncriptarDatos.css" />
     <Content Include="Actividades\actividades.aspx" />
@@ -228,6 +230,13 @@
     </Compile>
     <Compile Include="About.aspx.designer.cs">
       <DependentUpon>About.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\BackupRestore.aspx.cs">
+      <DependentUpon>BackupRestore.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\BackupRestore.aspx.designer.cs">
+      <DependentUpon>BackupRestore.aspx</DependentUpon>
     </Compile>
     <Compile Include="Admin\EncriptarDatos.aspx.cs">
       <DependentUpon>EncriptarDatos.aspx</DependentUpon>

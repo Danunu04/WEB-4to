@@ -73,6 +73,7 @@
                 <label>Rol</label>
                 <asp:DropDownList ID="ddlRol" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlRol_SelectedIndexChanged">
                     <asp:ListItem Value="">Todos los roles</asp:ListItem>
+                    <asp:ListItem Value="WebMaster">WebMaster</asp:ListItem>
                     <asp:ListItem Value="Administrador">Administrador</asp:ListItem>
                     <asp:ListItem Value="Recepcionista">Recepcionista</asp:ListItem>
                     <asp:ListItem Value="Entrenador">Entrenador</asp:ListItem>
@@ -169,6 +170,9 @@
                     <button id="btnDesbloquear" runat="server" class="btn-action btn-desbloquear" onserverclick="btnDesbloquear_Click">
                         <i class="fa-solid fa-lock-open"></i> Desbloquear
                     </button>
+                    <button id="btnBlanquearContrasena" runat="server" class="btn-action btn-desbloquear" onserverclick="btnBlanquearContrasena_Click" title="Fuerza al usuario a cambiar su contraseña en el próximo inicio de sesión">
+                        <i class="fa-solid fa-key"></i> Blanquear contraseña
+                    </button>
                     <button id="btnActivar" runat="server" class="btn-action btn-activar" onserverclick="btnActivar_Click">
                         <i class="fa-solid fa-circle-check"></i> Activar
                     </button>
@@ -237,6 +241,7 @@
                         <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Rol</label>
                         <asp:DropDownList ID="ddlRolForm" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlRolForm_SelectedIndexChanged" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;background:var(--card-bg);color:var(--text-color);">
                             <asp:ListItem Value="">Seleccionar rol</asp:ListItem>
+                            <asp:ListItem Value="5">WebMaster</asp:ListItem>
                             <asp:ListItem Value="1">Administrador</asp:ListItem>
                             <asp:ListItem Value="2">Recepcionista</asp:ListItem>
                             <asp:ListItem Value="3">Entrenador</asp:ListItem>

@@ -8,6 +8,7 @@ namespace BE
         public string USUARIO_Usuario { get; set; }
         public string USUARIO_Contras { get; set; }
         public string USUARIO_Tipo { get; set; }
+        public int USUARIO_Rol { get; set; }
         public bool USUARIO_Activo { get; set; }
         public bool USUARIO_Bloqueado { get; set; }
         public int USUARIO_Intentos { get; set; }

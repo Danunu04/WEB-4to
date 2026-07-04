@@ -200,7 +200,7 @@ namespace gymAppV2.CambiarContra
                 if (usuarioBD == null || !usuarioBD.USUARIO_Activo)
                     return false;
 
-                return usuarioBD.USUARIO_Bloqueado || usuarioBD.USUARIO_PrimerLogin;
+                return true; // Token válido + usuario activo es suficiente para el flujo de recuperación.
             }
             catch
             {
@@ -264,6 +264,8 @@ namespace gymAppV2.CambiarContra
                 // si es primer login, redirigir a la configuración de preguntas de seguridad.
                 if (ModoRecuperacion)
                 {
+                    System.Web.Security.FormsAuthentication.SignOut();
+                    try { Singleton.Instancia.LogOut(); } catch { }
                     MostrarMensaje("Contraseña actualizada. Inicie sesión con su nueva contraseña.", "success");
                     MostrarToast("Contraseña actualizada. Inicie sesión con su nueva contraseña.", "success");
                     RedirigirConDelay("~/LogIn/LogIn.aspx", 2000);
@@ -313,7 +315,13 @@ namespace gymAppV2.CambiarContra
 
         protected void btnCancelar_Click(object sender, EventArgs e)
         {
-            if (BllUsuario.UsuarioEstaLogueado())
+            if (ModoRecuperacion)
+            {
+                System.Web.Security.FormsAuthentication.SignOut();
+                try { Singleton.Instancia.LogOut(); } catch { }
+                Redirigir("~/LogIn/LogIn.aspx");
+            }
+            else if (BllUsuario.UsuarioEstaLogueado())
             {
                 Redirigir("~/DashBoard/WebForm1.aspx");
             }
@@ -321,6 +329,13 @@ namespace gymAppV2.CambiarContra
             {
                 Redirigir("~/LogIn/LogIn.aspx");
             }
+        }
+
+        protected void lnkVolverLogin_Click(object sender, EventArgs e)
+        {
+            System.Web.Security.FormsAuthentication.SignOut();
+            try { Singleton.Instancia.LogOut(); } catch { }
+            Redirigir("~/LogIn/LogIn.aspx");
         }
 
         protected void btnIrInicio_Click(object sender, EventArgs e)

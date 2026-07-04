@@ -41,6 +41,8 @@ namespace gymAppV2.Usuarios
 
             bllUsuario = new BLLUsuario();
 
+            txtFechaNacimiento.Attributes["max"] = DateTime.Today.ToString("yyyy-MM-dd");
+
             if (!IsPostBack)
             {
                 CargarUsuarios();
@@ -360,6 +362,27 @@ namespace gymAppV2.Usuarios
             ActualizarEstadisticas();
         }
 
+        protected void btnBlanquearContrasena_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(SelectedUsuario))
+            {
+                MostrarError("Seleccione un usuario para blanquear la contraseña");
+                return;
+            }
+
+            try
+            {
+                bllUsuario.BlanquearContrasena(SelectedUsuario);
+                MostrarExito($"Contraseña de '{SelectedUsuario}' blanqueada. Deberá cambiarla en su próximo inicio de sesión.");
+            }
+            catch (Exception ex)
+            {
+                MostrarError("Error al blanquear contraseña: " + ex.Message);
+            }
+
+            CargarUsuarios();
+        }
+
         protected void btnActivar_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(SelectedUsuario))
@@ -402,11 +425,7 @@ namespace gymAppV2.Usuarios
                 MostrarError("El DNI debe ser un número válido");
                 return;
             }
-            if(!int.TryParse(txtTelefono.Text, out int telefono))
-            {
-                MostrarError("El Teléfono debe ser un número válido");
-                return;
-            }
+            string telefono = txtTelefono.Text.Trim();
             string usuario = txtUsuario.Text;
             string contrasenia = string.IsNullOrEmpty(txtContrasena.Text) ? bllUsuario.GenerarContrasenaSegura() : txtContrasena.Text;
             string email = txtEmail.Text;
@@ -435,7 +454,7 @@ namespace gymAppV2.Usuarios
                     // Modificar usuario existente
                     int rol = int.Parse(ddlRolForm.SelectedValue);
                     bllUsuario.ModificarUsuario(SelectedUsuario, usuario, nombre, apellido,
-                        telefono.ToString(), email, fechaNacimiento, rol, activo, dni);
+                        telefono, email, fechaNacimiento, rol, activo, dni);
                     MostrarExito("Usuario modificado correctamente");
                 }
                 else
@@ -443,22 +462,26 @@ namespace gymAppV2.Usuarios
                     // Crear nuevo usuario
                     switch (ddlRolForm.SelectedValue)
                     {
+                        case "5": // WebMaster
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 5, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
+                            MostrarExito("WebMaster creado correctamente");
+                            break;
                         case "1": // Administrador
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 1, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 1, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
                             MostrarExito("Administrador creado correctamente");
                             break;
                         case "2": // Recepcionista
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 2, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, null, null, activo);
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 2, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
                             MostrarExito("Recepcionista creado correctamente");
                             break;
                         case "3": // Entrenador
                             Entrenador ent = new Entrenador(dni, 0, activo, "", "", usuario);
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono.ToString(), email, fechaNacimiento, ent, null, null, activo);
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono, email, fechaNacimiento, ent, null, null, activo);
                             MostrarExito("Entrenador creado correctamente");
                             break;
                         case "4": // Cliente
                             // En esquema normalizado: se crea USUARIOS + ALUMNOS con el mismo DNI
-                            bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono.ToString(), email, fechaNacimiento, null, dni, null, activo);
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
                             MostrarExito("Cliente creado correctamente");
                             break;
                         default:
@@ -510,6 +533,8 @@ namespace gymAppV2.Usuarios
             txtNombre.Text = string.Empty;
             txtEmail.Text = string.Empty;
             txtUsuario.Text = string.Empty;
+            txtUsuario.ReadOnly = false;
+            txtUsuario.Attributes.Remove("style");
             txtContrasena.Text = string.Empty;
             txtFechaNacimiento.Text = string.Empty;
             ddlRolForm.SelectedIndex = 0;
@@ -527,6 +552,8 @@ namespace gymAppV2.Usuarios
         private void CargarUsuarioEnFormulario(BE.UsuarioGestion usuario)
         {
             txtUsuario.Text = usuario.USUARIO_Usuario;
+            txtUsuario.ReadOnly = true;
+            txtUsuario.Attributes["style"] = "background-color:#e9ecef;cursor:not-allowed;opacity:0.8;";
             txtDNI.Text = usuario.DNI?.ToString() ?? "";
             txtNombre.Text = usuario.Nombre ?? "";
             txtApellido.Text = usuario.Apellido ?? "";
@@ -534,13 +561,7 @@ namespace gymAppV2.Usuarios
             txtEmail.Text = usuario.Email ?? "";
             txtFechaNacimiento.Text = usuario.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
             ddlEstadoForm.SelectedValue = usuario.USUARIO_Activo ? "1" : "0";
-
-            // Buscar el ListItem por texto y seleccionar su valor
-            ListItem rolItem = ddlRolForm.Items.FindByText(usuario.USUARIO_Tipo);
-            if (rolItem != null)
-            {
-                ddlRolForm.SelectedValue = rolItem.Value;
-            }
+            ddlRolForm.SelectedValue = usuario.USUARIO_Rol.ToString();
 
             // Mostrar campos específicos según el rol
             MostrarCamposSegunRol();
@@ -606,9 +627,10 @@ namespace gymAppV2.Usuarios
             string t = tipo?.ToString() ?? "";
             switch (t)
             {
+                case "WebMaster": return "role-webmaster";
                 case "Administrador": return "role-admin";
                 case "Entrenador": return "role-trainer";
-                case "Alumno": return "role-student";
+                case "Cliente": return "role-student";
                 case "Recepcionista": return "role-receptionist";
                 case "Familiar": return "role-family";
                 default: return "role-student";

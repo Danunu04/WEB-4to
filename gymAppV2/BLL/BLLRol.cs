@@ -55,6 +55,9 @@ namespace BLL
             if (string.IsNullOrEmpty(modulo))
                 return false;
 
+            if (rol == PerfilesSistema.RolWebMaster)
+                return true;
+
             switch (modulo)
             {
                 // Todos los usuarios autenticados ven el dashboard.
@@ -116,7 +119,10 @@ namespace BLL
         public bool UsuarioActualEsAdmin()
         {
             var usuario = Singleton.Instancia?.Usuario;
-            return usuario != null && usuario.USUARIO_Rol == PerfilesSistema.RolAdministrador;
+            return usuario != null && (
+                usuario.USUARIO_Rol == PerfilesSistema.RolAdministrador ||
+                usuario.USUARIO_Rol == PerfilesSistema.RolWebMaster
+            );
         }
 
         /// <summary>

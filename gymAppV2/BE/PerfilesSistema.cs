@@ -18,6 +18,7 @@ namespace BE
         public const int RolRecepcionista = 2;
         public const int RolEntrenador = 3;
         public const int RolCliente = 4;
+        public const int RolWebMaster = 5;
 
         public const string WebMaster = "Web master";
         public const string Administrador = "Administrador";
@@ -38,6 +39,8 @@ namespace BE
         {
             switch (rol)
             {
+                case RolWebMaster:
+                    return WebMaster;
                 case RolAdministrador:
                     return Administrador;
                 case RolRecepcionista:
@@ -58,6 +61,13 @@ namespace BE
         {
             switch (rol)
             {
+                case RolWebMaster:
+                    return new List<string>
+                    {
+                        WebMaster, Administrador, ABM, Bitacora,
+                        Alumnos, Profesores, Backup, Restore, DV
+                    }.AsReadOnly();
+
                 case RolAdministrador:
                     return new List<string>
                     {

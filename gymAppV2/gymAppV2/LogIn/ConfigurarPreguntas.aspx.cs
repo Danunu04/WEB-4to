@@ -70,7 +70,22 @@ namespace gymAppV2.LogIn
                 if (!string.IsNullOrWhiteSpace(usuarioQuery) &&
                     string.Equals(modoQuery, "primerLogin", StringComparison.OrdinalIgnoreCase))
                 {
-                    CargarUsuario(usuarioQuery.Trim(), true);
+                    string usuarioTrimmed = usuarioQuery.Trim();
+                    // El usuario de la URL debe coincidir con el de la sesión activa para evitar
+                    // que un usuario configure la pregunta de seguridad de otra cuenta.
+                    if (!BllUsuario.UsuarioEstaLogueado())
+                    {
+                        Redirigir("~/LogIn/LogIn.aspx");
+                        return;
+                    }
+                    var usuarioSesion = Singleton.Instancia?.Usuario;
+                    if (usuarioSesion == null ||
+                        !string.Equals(usuarioSesion.USUARIO_Usuario, usuarioTrimmed, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Redirigir("~/LogIn/LogIn.aspx");
+                        return;
+                    }
+                    CargarUsuario(usuarioTrimmed, true);
                     ModoPrimerLogin = true;
                 }
                 else if (BllUsuario.UsuarioEstaLogueado())
@@ -94,45 +109,16 @@ namespace gymAppV2.LogIn
         }
 
         /// <summary>
-        /// Carga la pregunta de seguridad del usuario y precarga el campo usuario.
+        /// Precarga el campo usuario en el formulario.
         /// </summary>
         private void CargarUsuario(string usuario, bool soloLectura)
         {
             txtUsuario.Text = usuario;
             txtUsuario.ReadOnly = soloLectura;
-
-            try
-            {
-                PreguntaSeguridad pregunta = BllPreguntaSeguridad.ObtenerPreguntaPorUsuario(usuario);
-
-                if (pregunta != null && !string.IsNullOrEmpty(pregunta.Pregunta))
-                {
-                    lblPregunta.Text = pregunta.Pregunta;
-                }
-                else
-                {
-                    // Si no existe pregunta, generarla automáticamente a partir de la fecha de nacimiento.
-                    try
-                    {
-                        pregunta = BllPreguntaSeguridad.GenerarPreguntaSeguridad(usuario);
-                        BllPreguntaSeguridad.GuardarPregunta(pregunta);
-                        lblPregunta.Text = pregunta.Pregunta;
-                    }
-                    catch (Exception exGenerar)
-                    {
-                        MostrarMensaje("No se pudo generar la pregunta de seguridad: " + exGenerar.Message, false);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MostrarMensaje("Error al cargar la pregunta de seguridad: " + ex.Message, false);
-            }
         }
 
         /// <summary>
-        /// Valida la respuesta de seguridad. Si es correcta, finaliza el primer login
-        /// (o guarda la pregunta en modo normal) y redirige al dashboard.
+        /// Guarda la pregunta y respuesta que el usuario ingresó, encriptadas, y finaliza el primer login.
         /// </summary>
         protected void btnGuardar_Click(object sender, EventArgs e)
         {
@@ -143,6 +129,7 @@ namespace gymAppV2.LogIn
             }
 
             string usuario = txtUsuario.Text.Trim();
+            string preguntaTexto = txtPregunta.Text.Trim();
             string respuesta = txtRespuesta.Text.Trim();
 
             if (string.IsNullOrWhiteSpace(usuario))
@@ -151,25 +138,23 @@ namespace gymAppV2.LogIn
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(preguntaTexto))
+            {
+                MostrarMensaje("Ingrese una pregunta de seguridad.", false);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(respuesta))
+            {
+                MostrarMensaje("Ingrese la respuesta.", false);
+                return;
+            }
+
             try
             {
-                // Validar que la respuesta coincida con la respuesta esperada.
-                bool valida = BllPreguntaSeguridad.ValidarRespuesta(usuario, respuesta);
+                var pregunta = new PreguntaSeguridad(0, preguntaTexto, respuesta, usuario, string.Empty, string.Empty);
+                BllPreguntaSeguridad.GuardarPregunta(pregunta);
 
-                if (!valida)
-                {
-                    MostrarMensaje("La respuesta no coincide con la información registrada.", false);
-                    return;
-                }
-
-                // Refrescar la pregunta de seguridad (por si el usuario la editara en una futura versión).
-                PreguntaSeguridad pregunta = BllPreguntaSeguridad.ObtenerPreguntaPorUsuario(usuario);
-                if (pregunta != null)
-                {
-                    BllPreguntaSeguridad.GuardarPregunta(pregunta);
-                }
-
-                // En modo primer login, finalizar el proceso y redirigir al dashboard.
                 if (ModoPrimerLogin)
                 {
                     try
@@ -178,11 +163,10 @@ namespace gymAppV2.LogIn
                     }
                     catch (Exception exFinalizar)
                     {
-                        MostrarMensaje("Respuesta correcta, pero no se pudo finalizar la configuración: " + exFinalizar.Message, false);
+                        MostrarMensaje("Pregunta guardada, pero no se pudo finalizar la configuración: " + exFinalizar.Message, false);
                         return;
                     }
 
-                    // Iniciar sesión automáticamente si no está logueado.
                     if (!BllUsuario.UsuarioEstaLogueado())
                     {
                         Usuario usuarioBD = BllUsuario.ObtenerUsuario(usuario);
@@ -192,14 +176,14 @@ namespace gymAppV2.LogIn
                         }
                     }
 
-                    MostrarMensaje("Preguntas de seguridad configuradas correctamente.", true);
-                    MostrarToast("Preguntas de seguridad configuradas correctamente.", "success");
+                    MostrarMensaje("Pregunta de seguridad configurada correctamente.", true);
+                    MostrarToast("Pregunta de seguridad configurada correctamente.", "success");
                     RedirigirConDelay("~/DashBoard/WebForm1.aspx", 1500);
                 }
                 else
                 {
-                    MostrarMensaje("Preguntas de seguridad actualizadas correctamente.", true);
-                    MostrarToast("Preguntas de seguridad actualizadas correctamente.", "success");
+                    MostrarMensaje("Pregunta de seguridad actualizada correctamente.", true);
+                    MostrarToast("Pregunta de seguridad actualizada correctamente.", "success");
                     RedirigirConDelay("~/DashBoard/WebForm1.aspx", 1500);
                 }
             }
@@ -215,7 +199,7 @@ namespace gymAppV2.LogIn
                 {
                     if (!string.IsNullOrEmpty(usuario))
                     {
-                        BllEvento.RegistrarError(usuario, $"Error al configurar preguntas de seguridad: {ex.Message}");
+                        BllEvento.RegistrarError(usuario, $"Error al configurar pregunta de seguridad: {ex.Message}");
                     }
                 }
                 catch
@@ -252,7 +236,7 @@ namespace gymAppV2.LogIn
         private void MostrarMensaje(string mensaje, bool exito)
         {
             lblMensaje.Text = mensaje;
-            lblMensaje.CssClass = exito ? "lblMensaje" : "lblMensaje";
+            lblMensaje.CssClass = exito ? "lblMensaje lblMensaje-success" : "lblMensaje";
             lblMensaje.Visible = true;
         }
 

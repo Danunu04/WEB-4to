@@ -173,7 +173,7 @@ namespace gymAppV2
                     "error_integridad",
                     usuario?.USUARIO_Usuario ?? "sistema",
                     "Se detectó un error de integridad; el sistema fue pausado para usuarios no administradores.",
-                    4, // Crítico
+                    1,
                     "Seguridad");
             }
             catch

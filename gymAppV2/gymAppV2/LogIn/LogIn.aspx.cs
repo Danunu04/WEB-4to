@@ -89,7 +89,7 @@ namespace gymAppV2.LogIn
                     // Si hay inconsistencias, solo el administrador puede ingresar para reparar el sistema.
                     if (BllDV.ExisteErrorIntegridad())
                     {
-                        if (userBD.USUARIO_Rol != PerfilesSistema.RolAdministrador)
+                        if (userBD.USUARIO_Rol != PerfilesSistema.RolAdministrador && userBD.USUARIO_Rol != PerfilesSistema.RolWebMaster)
                         {
                             try
                             {
@@ -97,7 +97,7 @@ namespace gymAppV2.LogIn
                                     "error_integridad",
                                     userBD.USUARIO_Usuario,
                                     "Intento de login bloqueado por error de integridad.",
-                                    4,
+                                    1,
                                     "Seguridad");
                             }
                             catch
@@ -116,7 +116,7 @@ namespace gymAppV2.LogIn
                             "error_integridad",
                             userBD.USUARIO_Usuario,
                             "El sistema ingresó en modo de reparación por error de integridad.",
-                            4,
+                            1,
                             "Seguridad");
                         BllEvento.RegistrarLogin(userBD.USUARIO_Usuario);
 
@@ -140,11 +140,11 @@ namespace gymAppV2.LogIn
 
                     BllEvento.RegistrarLogin(userBD.USUARIO_Usuario);
 
-                    // Si es el primer login, forzar cambio de contraseña y configuración de preguntas de seguridad.
+                    // Si es el primer login, redirigir a configuración de pregunta de seguridad.
                     if (userBD.USUARIO_PrimerLogin)
                     {
-                        RedirigirConToast("Es su primer inicio de sesión. Debe cambiar su contraseña y configurar sus preguntas de seguridad.",
-                            $"~/CambiarContra/Cambiar-contra.aspx?usuario={Server.UrlEncode(userBD.USUARIO_Usuario)}&modo=primerLogin");
+                        RedirigirConToast("Bienvenido. Configure su pregunta de seguridad para continuar.",
+                            $"~/LogIn/ConfigurarPreguntas.aspx?usuario={Server.UrlEncode(userBD.USUARIO_Usuario)}&modo=primerLogin");
                         return;
                     }
 

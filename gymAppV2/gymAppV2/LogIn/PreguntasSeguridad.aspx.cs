@@ -192,7 +192,19 @@ namespace gymAppV2.LogIn
                         // No bloquear el flujo si falla el log.
                     }
 
-                    MostrarMensaje("Respuesta incorrecta. Su usuario deberá ser desbloqueado por la administración de Sportio.", false);
+                    try
+                    {
+                        if (BllUsuario.UsuarioExiste(usuario))
+                        {
+                            BllUsuario.BloquearUsuario(usuario);
+                        }
+                    }
+                    catch
+                    {
+                        // No bloquear el flujo UI si falla el bloqueo.
+                    }
+
+                    MostrarMensaje("Respuesta incorrecta. Su cuenta ha sido bloqueada. Contacte al administrador de Sportio.", false);
                 }
             }
             catch (ThreadAbortException)
@@ -237,7 +249,7 @@ namespace gymAppV2.LogIn
         private void MostrarMensaje(string mensaje, bool exito)
         {
             lblMensaje.Text = mensaje;
-            lblMensaje.CssClass = exito ? "lblMensaje" : "lblMensaje";
+            lblMensaje.CssClass = exito ? "lblMensaje lblMensaje-success" : "lblMensaje";
             lblMensaje.Visible = true;
         }
     }

@@ -32,7 +32,8 @@ namespace gymAppV2.Admin
         /// </summary>
         private string ObtenerRutaSugeridaBackup()
         {
-            string carpeta = @"C:\Backups";
+            string carpeta = @"C:\GymApp";
+            try { Directory.CreateDirectory(carpeta); } catch { }
             string nombre = $"GymApp_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
             return Path.Combine(carpeta, nombre);
         }
@@ -100,6 +101,9 @@ namespace gymAppV2.Admin
             string directorio = Path.GetDirectoryName(ruta);
             if (string.IsNullOrWhiteSpace(directorio))
                 throw new Exception("La ruta de destino no es válida.");
+
+            if (!Directory.Exists(directorio))
+                throw new Exception($"El directorio de destino no existe: {directorio}");
         }
 
         /// <summary>

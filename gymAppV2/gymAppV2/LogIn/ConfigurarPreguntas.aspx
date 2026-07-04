@@ -45,9 +45,9 @@
             <div id="toastContainer" style="position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.75rem;max-width:400px;"></div>
             <div class="BloqueRosa">
                 <div class="formulario">
-                    <h1 class="titulo">Preguntas de Seguridad</h1>
+                    <h1 class="titulo">Configurar pregunta de seguridad</h1>
                     <p style="color: #FAECE7; font-size: 1rem; margin-top: 0.5rem;">
-                        Es tu primer inicio de sesión. Confirmá tu pregunta de seguridad para proteger tu cuenta.
+                        Elegí una pregunta de seguridad y su respuesta. La vas a necesitar si olvidás tu contraseña.
                     </p>
 
                     <div class="form-group mt-4">
@@ -56,17 +56,30 @@
                     </div>
 
                     <div class="form-group mt-3">
-                        <asp:Label ID="lblPregunta" runat="server" CssClass="pregunta-texto d-block" Text=""></asp:Label>
-                        <asp:TextBox ID="txtRespuesta" runat="server" CssClass="form-control form-control-lg" placeholder="Respuesta" MaxLength="500" />
+                        <label class="form-label" style="color: #FAECE7; display: block; margin-bottom: 0.375rem;">Pregunta de seguridad</label>
+                        <asp:TextBox ID="txtPregunta" runat="server" CssClass="form-control form-control-lg" placeholder="Ej: ¿Cuál es el nombre de tu primera mascota?" MaxLength="500" />
+                        <asp:RequiredFieldValidator
+                            ID="rfvPregunta"
+                            runat="server"
+                            ErrorMessage="* Ingrese una pregunta de seguridad"
+                            ControlToValidate="txtPregunta"
+                            ValidationGroup="ConfigurarPreguntaGroup"
+                            CssClass="text-danger"
+                            Display="Dynamic"></asp:RequiredFieldValidator>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label class="form-label" style="color: #FAECE7; display: block; margin-bottom: 0.375rem;">Respuesta</label>
+                        <asp:TextBox ID="txtRespuesta" runat="server" CssClass="form-control form-control-lg" placeholder="Respuesta a tu pregunta" MaxLength="500" />
                         <asp:RequiredFieldValidator
                             ID="rfvRespuesta"
                             runat="server"
-                            ErrorMessage="* Ingrese su respuesta"
+                            ErrorMessage="* Ingrese la respuesta"
                             ControlToValidate="txtRespuesta"
                             ValidationGroup="ConfigurarPreguntaGroup"
                             CssClass="text-danger"
                             Display="Dynamic"></asp:RequiredFieldValidator>
-                        <span class="cambio-hint">La respuesta debe coincidir con la información registrada de su cuenta.</span>
+                        <span class="cambio-hint">Guardá bien la respuesta. Se usará para recuperar tu cuenta si perdés el acceso.</span>
                     </div>
 
                     <asp:Label ID="lblMensaje" runat="server" CssClass="lblMensaje" Visible="false"></asp:Label>

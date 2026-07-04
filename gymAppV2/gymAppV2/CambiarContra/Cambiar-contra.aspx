@@ -213,7 +213,7 @@
                     <asp:Button ID="btnCancelar" runat="server" CssClass="btnSecundario" Text="Cancelar" OnClick="btnCancelar_Click" CausesValidation="false" />
                 </div>
 
-                <a href="<%= ResolveUrl("~/LogIn/LogIn.aspx") %>" class="link-volver">Volver al inicio de sesión</a>
+                <asp:LinkButton ID="lnkVolverLogin" runat="server" CssClass="link-volver" OnClick="lnkVolverLogin_Click" CausesValidation="false">Volver al inicio de sesión</asp:LinkButton>
             </div>
         </div>
     </form>

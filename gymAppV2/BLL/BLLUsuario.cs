@@ -458,7 +458,7 @@ namespace BLL
                 else // Empleado (Admin/Recepcionista)
                 {
                     tipo = "Empleado";
-                    dni = 999999990 + rol; // DNI placeholder
+                    dni = dniAlumno ?? (999999990 + rol); // use provided DNI, or fallback placeholder
                     nombre = nombre ?? "Empleado";
                     apellido = apellido ?? usuario;
                     fechaNac = fechaNacimiento ?? DateTime.Parse("1990-01-01");
@@ -480,10 +480,6 @@ namespace BLL
                 }
 
                 bllEvento.RegistrarAltaUsuario(usuario, rol);
-
-                // Crear pregunta de seguridad por defecto basada en fecha de nacimiento.
-                // Si falla, se propaga el error para que el operador lo corrija; el usuario ya fue creado.
-                bllPreguntaSeguridad.CrearPreguntaSeguridadPorDefecto(usuario);
             }
             catch (Exception ex)
             {
@@ -670,6 +666,19 @@ namespace BLL
             }
         }
 
+        public void BloquearUsuario(string usuario)
+        {
+            try
+            {
+                mppUsuario.BloquearUsuario(usuario);
+                bllEvento.RegistrarBloqueoUsuario(usuario);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al bloquear usuario: " + ex.Message, ex);
+            }
+        }
+
         public void DesbloquearUsuario(string usuario)
         {
             try
@@ -680,6 +689,24 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception("Error al desbloquear usuario: " + ex.Message, ex);
+            }
+        }
+
+        public void BlanquearContrasena(string usuario)
+        {
+            try
+            {
+                mppUsuario.BlanquearContrasena(usuario);
+                bllEvento.RegistrarEvento(
+                    BLLEvento.EVENTO_CAMBIO_CONTRASENA,
+                    usuario,
+                    $"Contraseña blanqueada por administrador. El usuario '{usuario}' deberá cambiarla en su próximo inicio de sesión.",
+                    1,
+                    "Usuarios");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al blanquear contraseña: " + ex.Message, ex);
             }
         }
 

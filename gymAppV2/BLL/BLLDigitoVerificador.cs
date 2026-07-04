@@ -50,6 +50,10 @@ namespace BLL
                     {
                         resultados.AddRange(mppEvento.VerificarIntegridadEventos());
                     }
+                    else if (tabla.Equals("USUARIO_Contras", StringComparison.OrdinalIgnoreCase))
+                    {
+                        resultados.AddRange(mppUsuario.VerificarIntegridadHistorialContrasenas());
+                    }
                     else
                     {
                         resultados.AddRange(mppDigitoVerificador.VerificarIntegridadTabla(tabla));
@@ -219,6 +223,13 @@ namespace BLL
                 return;
             }
 
+            if (tabla.Equals("USUARIO_Contras", StringComparison.OrdinalIgnoreCase))
+            {
+                mppUsuario.RecalcularDigitosHistorialContrasenas();
+                mppDigitoVerificador.RecalcularDigitosTabla(tabla, actualizarFilas: false);
+                return;
+            }
+
             mppDigitoVerificador.RecalcularDigitosTabla(tabla);
         }
 
@@ -255,12 +266,15 @@ namespace BLL
         }
 
         /// <summary>
-        /// Verifica si el usuario logueado es administrador (rol 1).
+        /// Verifica si el usuario logueado es administrador o WebMaster.
         /// </summary>
         public bool UsuarioActualEsAdmin()
         {
             var usuario = Singleton.Instancia.Usuario;
-            return usuario != null && usuario.USUARIO_Rol == 1;
+            return usuario != null && (
+                usuario.USUARIO_Rol == PerfilesSistema.RolAdministrador ||
+                usuario.USUARIO_Rol == PerfilesSistema.RolWebMaster
+            );
         }
     }
 }

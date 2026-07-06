@@ -266,6 +266,38 @@ namespace BLL
         }
 
         /// <summary>
+        /// Exporta la base de datos a un archivo .bacpac portable usando SqlPackage.exe.
+        /// Compatible con versiones anteriores de SQL Server.
+        /// </summary>
+        public void ExportarBacpac(string rutaDestino)
+        {
+            try
+            {
+                mppDigitoVerificador.ExportarBacpac(rutaDestino);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo exportar el archivo .bacpac: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Importa un archivo .bacpac reemplazando la base de datos existente.
+        /// ADVERTENCIA: operación destructiva. Requiere SqlPackage.exe instalado en el servidor.
+        /// </summary>
+        public void ImportarBacpac(string rutaBacpac)
+        {
+            try
+            {
+                mppDigitoVerificador.ImportarBacpac(rutaBacpac);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo importar el archivo .bacpac: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
         /// Verifica si el usuario logueado es administrador o WebMaster.
         /// </summary>
         public bool UsuarioActualEsAdmin()

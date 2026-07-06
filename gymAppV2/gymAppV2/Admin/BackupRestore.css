@@ -72,6 +72,23 @@
     gap: 0.75rem;
 }
 
+.formato-radios {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.formato-radios td {
+    font-size: 0.875rem;
+    color: var(--color-text);
+    padding: 0 0.5rem 0 0;
+}
+
+.formato-radios input[type="radio"] {
+    margin-right: 0.375rem;
+    accent-color: var(--color-accent-lavender);
+}
+
 .input-row {
     display: flex;
     gap: 0.75rem;

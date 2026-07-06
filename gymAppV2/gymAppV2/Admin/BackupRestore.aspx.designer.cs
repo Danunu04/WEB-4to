@@ -24,6 +24,11 @@ namespace gymAppV2.Admin
         protected global::System.Web.UI.WebControls.Panel pnlBackup;
 
         /// <summary>
+        /// rblFormatoBackup control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.RadioButtonList rblFormatoBackup;
+
+        /// <summary>
         /// lblRutaBackup control.
         /// </summary>
         /// <remarks>
@@ -67,6 +72,11 @@ namespace gymAppV2.Admin
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Panel pnlRestore;
+
+        /// <summary>
+        /// rblFormatoRestore control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.RadioButtonList rblFormatoRestore;
 
         /// <summary>
         /// lblRutaRestore control.

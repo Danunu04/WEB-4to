@@ -731,6 +731,215 @@ namespace MPP
         }
 
         /// <summary>
+        /// Exporta la base de datos a un archivo .bacpac portable usando SqlPackage.exe.
+        /// Compatible con versiones anteriores de SQL Server.
+        /// </summary>
+        public void ExportarBacpac(string rutaDestino)
+        {
+            if (string.IsNullOrWhiteSpace(rutaDestino))
+                throw new ArgumentException("La ruta de destino no puede estar vacía.", nameof(rutaDestino));
+
+            string extension = Path.GetExtension(rutaDestino);
+            if (!string.Equals(extension, ".bacpac", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("La ruta del archivo debe tener extensión .bacpac.");
+
+            try
+            {
+                string sqlPackage = BuscarSqlPackage();
+                string connSrc = ObtenerCadenaConexionSqlPackage();
+                string args = $"/Action:Export " +
+                              $"/SourceConnectionString:\"{connSrc}\" " +
+                              $"/TargetFile:\"{rutaDestino}\"";
+                EjecutarSqlPackage(sqlPackage, args);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al exportar el archivo .bacpac. Verifique que SqlPackage.exe esté instalado: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Importa un archivo .bacpac, reemplazando la base de datos existente.
+        /// ADVERTENCIA: operación destructiva. Requiere que SqlPackage.exe esté instalado.
+        /// </summary>
+        public void ImportarBacpac(string rutaBacpac)
+        {
+            if (string.IsNullOrWhiteSpace(rutaBacpac))
+                throw new ArgumentException("La ruta del archivo no puede estar vacía.", nameof(rutaBacpac));
+
+            if (!File.Exists(rutaBacpac))
+                throw new ArgumentException("No se encontró el archivo .bacpac especificado.");
+
+            try
+            {
+                string nombreBase = ObtenerNombreBaseDatos();
+
+                // Eliminar la BD existente para que SqlPackage la recree limpia
+                SqlConnection.ClearAllPools();
+                using (SqlConnection connMaster = new SqlConnection(ObtenerCadenaConexionMaster()))
+                {
+                    connMaster.Open();
+                    using (SqlCommand cmd = new SqlCommand(
+                        $"IF DB_ID('{nombreBase.Replace("'", "''")}') IS NOT NULL " +
+                        $"BEGIN ALTER DATABASE [{nombreBase}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; " +
+                        $"DROP DATABASE [{nombreBase}]; END", connMaster))
+                    {
+                        cmd.CommandTimeout = 60;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                string sqlPackage = BuscarSqlPackage();
+                string args = $"/Action:Import " +
+                              $"/TargetServerName:. " +
+                              $"/TargetDatabaseName:{nombreBase} " +
+                              $"/SourceFile:\"{rutaBacpac}\" " +
+                              $"/TargetTrustServerCertificate:True";
+                EjecutarSqlPackage(sqlPackage, args);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al importar el archivo .bacpac. Verifique que SqlPackage.exe esté instalado: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Busca SqlPackage.exe en las rutas estándar de instalación de SQL Server,
+        /// herramienta global de .NET, SSDT de Visual Studio y PATH del sistema.
+        /// Lanza una excepción descriptiva con instrucciones si no lo encuentra.
+        /// </summary>
+        private static string BuscarSqlPackage()
+        {
+            var candidatos = new System.Collections.Generic.List<string>();
+
+            // Rutas base de Program Files (32 y 64 bit)
+            string pf64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            string[] basesDirs = string.Equals(pf64, pf86, StringComparison.OrdinalIgnoreCase)
+                ? new[] { pf64 }
+                : new[] { pf64, pf86 };
+
+            // SQL Server DAC bin (versiones 2008 R2 a 2022)
+            string[] versiones = { "170", "160", "150", "140", "130", "120", "110" };
+            foreach (var dir in basesDirs)
+            {
+                if (string.IsNullOrEmpty(dir)) continue;
+                foreach (var ver in versiones)
+                    candidatos.Add(Path.Combine(dir, "Microsoft SQL Server", ver, "DAC", "bin", "SqlPackage.exe"));
+            }
+
+            // Herramienta global de .NET: dotnet tool install -g microsoft.sqlpackage
+            string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            candidatos.Add(Path.Combine(userProfile, ".dotnet", "tools", "SqlPackage.exe"));
+
+            // SSDT en Visual Studio (2017 / 2019 / 2022)
+            string[] aniosVS = { "2022", "2019", "2017" };
+            string[] edicionesVS = { "Enterprise", "Professional", "Community", "BuildTools" };
+            foreach (var dir in basesDirs)
+            {
+                if (string.IsNullOrEmpty(dir)) continue;
+                foreach (var anio in aniosVS)
+                    foreach (var ed in edicionesVS)
+                        candidatos.Add(Path.Combine(dir, "Microsoft Visual Studio", anio, ed,
+                            "Common7", "IDE", "Extensions", "Microsoft", "SQLDB", "DAC", "SqlPackage.exe"));
+            }
+
+            foreach (var ruta in candidatos)
+            {
+                if (File.Exists(ruta)) return ruta;
+            }
+
+            // Último recurso: buscar en el PATH mediante where.exe
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "where.exe",
+                    Arguments = "sqlpackage.exe",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true,
+                };
+                using (var proc = System.Diagnostics.Process.Start(psi))
+                {
+                    if (proc != null)
+                    {
+                        string linea = proc.StandardOutput.ReadLine()?.Trim();
+                        proc.WaitForExit(3000);
+                        if (!string.IsNullOrEmpty(linea) && File.Exists(linea))
+                            return linea;
+                    }
+                }
+            }
+            catch { }
+
+            throw new Exception(
+                "No se encontró SqlPackage.exe en el servidor. " +
+                "Para instalarlo ejecute en una consola con permisos de administrador: " +
+                "dotnet tool install -g microsoft.sqlpackage  " +
+                "O instale 'SQL Server Data Tools' (SSDT) desde el instalador de Visual Studio.");
+        }
+
+        /// <summary>
+        /// Ejecuta SqlPackage.exe con los argumentos indicados y espera hasta 5 minutos.
+        /// </summary>
+        private static void EjecutarSqlPackage(string exe, string args)
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = exe,
+                Arguments = args,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+
+            using (var proc = System.Diagnostics.Process.Start(psi))
+            {
+                if (proc == null)
+                    throw new Exception(
+                        "No se pudo iniciar SqlPackage.exe. " +
+                        "Instale SQL Server Data Tools en el servidor.");
+
+                string output = proc.StandardOutput.ReadToEnd();
+                string error = proc.StandardError.ReadToEnd();
+                bool termino = proc.WaitForExit(300000);
+
+                if (!termino)
+                {
+                    proc.Kill();
+                    throw new Exception("La operación excedió el tiempo máximo permitido (5 minutos).");
+                }
+
+                if (proc.ExitCode != 0)
+                {
+                    string detalle = !string.IsNullOrWhiteSpace(error) ? error
+                                   : !string.IsNullOrWhiteSpace(output) ? output
+                                   : "(sin detalle)";
+                    throw new Exception(
+                        $"SqlPackage.exe finalizó con error (código {proc.ExitCode}): {detalle.Trim()}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Devuelve una cadena de conexión a GymApp sin Network Library, compatible con SqlPackage.exe.
+        /// </summary>
+        private string ObtenerCadenaConexionSqlPackage()
+        {
+            var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
+            if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
+                throw new Exception("No se encontró la cadena de conexión 'GymAppConnection' en Web.config.");
+
+            // SqlPackage no soporta Network Library=dbnmpntw; se omite usando el builder
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(settings.ConnectionString);
+            builder.Remove("Network Library");
+            builder["TrustServerCertificate"] = true;
+            return builder.ConnectionString;
+        }
+
+        /// <summary>
         /// Devuelve el nombre de la base de datos configurada en Web.config.
         /// </summary>
         private string ObtenerNombreBaseDatos()

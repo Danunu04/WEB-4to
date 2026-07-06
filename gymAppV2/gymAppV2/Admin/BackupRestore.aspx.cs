@@ -28,19 +28,20 @@ namespace gymAppV2.Admin
         }
 
         /// <summary>
-        /// Genera una ruta sugerida para el backup con marca de tiempo.
+        /// Genera una ruta sugerida con marca de tiempo y extensión según el formato elegido.
         /// </summary>
-        private string ObtenerRutaSugeridaBackup()
+        private string ObtenerRutaSugeridaBackup(string formato = "bak")
         {
             string carpeta = @"C:\GymApp";
             try { Directory.CreateDirectory(carpeta); } catch { }
-            string nombre = $"GymApp_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+            string ext = formato == "bacpac" ? ".bacpac" : ".bak";
+            string nombre = $"GymApp_{DateTime.Now:yyyyMMdd_HHmmss}{ext}";
             return Path.Combine(carpeta, nombre);
         }
 
         protected void btnGenerarNombre_Click(object sender, EventArgs e)
         {
-            txtRutaBackup.Text = ObtenerRutaSugeridaBackup();
+            txtRutaBackup.Text = ObtenerRutaSugeridaBackup(rblFormatoBackup.SelectedValue);
         }
 
         protected void btnRealizarBackup_Click(object sender, EventArgs e)
@@ -50,14 +51,23 @@ namespace gymAppV2.Admin
                 VerificarAcceso(PermisosSistema.Backup);
 
                 string ruta = txtRutaBackup.Text.Trim();
-                ValidarRutaBackup(ruta);
-
-                bllDV.RealizarBackup(ruta);
+                string formato = rblFormatoBackup.SelectedValue;
+                ValidarRutaSegunFormato(ruta, formato, esDestino: true);
 
                 string usuario = Singleton.Instancia.Usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarBackup(usuario);
 
-                MostrarExito($"Backup realizado correctamente: {ruta}");
+                if (formato == "bacpac")
+                {
+                    bllDV.ExportarBacpac(ruta);
+                    bllEvento.RegistrarExportarBacpac(usuario);
+                    MostrarExito($"Exportación .bacpac completada: {ruta}");
+                }
+                else
+                {
+                    bllDV.RealizarBackup(ruta);
+                    bllEvento.RegistrarBackup(usuario);
+                    MostrarExito($"Backup .bak realizado correctamente: {ruta}");
+                }
             }
             catch (Exception ex)
             {
@@ -72,53 +82,69 @@ namespace gymAppV2.Admin
                 VerificarAcceso(PermisosSistema.Restore);
 
                 string ruta = txtRutaRestore.Text.Trim();
-                ValidarRutaRestore(ruta);
-
-                bllDV.RestaurarBackup(ruta);
+                string formato = rblFormatoRestore.SelectedValue;
+                ValidarRutaSegunFormato(ruta, formato, esDestino: false);
 
                 string usuario = Singleton.Instancia.Usuario?.USUARIO_Usuario ?? "sistema";
-                bllEvento.RegistrarRestore(usuario);
 
-                MostrarExito("Backup restaurado correctamente. Reinicie la aplicación.");
+                if (formato == "bacpac")
+                {
+                    bllDV.ImportarBacpac(ruta);
+                    RegistrarEventoSilencioso(() => bllEvento.RegistrarImportarBacpac(usuario));
+                    MostrarExito("Importación .bacpac completada. Reinicie la aplicación.");
+                }
+                else
+                {
+                    bllDV.RestaurarBackup(ruta);
+                    RegistrarEventoSilencioso(() => bllEvento.RegistrarRestore(usuario));
+                    MostrarExito("Backup .bak restaurado correctamente. Reinicie la aplicación.");
+                }
             }
             catch (Exception ex)
             {
-                MostrarError("Error al restaurar el backup: " + ex.Message);
+                MostrarError("Error al restaurar: " + ex.Message);
             }
         }
 
         /// <summary>
-        /// Valida que la ruta destino del backup sea un archivo .bak con directorio válido.
+        /// Valida que la ruta tenga la extensión correcta según el formato elegido
+        /// y que el directorio/archivo exista según corresponda.
         /// </summary>
-        private void ValidarRutaBackup(string ruta)
+        private void ValidarRutaSegunFormato(string ruta, string formato, bool esDestino)
         {
             if (string.IsNullOrWhiteSpace(ruta))
-                throw new Exception("Debe ingresar la ruta de destino.");
+                throw new Exception("Debe ingresar la ruta del archivo.");
 
-            if (!string.Equals(Path.GetExtension(ruta), ".bak", StringComparison.OrdinalIgnoreCase))
-                throw new Exception("El archivo debe tener extensión .bak.");
+            string extEsperada = formato == "bacpac" ? ".bacpac" : ".bak";
+            string extActual = Path.GetExtension(ruta);
 
-            string directorio = Path.GetDirectoryName(ruta);
-            if (string.IsNullOrWhiteSpace(directorio))
-                throw new Exception("La ruta de destino no es válida.");
+            if (!string.Equals(extActual, extEsperada, StringComparison.OrdinalIgnoreCase))
+                throw new Exception($"Para el formato {formato} el archivo debe tener extensión {extEsperada}.");
 
-            if (!Directory.Exists(directorio))
-                throw new Exception($"El directorio de destino no existe: {directorio}");
+            if (esDestino)
+            {
+                string directorio = Path.GetDirectoryName(ruta);
+                if (string.IsNullOrWhiteSpace(directorio))
+                    throw new Exception("La ruta de destino no es válida.");
+
+                if (!Directory.Exists(directorio))
+                    throw new Exception($"El directorio de destino no existe: {directorio}");
+            }
+            else
+            {
+                if (!File.Exists(ruta))
+                    throw new Exception("No se encontró el archivo especificado.");
+            }
         }
 
         /// <summary>
-        /// Valida que la ruta del backup a restaurar exista y tenga extensión .bak.
+        /// Registra el evento sin propagar errores: el restore/import ya fue exitoso
+        /// y la BD recién restaurada puede tener un estado diferente al esperado.
         /// </summary>
-        private void ValidarRutaRestore(string ruta)
+        private static void RegistrarEventoSilencioso(Action accion)
         {
-            if (string.IsNullOrWhiteSpace(ruta))
-                throw new Exception("Debe ingresar la ruta del backup.");
-
-            if (!string.Equals(Path.GetExtension(ruta), ".bak", StringComparison.OrdinalIgnoreCase))
-                throw new Exception("El archivo debe tener extensión .bak.");
-
-            if (!File.Exists(ruta))
-                throw new Exception("No se encontró el archivo de backup especificado.");
+            try { accion(); }
+            catch { /* no enmascarar el resultado si el log falla post-restore */ }
         }
     }
 }

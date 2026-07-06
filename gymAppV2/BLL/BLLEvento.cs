@@ -58,6 +58,8 @@ namespace BLL
         public const string EVENTO_CONFIGURACION = "configuracion";
         public const string EVENTO_BACKUP = "backup";
         public const string EVENTO_RESTORE = "restore";
+        public const string EVENTO_EXPORT_BACPAC = "export_bacpac";
+        public const string EVENTO_IMPORT_BACPAC = "import_bacpac";
         public const string EVENTO_ACTUALIZACION = "update";
         public const string EVENTO_NUEVO_USUARIO = "new_user";
 
@@ -377,7 +379,17 @@ namespace BLL
 
         public int RegistrarRestore(string usuario)
         {
-            return RegistrarEvento(EVENTO_RESTORE, usuario, "Restore realizado", 4, "Sistema");
+            return RegistrarEvento(EVENTO_RESTORE, usuario, "Restore .bak realizado", 1, "Sistema");
+        }
+
+        public int RegistrarExportarBacpac(string usuario)
+        {
+            return RegistrarEvento(EVENTO_EXPORT_BACPAC, usuario, "Exportación .bacpac realizada", 2, "Sistema");
+        }
+
+        public int RegistrarImportarBacpac(string usuario)
+        {
+            return RegistrarEvento(EVENTO_IMPORT_BACPAC, usuario, "Importación .bacpac realizada", 1, "Sistema");
         }
 
         public int RegistrarActualizacion(string usuario, string accion)

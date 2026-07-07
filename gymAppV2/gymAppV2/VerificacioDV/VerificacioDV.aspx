@@ -1,4 +1,4 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="VerificacioDV.aspx.cs" Inherits="gymAppV2.VerificacioDV.VerificacioDV" MasterPageFile="~/DashBoard.Master" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="VerificacioDV.aspx.cs" Inherits="gymAppV2.VerificacioDV.VerificacioDV" MasterPageFile="~/ErrorState.Master" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Verificación de Integridad - GymApp</title>

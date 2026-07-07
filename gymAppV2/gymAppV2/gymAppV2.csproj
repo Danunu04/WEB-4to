@@ -203,6 +203,7 @@
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
     <Content Include="Site.Master" />
     <Content Include="DashBoard.Master" />
+    <Content Include="ErrorState.Master" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
     <Content Include="Bundle.config" />
@@ -290,6 +291,13 @@
     </Compile>
     <Compile Include="DashBoard.Master.designer.cs">
       <DependentUpon>DashBoard.Master</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorState.Master.cs">
+      <DependentUpon>ErrorState.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ErrorState.Master.designer.cs">
+      <DependentUpon>ErrorState.Master</DependentUpon>
     </Compile>
     <Compile Include="Entrenadores\Entrenadores.aspx.cs">
       <DependentUpon>Entrenadores.aspx</DependentUpon>

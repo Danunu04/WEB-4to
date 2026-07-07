@@ -18,27 +18,25 @@ namespace gymAppV2
         protected BLLDigitoVerificador BllDV { get; private set; }
         protected BLLEvento BllEvento { get; private set; }
 
-        /// <summary>
-        /// Nombre de la página de verificación de integridad para evitar redirecciones en bucle.
-        /// </summary>
-        private const string PAGINA_VERIFICACION_DV = "VerificacioDV/VerificacioDV.aspx";
+        // FriendlyUrls (RedirectMode.Permanent) elimina la extensión .aspx de las URLs,
+        // por lo que Request.AppRelativeCurrentExecutionFilePath puede devolver la ruta
+        // sin extensión. Todas las listas usan rutas SIN .aspx para que el match sea
+        // consistente independientemente de si la URL tiene extensión o no.
 
-        /// <summary>
-        /// Páginas que solo deben accederse cuando el sistema tiene un error de integridad.
-        /// En condiciones normales se redirige al dashboard.
-        /// </summary>
-        private static readonly string[] PAGINAS_SOLO_CON_ERROR_INTEGRIDAD =
+        private static readonly string[] PAGINAS_EXENTAS_VERIFICACION =
         {
-            "VerificacioDV/VerificacioDV.aspx"
+            "VerificacioDV/VerificacioDV",
+            "Admin/BackupRestore",
         };
 
-        /// <summary>
-        /// Páginas de mantenimiento del sistema que no se exponen en el menú de navegación
-        /// y solo deben accederse mediante URL directa cuando el administrador lo requiera.
-        /// </summary>
+        private static readonly string[] PAGINAS_SOLO_CON_ERROR_INTEGRIDAD =
+        {
+            "VerificacioDV/VerificacioDV",
+        };
+
         private static readonly string[] PAGINAS_MANTENIMIENTO_SISTEMA =
         {
-            "Admin/EncriptarDatos.aspx"
+            "Admin/EncriptarDatos",
         };
 
         protected override void OnInit(EventArgs e)
@@ -48,7 +46,8 @@ namespace gymAppV2
             BllDV = new BLLDigitoVerificador();
             BllEvento = new BLLEvento();
 
-            if (!Singleton.Instancia.IsLogged())
+            var sesion = Singleton.Instancia;
+            if (sesion == null || !sesion.IsLogged())
             {
                 RedirigirSeguro("~/LogIn/LogIn.aspx");
                 return;
@@ -69,14 +68,14 @@ namespace gymAppV2
         {
             string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
             if (!string.IsNullOrEmpty(paginaActual)
-                && paginaActual.Replace("~/", "").Equals(PAGINA_VERIFICACION_DV, StringComparison.OrdinalIgnoreCase))
+                && EsPaginaEnLista(NormalizarPagina(paginaActual), PAGINAS_EXENTAS_VERIFICACION))
             {
                 return;
             }
 
             try
             {
-                if (BllDV.ExisteErrorIntegridad() && !BllDV.UsuarioActualEsAdmin())
+                if (BllDV.ExisteErrorIntegridad())
                 {
                     RegistrarErrorIntegridad();
                     RedirigirSeguro("~/VerificacioDV/VerificacioDV.aspx");
@@ -97,10 +96,7 @@ namespace gymAppV2
                     System.Diagnostics.Trace.WriteLine($"[INTEGRIDAD] Error de verificación: {ex}");
                 }
 
-                if (!BllDV.UsuarioActualEsAdmin())
-                {
-                    RedirigirSeguro("~/VerificacioDV/VerificacioDV.aspx");
-                }
+                RedirigirSeguro("~/VerificacioDV/VerificacioDV.aspx");
             }
         }
 
@@ -110,11 +106,15 @@ namespace gymAppV2
         /// </summary>
         private void VerificarPaginasSoloErrorIntegridad()
         {
+            // En PostBack la página ya está cargada; no redirigir para que puedan
+            // renderizarse mensajes de éxito tras recalcular o restaurar.
+            if (IsPostBack) return;
+
             string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
             if (string.IsNullOrEmpty(paginaActual))
                 return;
 
-            string pagina = paginaActual.Replace("~/", "");
+            string pagina = NormalizarPagina(paginaActual);
             if (!EsPaginaEnLista(pagina, PAGINAS_SOLO_CON_ERROR_INTEGRIDAD))
                 return;
 
@@ -141,11 +141,26 @@ namespace gymAppV2
             if (string.IsNullOrEmpty(paginaActual))
                 return;
 
-            string pagina = paginaActual.Replace("~/", "");
+            string pagina = NormalizarPagina(paginaActual);
             if (EsPaginaEnLista(pagina, PAGINAS_MANTENIMIENTO_SISTEMA))
             {
                 RedirigirSeguro("~/DashBoard/WebForm1.aspx");
             }
+        }
+
+        /// <summary>
+        /// Normaliza el path de página: quita el prefijo ~/ y la extensión .aspx.
+        /// Necesario porque FriendlyUrls (RedirectMode.Permanent) sirve las páginas
+        /// sin extensión, haciendo que AppRelativeCurrentExecutionFilePath devuelva
+        /// la ruta sin .aspx.
+        /// </summary>
+        private static string NormalizarPagina(string paginaActual)
+        {
+            if (string.IsNullOrEmpty(paginaActual)) return paginaActual;
+            string result = paginaActual.Replace("~/", "");
+            if (result.EndsWith(".aspx", StringComparison.OrdinalIgnoreCase))
+                result = result.Substring(0, result.Length - 5);
+            return result;
         }
 
         /// <summary>

@@ -24,8 +24,10 @@ namespace gymAppV2
             {
                 ConfigurarMenuPausa();
                 string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
-                if (!string.IsNullOrEmpty(paginaActual)
-                    && !paginaActual.Replace("~/", "").Equals("VerificacioDV/VerificacioDV.aspx", StringComparison.OrdinalIgnoreCase))
+                // FriendlyUrls puede devolver la ruta sin .aspx; comparar sin extensión.
+                string paginaNorm = NormalizarPagina(paginaActual);
+                if (!string.IsNullOrEmpty(paginaNorm)
+                    && !paginaNorm.Equals("VerificacioDV/VerificacioDV", StringComparison.OrdinalIgnoreCase))
                 {
                     RedirigirSeguro("~/VerificacioDV/VerificacioDV.aspx");
                     return;
@@ -132,6 +134,15 @@ namespace gymAppV2
             }
 
             RedirigirSeguro("~/LogIn/LogIn.aspx");
+        }
+
+        private static string NormalizarPagina(string paginaActual)
+        {
+            if (string.IsNullOrEmpty(paginaActual)) return paginaActual;
+            string result = paginaActual.Replace("~/", "");
+            if (result.EndsWith(".aspx", StringComparison.OrdinalIgnoreCase))
+                result = result.Substring(0, result.Length - 5);
+            return result;
         }
 
         /// <summary>

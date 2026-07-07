@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Fraunces:opsz,wght@9..144,400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=4") %>" rel="stylesheet" type="text/css" />
     <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet" type="text/css" />
 
     <!-- Toast helper global: se define en el head para estar disponible antes de los startup scripts del form -->
@@ -76,6 +76,7 @@
                         <i class="bi bi-list"></i>
                     </button>
                 </div>
+                <div class="sidebar-nav-scroll">
                 <ul class="sidebar-menu" id="ulMenuNavegacion" runat="server">
                     <li id="liDashboard" runat="server">
                         <a href="/DashBoard/WebForm1.aspx">
@@ -153,6 +154,7 @@
                         </a>
                     </li>
                 </ul>
+                </div>
                 <ul class="sidebar-menu sidebar-logout">
                     <li>
                         <asp:LinkButton ID="lnkLogout" runat="server" OnClick="LnkLogout_Click">

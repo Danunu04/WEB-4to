@@ -86,42 +86,38 @@ namespace gymAppV2.LogIn
                     Usuario userBD = BllUsuario.ObtenerUsuario(usuario);
 
                     // Verificación de integridad de dígitos verificadores (DVH/DVV).
-                    // Si hay inconsistencias, solo el administrador puede ingresar para reparar el sistema.
+                    // Todos los usuarios pueden ingresar; BasePage los redirige a VerificacioDV.
+                    // Los no-admins ven la pantalla de bloqueo; los admins ven el panel de reparación.
                     if (BllDV.ExisteErrorIntegridad())
                     {
-                        if (userBD.USUARIO_Rol != PerfilesSistema.RolAdministrador && userBD.USUARIO_Rol != PerfilesSistema.RolWebMaster)
-                        {
-                            try
-                            {
-                                BllEvento.RegistrarEvento(
-                                    "error_integridad",
-                                    userBD.USUARIO_Usuario,
-                                    "Intento de login bloqueado por error de integridad.",
-                                    1,
-                                    "Seguridad");
-                            }
-                            catch
-                            {
-                                // No impedir el flujo si falla el registro del evento.
-                            }
-
-                            MostrarToast("Error de integridad en la base de datos. Contacte al administrador.", "error");
-                            return;
-                        }
-
-                        // Administrador: permite el ingreso y redirige al panel de reparación.
+                        BllUsuario.ReestablecerIntentos(usuario);
                         BllUsuario.LogearUsuario(userBD);
                         FormsAuthentication.SetAuthCookie(userBD.USUARIO_Usuario, false);
-                        BllEvento.RegistrarEvento(
-                            "error_integridad",
-                            userBD.USUARIO_Usuario,
-                            "El sistema ingresó en modo de reparación por error de integridad.",
-                            1,
-                            "Seguridad");
-                        BllEvento.RegistrarLogin(userBD.USUARIO_Usuario);
+
+                        bool esAdmin = userBD.USUARIO_Rol == PerfilesSistema.RolAdministrador
+                                    || userBD.USUARIO_Rol == PerfilesSistema.RolWebMaster;
+
+                        try
+                        {
+                            BllEvento.RegistrarEvento(
+                                "error_integridad",
+                                userBD.USUARIO_Usuario,
+                                esAdmin
+                                    ? "El sistema ingresó en modo de reparación por error de integridad."
+                                    : "Usuario redirigido a pantalla de bloqueo por error de integridad.",
+                                1,
+                                "Seguridad");
+                            BllEvento.RegistrarLogin(userBD.USUARIO_Usuario);
+                        }
+                        catch
+                        {
+                            // No impedir el flujo si falla el registro del evento.
+                        }
 
                         RedirigirConToast(
-                            "Se detectó un error de integridad. Redirigiendo al panel de reparación.",
+                            esAdmin
+                                ? "Se detectó un error de integridad. Redirigiendo al panel de reparación."
+                                : "El sistema está temporalmente en mantenimiento.",
                             "~/VerificacioDV/VerificacioDV.aspx",
                             "warning");
                         return;

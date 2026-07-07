@@ -197,6 +197,20 @@ namespace gymAppV2.VerificacioDV
         {
             try
             {
+                if (bllDV.ExisteErrorIntegridad())
+                {
+                    MostrarMensaje("Debe resolver el problema de integridad antes de salir. Recalcule los dígitos verificadores o restaure un backup.", "error");
+                    return;
+                }
+            }
+            catch
+            {
+                // Si la verificación falla (ej. tras un restore que reinició la BD),
+                // se permite el logout ya que el estado no es determinable.
+            }
+
+            try
+            {
                 var sesion = Singleton.Instancia;
                 if (sesion != null && sesion.IsLogged())
                     sesion.LogOut();

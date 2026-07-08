@@ -475,7 +475,7 @@ namespace gymAppV2.Usuarios
                             MostrarExito("Recepcionista creado correctamente");
                             break;
                         case "3": // Entrenador
-                            Entrenador ent = new Entrenador(dni, 0, activo, "", "", usuario);
+                            Entrenador ent = new Entrenador(dni, 0, activo, "", usuario);
                             bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono, email, fechaNacimiento, ent, null, null, activo);
                             MostrarExito("Entrenador creado correctamente");
                             break;

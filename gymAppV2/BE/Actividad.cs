@@ -15,8 +15,7 @@ namespace BE
         public decimal PrecioAlumno { get; set; }
         public bool Activo { get; set; }
 
-        // Campos de verificación de integridad
-        public string DVV { get; set; }
+        // Campo de verificación de integridad
         public string DVH { get; set; }
 
         public Actividad()
@@ -25,7 +24,7 @@ namespace BE
 
         public Actividad(int codActividad, string descripcion, int cantXSemana,
                          decimal costoInterno, decimal precioAlumno, bool activo,
-                         string dvv, string dvh)
+                         string dvh)
         {
             CodActividad = codActividad;
             Descripcion = descripcion;
@@ -33,7 +32,6 @@ namespace BE
             CostoInterno = costoInterno;
             PrecioAlumno = precioAlumno;
             Activo = activo;
-            DVV = dvv;
             DVH = dvh;
         }
     }

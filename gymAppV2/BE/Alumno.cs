@@ -17,8 +17,7 @@ namespace BE
         public bool TieneRutinas { get; set; }
         public bool Activo { get; set; }
 
-        // Campos de verificación
-        public string DVV { get; set; }
+        // Campo de verificación
         public string DVH { get; set; }
 
         // Referencia al usuario (solo el usr, no datos personales)
@@ -35,26 +34,21 @@ namespace BE
         {
         }
 
-        public Alumno(int dni, decimal? peso, bool tieneRutinas, bool activo, string dvv, string dvh)
+        public Alumno(int dni, decimal? peso, bool tieneRutinas, bool activo, string dvh)
         {
             DNI = dni;
             Peso = peso;
             TieneRutinas = tieneRutinas;
             Activo = activo;
-            DVV = dvv;
             DVH = dvh;
         }
 
-        /// <summary>
-        /// Constructor completo que incluye la referencia al usuario
-        /// </summary>
-        public Alumno(int dni, decimal? peso, bool tieneRutinas, bool activo, string dvv, string dvh, string usuario)
+        public Alumno(int dni, decimal? peso, bool tieneRutinas, bool activo, string dvh, string usuario)
         {
             DNI = dni;
             Peso = peso;
             TieneRutinas = tieneRutinas;
             Activo = activo;
-            DVV = dvv;
             DVH = dvh;
             Usuario = usuario;
         }

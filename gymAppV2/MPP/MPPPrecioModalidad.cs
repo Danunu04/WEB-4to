@@ -23,7 +23,7 @@ namespace MPP
         /// <summary>
         /// Calcula DVH y DVV de una modalidad de precio a partir de sus valores.
         /// </summary>
-        private void CalcularDigitosPrecioModalidad(PrecioModalidad modalidad, out string dvh, out string dvv)
+        private string CalcularDigitosPrecioModalidad(PrecioModalidad modalidad)
         {
             var valores = new Dictionary<string, object>
             {
@@ -35,7 +35,7 @@ namespace MPP
                 { "FechaModificacion", modalidad.FechaModificacion }
             };
 
-            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+            return dvManager.CalcularDVH(valores);
         }
 
         /// <summary>
@@ -53,7 +53,6 @@ namespace MPP
                         Precio,
                         Activo,
                         FechaModificacion,
-                        dvv,
                         dvh
                     FROM [GymApp].[dbo].[PrecioModalidad]
                     ORDER BY Id";
@@ -73,7 +72,6 @@ namespace MPP
                         Precio = row["Precio"] != DBNull.Value ? Convert.ToDecimal(row["Precio"]) : 0,
                         Activo = row["Activo"] != DBNull.Value && Convert.ToBoolean(row["Activo"]),
                         FechaModificacion = row["FechaModificacion"] != DBNull.Value ? Convert.ToDateTime(row["FechaModificacion"]) : DateTime.MinValue,
-                        DVV = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         DVH = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
                     });
                 }
@@ -101,7 +99,6 @@ namespace MPP
                         Precio,
                         Activo,
                         FechaModificacion,
-                        dvv,
                         dvh
                     FROM [GymApp].[dbo].[PrecioModalidad]
                     WHERE Id = @Id";
@@ -124,7 +121,6 @@ namespace MPP
                         Precio = row["Precio"] != DBNull.Value ? Convert.ToDecimal(row["Precio"]) : 0,
                         Activo = row["Activo"] != DBNull.Value && Convert.ToBoolean(row["Activo"]),
                         FechaModificacion = row["FechaModificacion"] != DBNull.Value ? Convert.ToDateTime(row["FechaModificacion"]) : DateTime.MinValue,
-                        DVV = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         DVH = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
                     };
                 }
@@ -151,13 +147,12 @@ namespace MPP
                 modalidad.Precio = nuevoPrecio;
                 modalidad.FechaModificacion = DateTime.Now;
 
-                CalcularDigitosPrecioModalidad(modalidad, out string dvh, out string dvv);
+                string dvh = CalcularDigitosPrecioModalidad(modalidad);
 
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[PrecioModalidad]
                     SET Precio = @Precio,
                         FechaModificacion = @FechaModificacion,
-                        dvv = @DVV,
                         dvh = @DVH
                     WHERE Id = @Id";
 
@@ -165,7 +160,6 @@ namespace MPP
                 {
                     new SqlParameter("@Precio", nuevoPrecio),
                     new SqlParameter("@FechaModificacion", modalidad.FechaModificacion),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh),
                     new SqlParameter("@Id", id)
                 };

@@ -22,8 +22,7 @@ namespace BE
         public string Email { get; set; }
         public DateTime? FechaNacimiento { get; set; }
 
-        // Campos de verificación
-        public string USUARIO_DVV { get; set; }
+        // Campo de verificación horizontal por fila
         public string USUARIO_DVH { get; set; }
 
         public Usuario()
@@ -32,7 +31,7 @@ namespace BE
 
         public Usuario(string usuario, string contras, bool activo, bool bloqueado, int intentos, int rol,
                        string tipo, int dni, string nombre, string apellido, string telefono,
-                       string email, DateTime? fechaNacimiento, string dvv, string dvh, bool primerLogin = true)
+                       string email, DateTime? fechaNacimiento, string dvh, bool primerLogin = true)
         {
             USUARIO_Usuario = usuario;
             USUARIO_Contras = contras;
@@ -48,7 +47,6 @@ namespace BE
             Telefono = telefono;
             Email = email;
             FechaNacimiento = fechaNacimiento;
-            USUARIO_DVV = dvv;
             USUARIO_DVH = dvh;
         }
     }

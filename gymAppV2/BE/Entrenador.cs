@@ -15,8 +15,7 @@ namespace BE
         public int AlumnosCount { get; set; }  // Count of students assigned via Rutinas
         public bool Activo { get; set; }
 
-        // Campos de verificación
-        public string DVV { get; set; }
+        // Campo de verificación
         public string DVH { get; set; }
 
         // Referencia al usuario (solo el usr, no datos personales)
@@ -32,24 +31,19 @@ namespace BE
         {
         }
 
-        public Entrenador(int dni, int alumnosCount, bool activo, string dvv, string dvh)
+        public Entrenador(int dni, int alumnosCount, bool activo, string dvh)
         {
             DNI = dni;
             AlumnosCount = alumnosCount;
             Activo = activo;
-            DVV = dvv;
             DVH = dvh;
         }
 
-        /// <summary>
-        /// Constructor completo que incluye la referencia al usuario
-        /// </summary>
-        public Entrenador(int dni, int alumnosCount, bool activo, string dvv, string dvh, string usuario)
+        public Entrenador(int dni, int alumnosCount, bool activo, string dvh, string usuario)
         {
             DNI = dni;
             AlumnosCount = alumnosCount;
             Activo = activo;
-            DVV = dvv;
             DVH = dvh;
             Usuario = usuario;
         }

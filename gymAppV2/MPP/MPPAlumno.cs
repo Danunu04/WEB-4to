@@ -23,7 +23,7 @@ namespace MPP
         /// <summary>
         /// Calcula DVH y DVV de un alumno a partir de sus valores de persistencia.
         /// </summary>
-        private void CalcularDigitosAlumno(Alumno alumno, out string dvh, out string dvv)
+        private string CalcularDigitosAlumno(Alumno alumno)
         {
             var valores = new Dictionary<string, object>
             {
@@ -34,7 +34,7 @@ namespace MPP
                 { "usr", alumno.Usuario }
             };
 
-            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+            return dvManager.CalcularDVH(valores);
         }
 
         /// <summary>
@@ -45,17 +45,16 @@ namespace MPP
             Alumno alumno = ObtenerAlumno(dni);
             if (alumno == null) return;
 
-            CalcularDigitosAlumno(alumno, out string dvh, out string dvv);
+            string dvh = CalcularDigitosAlumno(alumno);
 
             string consulta = @"
                 UPDATE [GymApp].[dbo].[Alumnos]
-                SET dvv = @DVV, dvh = @DVH
+                SET dvh = @DVH
                 WHERE dni = @DNI";
 
             List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@DNI", dni),
-                new SqlParameter("@DVV", dvv),
                 new SqlParameter("@DVH", dvh)
             };
 
@@ -66,15 +65,13 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosAlumno(alumno, out string dvh, out string dvv);
+                string dvh = CalcularDigitosAlumno(alumno);
 
-                // En esquema normalizado, ALUMNOS solo tiene dni, peso, activo, tieneRutinas, usr, dvv, dvh
-                // Los datos personales están en USUARIOS
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Alumnos]
-                    (dni, peso, activo, tieneRutinas, usr, dvv, dvh)
+                    (dni, peso, activo, tieneRutinas, usr, dvh)
                     VALUES
-                    (@DNI, @Peso, @Activo, @TieneRutinas, @Usuario, @DVV, @DVH)";
+                    (@DNI, @Peso, @Activo, @TieneRutinas, @Usuario, @DVH)";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
@@ -83,7 +80,6 @@ namespace MPP
                     new SqlParameter("@Activo", alumno.Activo),
                     new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
                     new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 
@@ -107,7 +103,6 @@ namespace MPP
                         a.activo,
                         a.tieneRutinas,
                         a.usr,
-                        a.dvv,
                         a.dvh,
                         u.nombre,
                         u.apellido,
@@ -133,7 +128,6 @@ namespace MPP
                         row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
                         Convert.ToBoolean(row["tieneRutinas"]),
                         Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
@@ -157,16 +151,14 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosAlumno(alumno, out string dvh, out string dvv);
+                string dvh = CalcularDigitosAlumno(alumno);
 
-                // En esquema normalizado, ALUMNOS solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Alumnos]
                     SET peso = @Peso,
                         activo = @Activo,
                         tieneRutinas = @TieneRutinas,
                         usr = @Usuario,
-                        dvv = @DVV,
                         dvh = @DVH
                     WHERE dni = @DNI";
 
@@ -177,7 +169,6 @@ namespace MPP
                     new SqlParameter("@Activo", alumno.Activo),
                     new SqlParameter("@TieneRutinas", alumno.TieneRutinas),
                     new SqlParameter("@Usuario", alumno.Usuario ?? (object)DBNull.Value),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 
@@ -230,7 +221,6 @@ namespace MPP
                         a.activo,
                         a.tieneRutinas,
                         a.usr,
-                        a.dvv,
                         a.dvh,
                         u.nombre,
                         u.apellido,
@@ -253,7 +243,6 @@ namespace MPP
                         row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
                         Convert.ToBoolean(row["tieneRutinas"]),
                         Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
@@ -319,7 +308,6 @@ namespace MPP
                         a.activo,
                         a.tieneRutinas,
                         a.usr,
-                        a.dvv,
                         a.dvh,
                         u.nombre,
                         u.apellido,
@@ -341,7 +329,6 @@ namespace MPP
                         row["peso"] != DBNull.Value ? Convert.ToDecimal(row["peso"]) : (decimal?)null,
                         Convert.ToBoolean(row["tieneRutinas"]),
                         Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );

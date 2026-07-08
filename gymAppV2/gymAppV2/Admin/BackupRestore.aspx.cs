@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 using BE;
 using BLL;
 using Servicios.Singleton;
@@ -24,7 +27,50 @@ namespace gymAppV2.Admin
             if (!IsPostBack)
             {
                 txtRutaBackup.Text = ObtenerRutaSugeridaBackup();
+                CargarListaBackups();
             }
+        }
+
+        private void CargarListaBackups()
+        {
+            ddlBackupsRestore.Items.Clear();
+            ddlBackupsRestore.Items.Add(new ListItem("— Seleccionar backup —", ""));
+
+            var archivos = ObtenerArchivosBackup();
+            foreach (string archivo in archivos)
+                ddlBackupsRestore.Items.Add(new ListItem(Path.GetFileName(archivo), archivo));
+
+            if (archivos.Count == 0)
+                ddlBackupsRestore.Items.Add(new ListItem("(No se encontraron backups en C:\\GymApp\\)", ""));
+        }
+
+        private List<string> ObtenerArchivosBackup()
+        {
+            string carpeta = @"C:\GymApp";
+            var archivos = new List<string>();
+            if (!Directory.Exists(carpeta)) return archivos;
+
+            archivos.AddRange(Directory.GetFiles(carpeta, "*.bak"));
+            archivos.AddRange(Directory.GetFiles(carpeta, "*.bacpac"));
+            archivos.Sort();
+            archivos.Reverse(); // más reciente primero
+            return archivos;
+        }
+
+        protected void ddlBackupsRestore_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(ddlBackupsRestore.SelectedValue))
+            {
+                txtRutaRestore.Text = ddlBackupsRestore.SelectedValue;
+                string ext = Path.GetExtension(ddlBackupsRestore.SelectedValue).TrimStart('.').ToLower();
+                if (ext == "bacpac") rblFormatoRestore.SelectedValue = "bacpac";
+                else rblFormatoRestore.SelectedValue = "bak";
+            }
+        }
+
+        protected void btnActualizarListaRestore_Click(object sender, EventArgs e)
+        {
+            CargarListaBackups();
         }
 
         /// <summary>

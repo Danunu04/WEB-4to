@@ -55,8 +55,15 @@
                     <asp:ListItem Value="bacpac">.bacpac &mdash; portable</asp:ListItem>
                 </asp:RadioButtonList>
 
+                <asp:Label runat="server" CssClass="form-label">Backups disponibles en C:\GymApp\</asp:Label>
+                <div class="input-row">
+                    <asp:DropDownList ID="ddlBackupsRestore" runat="server" CssClass="form-control"
+                        AutoPostBack="true" OnSelectedIndexChanged="ddlBackupsRestore_SelectedIndexChanged" />
+                    <asp:Button ID="btnActualizarListaRestore" runat="server" Text="↻ Actualizar" CssClass="btn-secondary" OnClick="btnActualizarListaRestore_Click" />
+                </div>
+
                 <asp:Label ID="lblRutaRestore" runat="server" CssClass="form-label" AssociatedControlID="txtRutaRestore">Ruta del archivo a restaurar</asp:Label>
-                <asp:TextBox ID="txtRutaRestore" runat="server" CssClass="form-control" placeholder="C:\Backups\GymApp_20250701_120000.bak" />
+                <asp:TextBox ID="txtRutaRestore" runat="server" CssClass="form-control" placeholder="C:\GymApp\GymApp_20250701_120000.bak" />
                 <asp:Button ID="btnRealizarRestore" runat="server" Text="Restaurar backup" CssClass="btn-danger" OnClick="btnRealizarRestore_Click"
                     OnClientClick="return confirm('¿Confirma que desea restaurar? Esta operación reemplaza todos los datos actuales.');" />
             </div>

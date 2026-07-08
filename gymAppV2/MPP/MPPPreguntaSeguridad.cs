@@ -25,7 +25,7 @@ namespace MPP
         /// <summary>
         /// Calcula DVH y DVV de una pregunta de seguridad a partir de valores en texto plano.
         /// </summary>
-        private void CalcularDigitosPregunta(PreguntaSeguridad pregunta, out string dvh, out string dvv)
+        private string CalcularDigitosPregunta(PreguntaSeguridad pregunta)
         {
             var valores = new Dictionary<string, object>
             {
@@ -34,7 +34,7 @@ namespace MPP
                 { "respuesta", pregunta.Respuesta }
             };
 
-            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+            return dvManager.CalcularDVH(valores);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT codPregunta, pregunta, respuesta, usr, dvv, dvh
+                    SELECT codPregunta, pregunta, respuesta, usr, dvh
                     FROM [GymApp].[dbo].[PreguntasSeguridad]
                     WHERE usr = @Usuario";
 
@@ -88,7 +88,6 @@ namespace MPP
                         DesencriptarCampo(row["pregunta"] != DBNull.Value ? row["pregunta"].ToString() : string.Empty),
                         DesencriptarCampo(row["respuesta"] != DBNull.Value ? row["respuesta"].ToString() : string.Empty),
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
                     );
                 }
@@ -105,26 +104,24 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosPregunta(pregunta, out string dvh, out string dvv);
+                string dvh = CalcularDigitosPregunta(pregunta);
 
                 string consulta = @"
                     IF EXISTS (SELECT 1 FROM [GymApp].[dbo].[PreguntasSeguridad] WHERE usr = @Usuario)
                         UPDATE [GymApp].[dbo].[PreguntasSeguridad]
                         SET pregunta = @Pregunta,
                             respuesta = @Respuesta,
-                            dvv = @DVV,
                             dvh = @DVH
                         WHERE usr = @Usuario
                     ELSE
-                        INSERT INTO [GymApp].[dbo].[PreguntasSeguridad] (pregunta, respuesta, usr, dvv, dvh)
-                        VALUES (@Pregunta, @Respuesta, @Usuario, @DVV, @DVH)";
+                        INSERT INTO [GymApp].[dbo].[PreguntasSeguridad] (pregunta, respuesta, usr, dvh)
+                        VALUES (@Pregunta, @Respuesta, @Usuario, @DVH)";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", pregunta.Usuario),
                     new SqlParameter("@Pregunta", EncriptarCampo(pregunta.Pregunta)),
                     new SqlParameter("@Respuesta", EncriptarCampo(pregunta.Respuesta)),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 
@@ -231,21 +228,19 @@ namespace MPP
                         DesencriptarCampo(row["pregunta"] != DBNull.Value ? row["pregunta"].ToString() : string.Empty),
                         DesencriptarCampo(row["respuesta"] != DBNull.Value ? row["respuesta"].ToString() : string.Empty),
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
-                        string.Empty,
                         string.Empty
                     );
 
-                    CalcularDigitosPregunta(pregunta, out string dvh, out string dvv);
+                    string dvh = CalcularDigitosPregunta(pregunta);
 
                     string actualizar = @"
                         UPDATE [GymApp].[dbo].[PreguntasSeguridad]
-                        SET dvv = @DVV, dvh = @DVH
+                        SET dvh = @DVH
                         WHERE codPregunta = @IdPregunta";
 
                     List<SqlParameter> parametros = new List<SqlParameter>
                     {
                         new SqlParameter("@IdPregunta", pregunta.Id),
-                        new SqlParameter("@DVV", dvv),
                         new SqlParameter("@DVH", dvh)
                     };
 
@@ -269,7 +264,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT codPregunta, usr, pregunta, respuesta, dvv, dvh
+                    SELECT codPregunta, usr, pregunta, respuesta, dvh
                     FROM [GymApp].[dbo].[PreguntasSeguridad]";
 
                 DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
@@ -278,7 +273,6 @@ namespace MPP
                 {
                     int codPregunta = Convert.ToInt32(row["codPregunta"]);
                     string usuario = row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty;
-                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
                     string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
 
                     PreguntaSeguridad pregunta = new PreguntaSeguridad(
@@ -286,29 +280,27 @@ namespace MPP
                         DesencriptarCampo(row["pregunta"] != DBNull.Value ? row["pregunta"].ToString() : string.Empty),
                         DesencriptarCampo(row["respuesta"] != DBNull.Value ? row["respuesta"].ToString() : string.Empty),
                         usuario,
-                        string.Empty,
                         string.Empty
                     );
 
-                    CalcularDigitosPregunta(pregunta, out string dvhCalculado, out string dvvCalculado);
+                    string dvhCalculado = CalcularDigitosPregunta(pregunta);
 
-                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado) && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
-                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado) && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
+                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado)
+                        && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
 
-                    if (dvhOk && dvvOk)
+                    if (dvhOk)
                         continue;
 
                     resultados.Add(new ResultadoVerificacionDV
                     {
                         NombreTabla = "PreguntasSeguridad",
                         ClaveFila = codPregunta.ToString(),
-                        Campo = "DVH/DVV (fila completa)",
+                        Campo = "DVH (fila completa)",
                         EsValido = false,
-                        Mensaje = $"Los dígitos verificadores de la pregunta del usuario {usuario} no coinciden.",
+                        TipoAlteracion = TipoAlteracion.EdicionDato,
+                        Mensaje = $"DVH de la pregunta del usuario {usuario} no coincide. Los datos fueron modificados.",
                         DVHAlmacenado = dvhAlmacenado,
-                        DVHCalculado = dvhCalculado,
-                        DVVAlmacenado = dvvAlmacenado,
-                        DVVCalculado = dvvCalculado
+                        DVHCalculado = dvhCalculado
                     });
                 }
 

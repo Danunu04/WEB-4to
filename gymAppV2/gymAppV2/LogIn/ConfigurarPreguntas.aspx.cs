@@ -152,7 +152,7 @@ namespace gymAppV2.LogIn
 
             try
             {
-                var pregunta = new PreguntaSeguridad(0, preguntaTexto, respuesta, usuario, string.Empty, string.Empty);
+                var pregunta = new PreguntaSeguridad(0, preguntaTexto, respuesta, usuario, string.Empty);
                 BllPreguntaSeguridad.GuardarPregunta(pregunta);
 
                 if (ModoPrimerLogin)

@@ -55,30 +55,6 @@ namespace SERVICIOS
         }
 
         /// <summary>
-        /// Calcula el Dígito Verificador Vertical (DVV) de una fila.
-        /// Para cada campo (excepto dvv/dvh) calcula SHA-256 individual, concatena esos
-        /// hashes intermedios y vuelve a calcular SHA-256.
-        /// </summary>
-        public string CalcularDVV(Dictionary<string, object> valores)
-        {
-            if (valores == null || valores.Count == 0)
-                throw new ArgumentException("El diccionario de valores no puede ser nulo o vacío.", nameof(valores));
-
-            StringBuilder hashesConcatenados = new StringBuilder();
-
-            foreach (var kvp in valores)
-            {
-                if (EsColumnaDigitoVerificador(kvp.Key))
-                    continue;
-
-                string hashCampo = _criptoManager.GenerarHashSHA256(NormalizarValor(kvp.Value));
-                hashesConcatenados.Append(hashCampo);
-            }
-
-            return _criptoManager.GenerarHashSHA256(hashesConcatenados.ToString());
-        }
-
-        /// <summary>
         /// Verifica que el DVH almacenado coincida con el calculado a partir de los valores.
         /// </summary>
         public bool VerificarDVH(string dvhAlmacenado, Dictionary<string, object> valores)
@@ -87,26 +63,6 @@ namespace SERVICIOS
                 return false;
 
             return dvhAlmacenado.Equals(CalcularDVH(valores), StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// Verifica que el DVV almacenado coincida con el calculado a partir de los valores.
-        /// </summary>
-        public bool VerificarDVV(string dvvAlmacenado, Dictionary<string, object> valores)
-        {
-            if (string.IsNullOrEmpty(dvvAlmacenado))
-                return false;
-
-            return dvvAlmacenado.Equals(CalcularDVV(valores), StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// Calcula DVH y DVV en una sola llamada.
-        /// </summary>
-        public void CalcularAmbos(Dictionary<string, object> valores, out string dvh, out string dvv)
-        {
-            dvh = CalcularDVH(valores);
-            dvv = CalcularDVV(valores);
         }
 
         /// <summary>

@@ -3,54 +3,51 @@ using System;
 namespace BE
 {
     /// <summary>
+    /// Tipo de alteración detectada en la verificación de integridad de una tabla.
+    /// </summary>
+    public enum TipoAlteracion
+    {
+        SinAlteracion = 0,
+        EdicionDato = 1,
+        EliminacionFila = 2,
+        InsercionNoAutorizada = 3,
+        TablaVaciada = 4,
+        TablaEliminada = 5
+    }
+
+    /// <summary>
     /// Representa el resultado de verificar integridad de una fila/campo de una tabla.
     /// </summary>
     public class ResultadoVerificacionDV
     {
-        /// <summary>
-        /// Nombre de la tabla verificada.
-        /// </summary>
         public string NombreTabla { get; set; }
-
-        /// <summary>
-        /// Clave primaria de la fila afectada (puede ser compuesta o varias columnas separadas por '|').
-        /// </summary>
         public string ClaveFila { get; set; }
-
-        /// <summary>
-        /// Nombre del campo/columna sospechoso. Vacío si el error es a nivel de fila completa.
-        /// </summary>
         public string Campo { get; set; }
-
-        /// <summary>
-        /// Indica si la fila/campo es válido.
-        /// </summary>
         public bool EsValido { get; set; }
-
-        /// <summary>
-        /// Descripción del estado o error detectado.
-        /// </summary>
         public string Mensaje { get; set; }
+        public TipoAlteracion TipoAlteracion { get; set; }
 
         /// <summary>
-        /// DVH almacenado en la fila (si aplica).
+        /// Descripción legible del tipo de alteración, para mostrar en grids.
         /// </summary>
+        public string TipoAlteracionTexto
+        {
+            get
+            {
+                switch (TipoAlteracion)
+                {
+                    case TipoAlteracion.EdicionDato:            return "Edición de dato";
+                    case TipoAlteracion.EliminacionFila:        return "Eliminación de fila";
+                    case TipoAlteracion.InsercionNoAutorizada:  return "Inserción no autorizada";
+                    case TipoAlteracion.TablaVaciada:           return "Tabla vaciada";
+                    case TipoAlteracion.TablaEliminada:         return "Tabla eliminada";
+                    default:                                     return "—";
+                }
+            }
+        }
+
         public string DVHAlmacenado { get; set; }
-
-        /// <summary>
-        /// DVH recalculado a partir de los valores actuales (si aplica).
-        /// </summary>
         public string DVHCalculado { get; set; }
-
-        /// <summary>
-        /// DVV almacenado en la fila (si aplica).
-        /// </summary>
-        public string DVVAlmacenado { get; set; }
-
-        /// <summary>
-        /// DVV recalculado a partir de los valores actuales (si aplica).
-        /// </summary>
-        public string DVVCalculado { get; set; }
 
         public ResultadoVerificacionDV()
         {

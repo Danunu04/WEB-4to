@@ -12,7 +12,6 @@ namespace BE
         public bool USUARIO_Activo { get; set; }
         public bool USUARIO_Bloqueado { get; set; }
         public int USUARIO_Intentos { get; set; }
-        public string USUARIO_DVV { get; set; }
         public string USUARIO_DVH { get; set; }
 
         // Campos adicionales para gestión (no en tabla USUARIOS)
@@ -27,7 +26,7 @@ namespace BE
         {
         }
 
-        public UsuarioGestion(string usuario, string contras, string tipo, bool activo, bool bloqueado, int intentos, string dvv, string dvh)
+        public UsuarioGestion(string usuario, string contras, string tipo, bool activo, bool bloqueado, int intentos, string dvh)
         {
             USUARIO_Usuario = usuario;
             USUARIO_Contras = contras;
@@ -35,7 +34,6 @@ namespace BE
             USUARIO_Activo = activo;
             USUARIO_Bloqueado = bloqueado;
             USUARIO_Intentos = intentos;
-            USUARIO_DVV = dvv;
             USUARIO_DVH = dvh;
         }
     }

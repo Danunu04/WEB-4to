@@ -423,7 +423,7 @@ namespace BLL
                     fechaNac = fechaNacimiento;
 
                     // Crear usuario primero con datos personales; primerLogin = 1 fuerza cambio de contraseña.
-                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "", true);
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ENTRENADORES (solo datos específicos del rol)
@@ -448,11 +448,11 @@ namespace BLL
                     fechaNac = fechaNacimiento;
 
                     // Crear usuario con datos personales; primerLogin = 1 fuerza cambio de contraseña.
-                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "", true);
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ALUMNOS (solo datos específicos del rol)
-                    Alumno nuevoAlumno = new Alumno(dni, null, activo, true, "", "", usuario);
+                    Alumno nuevoAlumno = new Alumno(dni, null, activo, true, "", usuario);
                     bllAlumno.CrearAlumno(nuevoAlumno);
                 }
                 else // Empleado (Admin/Recepcionista)
@@ -465,7 +465,7 @@ namespace BLL
                     telefono = telefono ?? "0000-0000";
 
                     // primerLogin = 1 fuerza cambio de contraseña en el primer login.
-                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", "", true);
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
                 }
 
@@ -529,11 +529,11 @@ namespace BLL
                     fechaNacimiento = dto.EntrenadorFechaNacimiento;
 
                     // Crear usuario primero con datos personales; primerLogin = 1 fuerza cambio de contraseña.
-                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "", true);
+                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ENTRENADORES
-                    Entrenador entrenador = new Entrenador(dni, 0, true, "", "", dto.Usuario);
+                    Entrenador entrenador = new Entrenador(dni, 0, true, "", dto.Usuario);
                     bllEntrenador.CrearEntrenador(entrenador);
                 }
                 else if (dto.Rol == 4) // Cliente
@@ -547,11 +547,11 @@ namespace BLL
                     fechaNacimiento = dto.AlumnoFechaNacimiento;
 
                     // Crear usuario primero; primerLogin = 1 fuerza cambio de contraseña.
-                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "", true);
+                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ALUMNOS
-                    Alumno alumno = new Alumno(dni, null, false, true, "", "", dto.Usuario);
+                    Alumno alumno = new Alumno(dni, null, false, true, "", dto.Usuario);
                     bllAlumno.CrearAlumno(alumno);
                 }
                 else // Empleado
@@ -563,7 +563,7 @@ namespace BLL
                     fechaNacimiento = DateTime.Parse("1990-01-01");
 
                     // primerLogin = 1 fuerza cambio de contraseña en el primer login.
-                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", "", true);
+                    Usuario nuevoUsuario = new Usuario(dto.Usuario, contrasenaHash, true, false, 0, dto.Rol, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
                 }
 
@@ -767,7 +767,6 @@ namespace BLL
                     telefono,
                     email,
                     fechaNacimiento,
-                    usuarioExistente.USUARIO_DVV,
                     usuarioExistente.USUARIO_DVH,
                     usuarioExistente.USUARIO_PrimerLogin // Mantener estado de primer login
                 );
@@ -783,7 +782,7 @@ namespace BLL
                         Entrenador entrenadorExistente = bllEntrenador.ObtenerEntrenador(nuevoDNI);
                         if (entrenadorExistente == null)
                         {
-                            Entrenador entrenadorNuevo = new Entrenador(nuevoDNI, 0, activo, "", "", nuevoUsuario);
+                            Entrenador entrenadorNuevo = new Entrenador(nuevoDNI, 0, activo, "", nuevoUsuario);
                             bllEntrenador.CrearEntrenador(entrenadorNuevo);
                         }
                         else
@@ -813,7 +812,7 @@ namespace BLL
                         Alumno alumnoExistente = bllAlumno.ObtenerAlumno(nuevoDNI);
                         if (alumnoExistente == null)
                         {
-                            Alumno alumnoNuevo = new Alumno(nuevoDNI, null, activo, true, "", "", nuevoUsuario);
+                            Alumno alumnoNuevo = new Alumno(nuevoDNI, null, activo, true, "", nuevoUsuario);
                             bllAlumno.CrearAlumno(alumnoNuevo);
                         }
                         else

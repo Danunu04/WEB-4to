@@ -56,10 +56,10 @@ namespace MPP
         /// Calcula DVH y DVV de un evento a partir de sus valores de persistencia.
         /// La fecha se trunca a segundos para coincidir con lo almacenado en SQL Server.
         /// </summary>
-        private void CalcularDigitosEvento(Evento evento, int criticidad, out string dvh, out string dvv)
+        private string CalcularDigitosEvento(Evento evento, int criticidad)
         {
             var valores = ArmarValoresDV(evento, criticidad);
-            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+            return dvManager.CalcularDVH(valores);
         }
 
         public int RegistrarEvento(Evento evento, int criticidad = 1)
@@ -74,12 +74,12 @@ namespace MPP
                 }
 
                 DateTime fechaTruncada = TruncarFecha(evento.EVENTO_Timestamp);
-                CalcularDigitosEvento(evento, criticidad, out string dvh, out string dvv);
+                string dvh = CalcularDigitosEvento(evento, criticidad);
 
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Evento]
-                    (tipo, usr, descripcion, fecha, criticidad, modulo, dvv, dvh)
-                    VALUES (@Tipo, @Usuario, @Accion, @Timestamp, @Criticidad, @Modulo, @DVV, @DVH);
+                    (tipo, usr, descripcion, fecha, criticidad, modulo, dvh)
+                    VALUES (@Tipo, @Usuario, @Accion, @Timestamp, @Criticidad, @Modulo, @DVH);
 
                     SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
@@ -91,18 +91,24 @@ namespace MPP
                     new SqlParameter("@Timestamp", fechaTruncada),
                     new SqlParameter("@Criticidad", criticidad),
                     new SqlParameter("@Modulo", string.IsNullOrEmpty(evento.EVENTO_Modulo) ? (object)DBNull.Value : evento.EVENTO_Modulo),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
 
-                if (resultado != null && resultado != DBNull.Value)
-                {
-                    return Convert.ToInt32(resultado);
-                }
+                int codEvento = (resultado != null && resultado != DBNull.Value)
+                    ? Convert.ToInt32(resultado)
+                    : 0;
 
-                return 0;
+                // Mantener DigitoVerificador sincronizado: cada INSERT legítimo actualiza
+                // dvvTabla y cantidadFilas para que la verificación no lo tome como intrusión.
+                try
+                {
+                    new MPPDigitoVerificador().ActualizarControlTabla("Evento");
+                }
+                catch { /* no romper el flujo si falla la actualización del control */ }
+
+                return codEvento;
             }
             catch (Exception ex)
             {
@@ -121,7 +127,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT codEvento, tipo, usr, descripcion, fecha, criticidad, modulo, dvv, dvh
+                    SELECT codEvento, tipo, usr, descripcion, fecha, criticidad, modulo, dvh
                     FROM [GymApp].[dbo].[Evento]";
 
                 DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
@@ -129,7 +135,6 @@ namespace MPP
                 foreach (DataRow row in dt.Rows)
                 {
                     int codEvento = Convert.ToInt32(row["codEvento"]);
-                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
                     string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
 
                     Evento evento = new Evento
@@ -143,25 +148,24 @@ namespace MPP
                         EVENTO_Modulo = row["modulo"] != DBNull.Value ? row["modulo"].ToString() : string.Empty
                     };
 
-                    CalcularDigitosEvento(evento, evento.EVENTO_Criticidad, out string dvhCalculado, out string dvvCalculado);
+                    string dvhCalculado = CalcularDigitosEvento(evento, evento.EVENTO_Criticidad);
 
-                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado) && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
-                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado) && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
+                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado)
+                        && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
 
-                    if (dvhOk && dvvOk)
+                    if (dvhOk)
                         continue;
 
                     resultados.Add(new ResultadoVerificacionDV
                     {
                         NombreTabla = "Evento",
                         ClaveFila = codEvento.ToString(),
-                        Campo = "DVH/DVV (fila completa)",
+                        Campo = "DVH (fila completa)",
                         EsValido = false,
-                        Mensaje = "Los dígitos verificadores del evento no coinciden.",
+                        TipoAlteracion = TipoAlteracion.EdicionDato,
+                        Mensaje = "DVH del evento no coincide. Los datos fueron modificados.",
                         DVHAlmacenado = dvhAlmacenado,
-                        DVHCalculado = dvhCalculado,
-                        DVVAlmacenado = dvvAlmacenado,
-                        DVVCalculado = dvvCalculado
+                        DVHCalculado = dvhCalculado
                     });
                 }
 
@@ -173,7 +177,7 @@ namespace MPP
                         ClaveFila = "-",
                         Campo = "-",
                         EsValido = true,
-                        Mensaje = "Tabla Evento verificada correctamente."
+                        Mensaje = "Filas de Evento verificadas correctamente."
                     });
                 }
             }
@@ -218,8 +222,8 @@ namespace MPP
                         EVENTO_Modulo = row["modulo"] != DBNull.Value ? row["modulo"].ToString() : string.Empty
                     };
 
-                    CalcularDigitosEvento(evento, evento.EVENTO_Criticidad, out string dvh, out string dvv);
-                    ActualizarDigitosEvento(evento.EVENTO_Id, dvh, dvv);
+                    string dvh = CalcularDigitosEvento(evento, evento.EVENTO_Criticidad);
+                    ActualizarDigitosEvento(evento.EVENTO_Id, dvh);
                 }
             }
             catch (Exception ex)
@@ -231,17 +235,16 @@ namespace MPP
         /// <summary>
         /// Actualiza los dígitos verificadores de un evento por su codEvento.
         /// </summary>
-        private void ActualizarDigitosEvento(int codEvento, string dvh, string dvv)
+        private void ActualizarDigitosEvento(int codEvento, string dvh)
         {
             string consulta = @"
                 UPDATE [GymApp].[dbo].[Evento]
-                SET dvv = @DVV, dvh = @DVH
+                SET dvh = @DVH
                 WHERE codEvento = @CodEvento";
 
             List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@CodEvento", codEvento),
-                new SqlParameter("@DVV", dvv),
                 new SqlParameter("@DVH", dvh)
             };
 

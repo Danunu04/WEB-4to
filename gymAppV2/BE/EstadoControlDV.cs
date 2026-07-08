@@ -28,11 +28,6 @@ namespace BE
         public int FilasDVHVacio { get; set; }
 
         /// <summary>
-        /// Cantidad de filas que tienen dvv vacío.
-        /// </summary>
-        public int FilasDVVVacio { get; set; }
-
-        /// <summary>
         /// Fecha del último cálculo del control de tabla.
         /// </summary>
         public DateTime? FechaCalculo { get; set; }
@@ -41,13 +36,12 @@ namespace BE
         {
         }
 
-        public EstadoControlDV(string nombreTabla, bool tieneControl, int totalFilas, int filasDVHVacio, int filasDVVVacio, DateTime? fechaCalculo)
+        public EstadoControlDV(string nombreTabla, bool tieneControl, int totalFilas, int filasDVHVacio, DateTime? fechaCalculo)
         {
             NombreTabla = nombreTabla;
             TieneControl = tieneControl;
             TotalFilas = totalFilas;
             FilasDVHVacio = filasDVHVacio;
-            FilasDVVVacio = filasDVVVacio;
             FechaCalculo = fechaCalculo;
         }
     }

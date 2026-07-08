@@ -80,8 +80,15 @@
         </div>
 
         <asp:Panel ID="pnlRestaurar" runat="server" Visible="false" CssClass="dv-restaurar">
-            <label class="dv-label">Ruta del backup a restaurar</label>
-            <asp:TextBox ID="txtRutaBackup" runat="server" CssClass="dv-input" placeholder="C:\Backups\GymApp_20260623.bak"></asp:TextBox>
+            <label class="dv-label">Backups disponibles en C:\GymApp\</label>
+            <div class="dv-restore-selector">
+                <asp:DropDownList ID="ddlBackups" runat="server" CssClass="dv-input dv-select"
+                    AutoPostBack="true" OnSelectedIndexChanged="ddlBackups_SelectedIndexChanged" />
+                <asp:Button ID="btnRefrescarBackups" runat="server" Text="↻" CssClass="dv-btn dv-btn-secondary dv-btn-icon"
+                    OnClick="btnRefrescarBackups_Click" ToolTip="Actualizar lista" />
+            </div>
+            <label class="dv-label">Ruta del archivo a restaurar</label>
+            <asp:TextBox ID="txtRutaBackup" runat="server" CssClass="dv-input" placeholder="C:\GymApp\GymApp_20260623.bak"></asp:TextBox>
             <p class="dv-ayuda">Esta acción reemplazará la base de datos actual. Todos los cambios posteriores al backup se perderán.</p>
             <asp:Button ID="btnConfirmarRestaurar" runat="server" Text="Confirmar restauración" CssClass="dv-btn dv-btn-danger"
                 OnClick="btnConfirmarRestaurar_Click" />
@@ -90,7 +97,14 @@
         </asp:Panel>
 
         <div class="dv-resultados">
-            <h3 class="dv-resultados-titulo"><i class="fa-solid fa-table-list"></i> Estado del control por tabla</h3>
+            <h3 class="dv-resultados-titulo"><i class="fa-solid fa-list"></i> Detalle de verificación</h3>
+            <asp:Literal ID="litResultados" runat="server" />
+        </div>
+
+        <details class="dv-resultados dv-estado-control-collapsible">
+            <summary class="dv-resultados-titulo dv-estado-control-summary">
+                <i class="fa-solid fa-table-list"></i> Estado del control por tabla
+            </summary>
             <asp:GridView ID="gvEstadoControl" runat="server" AutoGenerateColumns="false" CssClass="dv-grid"
                 EmptyDataText="No se pudo cargar el estado de control."
                 OnRowDataBound="gvEstadoControl_RowDataBound">
@@ -105,30 +119,9 @@
                     </asp:TemplateField>
                     <asp:BoundField DataField="TotalFilas" HeaderText="Filas" />
                     <asp:BoundField DataField="FilasDVHVacio" HeaderText="DVH vacío" />
-                    <asp:BoundField DataField="FilasDVVVacio" HeaderText="DVV vacío" />
                     <asp:BoundField DataField="FechaCalculo" HeaderText="Último cálculo" DataFormatString="{0:dd/MM/yyyy HH:mm}" />
                 </Columns>
             </asp:GridView>
-        </div>
-
-        <div class="dv-resultados">
-            <h3 class="dv-resultados-titulo"><i class="fa-solid fa-list"></i> Detalle de verificación</h3>
-            <asp:GridView ID="gvResultados" runat="server" AutoGenerateColumns="false" CssClass="dv-grid"
-                EmptyDataText="No hay resultados para mostrar. Presione 'Verificar ahora'.">
-                <Columns>
-                    <asp:BoundField DataField="NombreTabla" HeaderText="Tabla" />
-                    <asp:BoundField DataField="ClaveFila" HeaderText="Clave" />
-                    <asp:BoundField DataField="Campo" HeaderText="Campo" />
-                    <asp:TemplateField HeaderText="Estado">
-                        <ItemTemplate>
-                            <span class='<%# Eval("EsValido").ToString() == "True" ? "dv-estado-ok" : "dv-estado-error" %>'>
-                                <%# Eval("EsValido").ToString() == "True" ? "OK" : "ERROR" %>
-                            </span>
-                        </ItemTemplate>
-                    </asp:TemplateField>
-                    <asp:BoundField DataField="Mensaje" HeaderText="Mensaje" />
-                </Columns>
-            </asp:GridView>
-        </div>
+        </details>
     </asp:Panel>
 </asp:Content>

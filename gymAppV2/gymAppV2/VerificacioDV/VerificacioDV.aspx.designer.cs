@@ -33,11 +33,13 @@ namespace gymAppV2.VerificacioDV
         protected global::System.Web.UI.WebControls.Button btnSalir;
 
         protected global::System.Web.UI.WebControls.Panel pnlRestaurar;
+        protected global::System.Web.UI.WebControls.DropDownList ddlBackups;
+        protected global::System.Web.UI.WebControls.Button btnRefrescarBackups;
         protected global::System.Web.UI.WebControls.TextBox txtRutaBackup;
         protected global::System.Web.UI.WebControls.Button btnConfirmarRestaurar;
         protected global::System.Web.UI.WebControls.Button btnCancelarRestaurar;
 
         protected global::System.Web.UI.WebControls.GridView gvEstadoControl;
-        protected global::System.Web.UI.WebControls.GridView gvResultados;
+        protected global::System.Web.UI.WebControls.Literal litResultados;
     }
 }

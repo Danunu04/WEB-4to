@@ -24,7 +24,7 @@ namespace MPP
         /// <summary>
         /// Calcula DVH y DVV de un entrenador a partir de sus valores de persistencia.
         /// </summary>
-        private void CalcularDigitosEntrenador(Entrenador entrenador, out string dvh, out string dvv)
+        private string CalcularDigitosEntrenador(Entrenador entrenador)
         {
             var valores = new Dictionary<string, object>
             {
@@ -34,7 +34,7 @@ namespace MPP
                 { "usr", entrenador.Usuario }
             };
 
-            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+            return dvManager.CalcularDVH(valores);
         }
 
         public List<Entrenador> ListarEntrenadores()
@@ -48,7 +48,6 @@ namespace MPP
                         e.activo,
                         e.alumnosCount,
                         e.usr,
-                        e.dvv,
                         e.dvh,
                         u.nombre,
                         u.apellido,
@@ -69,7 +68,6 @@ namespace MPP
                         Convert.ToInt32(row["dni"]),
                         row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
                         Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
@@ -93,14 +91,13 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosEntrenador(entrenador, out string dvh, out string dvv);
+                string dvh = CalcularDigitosEntrenador(entrenador);
 
-                // En esquema normalizado, ENTRENADORES solo tiene dni, alumnosCount, activo, usr, dvv, dvh
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Entrenadores]
-                    (dni, alumnosCount, activo, usr, dvv, dvh)
+                    (dni, alumnosCount, activo, usr, dvh)
                     VALUES
-                    (@DNI, @AlumnosCount, @Activo, @Usuario, @DVV, @DVH)";
+                    (@DNI, @AlumnosCount, @Activo, @Usuario, @DVH)";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
@@ -108,7 +105,6 @@ namespace MPP
                     new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
                     new SqlParameter("@Activo", entrenador.Activo),
                     new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 
@@ -160,7 +156,6 @@ namespace MPP
                         e.activo,
                         e.alumnosCount,
                         e.usr,
-                        e.dvv,
                         e.dvh,
                         u.nombre,
                         u.apellido,
@@ -184,7 +179,6 @@ namespace MPP
                         Convert.ToInt32(row["dni"]),
                         row["alumnosCount"] != DBNull.Value ? Convert.ToInt32(row["alumnosCount"]) : 0,
                         Convert.ToBoolean(row["activo"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
@@ -208,15 +202,13 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosEntrenador(entrenador, out string dvh, out string dvv);
+                string dvh = CalcularDigitosEntrenador(entrenador);
 
-                // En esquema normalizado, ENTRENADORES solo tiene campos específicos del rol
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[Entrenadores]
                     SET alumnosCount = @AlumnosCount,
                         activo = @Activo,
                         usr = @Usuario,
-                        dvv = @DVV,
                         dvh = @DVH
                     WHERE dni = @DNI";
 
@@ -226,7 +218,6 @@ namespace MPP
                     new SqlParameter("@AlumnosCount", entrenador.AlumnosCount),
                     new SqlParameter("@Activo", entrenador.Activo),
                     new SqlParameter("@Usuario", entrenador.Usuario ?? (object)DBNull.Value),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 

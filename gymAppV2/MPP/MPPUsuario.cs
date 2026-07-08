@@ -83,7 +83,7 @@ namespace MPP
         /// Los campos personales se normalizan al formato que se persistiría para asegurar
         /// que el cálculo coincida al leer y al escribir.
         /// </summary>
-        private void CalcularDigitosUsuario(Usuario usuario, out string dvh, out string dvv)
+        private string CalcularDigitosUsuario(Usuario usuario)
         {
             var valores = new Dictionary<string, object>
             {
@@ -103,7 +103,7 @@ namespace MPP
                 { "primerLogin", usuario.USUARIO_PrimerLogin }
             };
 
-            dvManager.CalcularAmbos(valores, out dvh, out dvv);
+            return dvManager.CalcularDVH(valores);
         }
 
         /// <summary>
@@ -115,24 +115,23 @@ namespace MPP
             Usuario u = ObtenerUsuario(usuario);
             if (u == null) return;
 
-            CalcularDigitosUsuario(u, out string dvh, out string dvv);
-            ActualizarDigitosUsuario(usuario, dvh, dvv);
+            string dvh = CalcularDigitosUsuario(u);
+            ActualizarDigitosUsuario(usuario, dvh);
         }
 
         /// <summary>
         /// Actualiza los dígitos verificadores de un usuario por su nombre de usuario.
         /// </summary>
-        private void ActualizarDigitosUsuario(string usuario, string dvh, string dvv)
+        private void ActualizarDigitosUsuario(string usuario, string dvh)
         {
             string consulta = @"
                 UPDATE [GymApp].[dbo].[USUARIOS]
-                SET dvv = @DVV, dvh = @DVH
+                SET dvh = @DVH
                 WHERE usr = @Usuario";
 
             List<SqlParameter> parametros = new List<SqlParameter>
             {
                 new SqlParameter("@Usuario", usuario),
-                new SqlParameter("@DVV", dvv),
                 new SqlParameter("@DVH", dvh)
             };
 
@@ -163,8 +162,8 @@ namespace MPP
                     Usuario u = ObtenerUsuario(usuario);
                     if (u == null) continue;
 
-                    CalcularDigitosUsuario(u, out string dvh, out string dvv);
-                    ActualizarDigitosUsuario(usuario, dvh, dvv);
+                    string dvh = CalcularDigitosUsuario(u);
+                    ActualizarDigitosUsuario(usuario, dvh);
                 }
             }
             catch (Exception ex)
@@ -183,10 +182,7 @@ namespace MPP
 
             try
             {
-                string consulta = @"
-                    SELECT usr, dvv, dvh
-                    FROM [GymApp].[dbo].[USUARIOS]";
-
+                string consulta = "SELECT usr, dvh FROM [GymApp].[dbo].[USUARIOS]";
                 DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 foreach (DataRow row in dt.Rows)
@@ -194,31 +190,29 @@ namespace MPP
                     string usuario = row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty;
                     if (string.IsNullOrEmpty(usuario)) continue;
 
-                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
                     string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
 
                     Usuario u = ObtenerUsuario(usuario);
                     if (u == null) continue;
 
-                    CalcularDigitosUsuario(u, out string dvhCalculado, out string dvvCalculado);
+                    string dvhCalculado = CalcularDigitosUsuario(u);
 
-                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado) && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
-                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado) && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
+                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado)
+                        && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
 
-                    if (dvhOk && dvvOk)
+                    if (dvhOk)
                         continue;
 
                     resultados.Add(new ResultadoVerificacionDV
                     {
                         NombreTabla = "USUARIOS",
                         ClaveFila = usuario,
-                        Campo = "DVH/DVV (fila completa)",
+                        Campo = "DVH (fila completa)",
                         EsValido = false,
-                        Mensaje = "Los dígitos verificadores del usuario no coinciden.",
+                        TipoAlteracion = TipoAlteracion.EdicionDato,
+                        Mensaje = "DVH del usuario no coincide. Los datos fueron modificados.",
                         DVHAlmacenado = dvhAlmacenado,
-                        DVHCalculado = dvhCalculado,
-                        DVVAlmacenado = dvvAlmacenado,
-                        DVVCalculado = dvvCalculado
+                        DVHCalculado = dvhCalculado
                     });
                 }
 
@@ -230,7 +224,7 @@ namespace MPP
                         ClaveFila = "-",
                         Campo = "-",
                         EsValido = true,
-                        Mensaje = "Tabla USUARIOS verificada correctamente."
+                        Mensaje = "Filas de USUARIOS verificadas correctamente."
                     });
                 }
             }
@@ -254,7 +248,7 @@ namespace MPP
             var resultados = new List<ResultadoVerificacionDV>();
             try
             {
-                string consulta = "SELECT usr, contra, dvv, dvh FROM [GymApp].[dbo].[USUARIO_Contras]";
+                string consulta = "SELECT usr, contra, dvh FROM [GymApp].[dbo].[USUARIO_Contras]";
                 DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 foreach (DataRow row in dt.Rows)
@@ -262,33 +256,29 @@ namespace MPP
                     string usr = row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty;
                     string contra = row["contra"] != DBNull.Value ? row["contra"].ToString() : string.Empty;
                     string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
-                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
 
                     var valores = new Dictionary<string, object>
                     {
                         { "usr", usr },
                         { "contra", contra }
                     };
-                    dvManager.CalcularAmbos(valores, out string dvhCalculado, out string dvvCalculado);
+                    string dvhCalculado = dvManager.CalcularDVH(valores);
 
                     bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado)
                         && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
-                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado)
-                        && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
 
-                    if (dvhOk && dvvOk) continue;
+                    if (dvhOk) continue;
 
                     resultados.Add(new ResultadoVerificacionDV
                     {
                         NombreTabla = "USUARIO_Contras",
                         ClaveFila = usr,
-                        Campo = "DVH/DVV (fila completa)",
+                        Campo = "DVH (fila completa)",
                         EsValido = false,
-                        Mensaje = "Los dígitos verificadores del historial de contraseñas no coinciden.",
+                        TipoAlteracion = TipoAlteracion.EdicionDato,
+                        Mensaje = "DVH del historial de contraseñas no coincide. Los datos fueron modificados.",
                         DVHAlmacenado = dvhAlmacenado,
-                        DVHCalculado = dvhCalculado,
-                        DVVAlmacenado = dvvAlmacenado,
-                        DVVCalculado = dvvCalculado
+                        DVHCalculado = dvhCalculado
                     });
                 }
 
@@ -335,16 +325,15 @@ namespace MPP
                         { "usr", usr },
                         { "contra", contra }
                     };
-                    dvManager.CalcularAmbos(valores, out string dvh, out string dvv);
+                    string dvh = dvManager.CalcularDVH(valores);
 
                     string update = @"
                         UPDATE [GymApp].[dbo].[USUARIO_Contras]
-                        SET dvv = @DVV, dvh = @DVH
+                        SET dvh = @DVH
                         WHERE usr = @Usuario AND contra = @Contra";
 
                     dal._686DPEscribir(update, new List<SqlParameter>
                     {
-                        new SqlParameter("@DVV", dvv),
                         new SqlParameter("@DVH", dvh),
                         new SqlParameter("@Usuario", usr),
                         new SqlParameter("@Contra", contra)
@@ -377,7 +366,6 @@ namespace MPP
                 us.email,
                 us.fechaNacimiento,
                 us.primerLogin,
-                us.dvv,
                 us.dvh
             FROM [GymApp].[dbo].[USUARIOS] as us
             WHERE us.usr = @Usuario";
@@ -406,7 +394,6 @@ namespace MPP
                         DesencriptarCampoPersonal(row["telefono"] != DBNull.Value ? row["telefono"].ToString() : string.Empty),
                         DesencriptarCampoPersonal(row["email"] != DBNull.Value ? row["email"].ToString() : string.Empty),
                         DesencriptarFechaPersonal(row["fechaNacimiento"]),
-                        row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
                         row["primerLogin"] != DBNull.Value && Convert.ToBoolean(row["primerLogin"])
                     );
@@ -646,18 +633,17 @@ namespace MPP
                     { "usr", usuario },
                     { "contra", contrasenaHash }
                 };
-                dvManager.CalcularAmbos(valoresContras, out string dvhContra, out string dvvContra);
+                string dvhContra = dvManager.CalcularDVH(valoresContras);
 
                 // Insertar la nueva contraseña en el historial.
                 string insertar = @"
-            INSERT INTO [GymApp].[dbo].[USUARIO_Contras] (usr, contra, dvv, dvh)
-            VALUES (@Usuario, @Contrasena, @DVV, @DVH)";
+            INSERT INTO [GymApp].[dbo].[USUARIO_Contras] (usr, contra, dvh)
+            VALUES (@Usuario, @Contrasena, @DVH)";
 
                 List<SqlParameter> parametrosInsertar = new List<SqlParameter>
                 {
                     new SqlParameter("@Usuario", usuario),
                     new SqlParameter("@Contrasena", contrasenaHash),
-                    new SqlParameter("@DVV", dvvContra),
                     new SqlParameter("@DVH", dvhContra)
                 };
 
@@ -666,7 +652,7 @@ namespace MPP
                 // Mantener solo las últimas N contraseñas históricas para evitar acumulación infinita.
                 string limpiar = @"
             WITH ContrasOrdenadas AS (
-                SELECT TOP 1000000 [usr], [contra], [dvv], [dvh],
+                SELECT TOP 1000000 [usr], [contra], [dvh],
                     ROW_NUMBER() OVER (PARTITION BY [usr] ORDER BY (SELECT NULL)) AS rn
                 FROM [GymApp].[dbo].[USUARIO_Contras]
                 WHERE [usr] = @Usuario
@@ -682,17 +668,11 @@ namespace MPP
 
                 dal._686DPEscribir(limpiar, parametrosLimpiar);
 
-                // Mantener tabla-hash de DigitoVerificador sincronizado para USUARIO_Contras.
                 try
                 {
-                    var mppDV = new MPPDigitoVerificador();
-                    if (mppDV.ObtenerControlPorTabla("USUARIO_Contras") != null)
-                        mppDV.RecalcularDigitosTabla("USUARIO_Contras", actualizarFilas: false);
+                    new MPPDigitoVerificador().ActualizarControlTabla("USUARIO_Contras");
                 }
-                catch
-                {
-                    // No bloquear el flujo si falla la sincronización del hash de tabla.
-                }
+                catch { }
             }
             catch (Exception ex)
             {
@@ -774,13 +754,13 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosUsuario(usuario, out string dvh, out string dvv);
+                string dvh = CalcularDigitosUsuario(usuario);
 
                 string consulta = @"
             INSERT INTO [GymApp].[dbo].[USUARIOS]
-            (usr, contra, activo, bloqueado, intentos, rol, primerLogin, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, dvv, dvh)
+            (usr, contra, activo, bloqueado, intentos, rol, primerLogin, tipo, dni, nombre, apellido, telefono, email, fechaNacimiento, dvh)
             VALUES
-            (@Usuario, @Contrasena, @Activo, @Bloqueado, @Intentos, @Rol, @PrimerLogin, @Tipo, @DNI, @Nombre, @Apellido, @Telefono, @Email, @FechaNacimiento, @DVV, @DVH)";
+            (@Usuario, @Contrasena, @Activo, @Bloqueado, @Intentos, @Rol, @PrimerLogin, @Tipo, @DNI, @Nombre, @Apellido, @Telefono, @Email, @FechaNacimiento, @DVH)";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
@@ -798,11 +778,16 @@ namespace MPP
                     new SqlParameter("@Telefono", EncriptarCampoPersonal(usuario.Telefono) ?? (object)DBNull.Value),
                     new SqlParameter("@Email", EncriptarCampoPersonal(usuario.Email) ?? (object)DBNull.Value),
                     new SqlParameter("@FechaNacimiento", EncriptarCampoPersonal(usuario.FechaNacimiento?.ToString("yyyy-MM-dd")) ?? (object)DBNull.Value),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+
+                try
+                {
+                    new MPPDigitoVerificador().ActualizarControlTabla("USUARIOS");
+                }
+                catch { }
             }
             catch (Exception ex)
             {
@@ -822,7 +807,6 @@ namespace MPP
                 u.activo AS USUARIO_Activo,
                 u.bloqueado AS USUARIO_Bloqueado,
                 u.intentos AS USUARIO_Intentos,
-                u.dvv AS USUARIO_DVV,
                 u.dvh AS USUARIO_DVH,
                 u.nombre AS Nombre,
                 u.apellido AS Apellido,
@@ -854,7 +838,6 @@ namespace MPP
                         Convert.ToBoolean(row["USUARIO_Activo"]),
                         Convert.ToBoolean(row["USUARIO_Bloqueado"]),
                         row["USUARIO_Intentos"] != DBNull.Value ? Convert.ToInt32(row["USUARIO_Intentos"]) : 0,
-                        row["USUARIO_DVV"] != DBNull.Value ? row["USUARIO_DVV"].ToString() : string.Empty,
                         row["USUARIO_DVH"] != DBNull.Value ? row["USUARIO_DVH"].ToString() : string.Empty
                     )
                     {
@@ -917,7 +900,6 @@ namespace MPP
                         u.activo AS USUARIO_Activo,
                         u.bloqueado AS USUARIO_Bloqueado,
                         u.intentos AS USUARIO_Intentos,
-                        u.dvv AS USUARIO_DVV,
                         u.dvh AS USUARIO_DVH,
                         u.nombre AS Nombre,
                         u.apellido AS Apellido,
@@ -945,7 +927,6 @@ namespace MPP
                         Convert.ToBoolean(row["USUARIO_Activo"]),
                         Convert.ToBoolean(row["USUARIO_Bloqueado"]),
                         row["USUARIO_Intentos"] != DBNull.Value ? Convert.ToInt32(row["USUARIO_Intentos"]) : 0,
-                        row["USUARIO_DVV"] != DBNull.Value ? row["USUARIO_DVV"].ToString() : string.Empty,
                         row["USUARIO_DVH"] != DBNull.Value ? row["USUARIO_DVH"].ToString() : string.Empty
                     )
                     {
@@ -1019,7 +1000,7 @@ namespace MPP
         {
             try
             {
-                CalcularDigitosUsuario(usuario, out string dvh, out string dvv);
+                string dvh = CalcularDigitosUsuario(usuario);
 
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[USUARIOS]
@@ -1035,7 +1016,6 @@ namespace MPP
                         fechaNacimiento = @FechaNacimiento,
                         rol = @Rol,
                         primerLogin = @PrimerLogin,
-                        dvv = @DVV,
                         dvh = @DVH
                     WHERE usr = @UsuarioOriginal";
 
@@ -1053,7 +1033,6 @@ namespace MPP
                     new SqlParameter("@FechaNacimiento", EncriptarCampoPersonal(usuario.FechaNacimiento?.ToString("yyyy-MM-dd")) ?? (object)DBNull.Value),
                     new SqlParameter("@Rol", usuario.USUARIO_Rol),
                     new SqlParameter("@PrimerLogin", usuario.USUARIO_PrimerLogin),
-                    new SqlParameter("@DVV", dvv),
                     new SqlParameter("@DVH", dvh)
                 };
 

@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Web;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 using BE;
 using BLL;
 using Servicios.Singleton;
@@ -69,20 +73,93 @@ namespace gymAppV2.VerificacioDV
         }
 
         /// <summary>
-        /// Carga los resultados en el grid y actualiza los contadores.
+        /// Carga los resultados agrupados por tabla: errores arriba expandidos, OK en desplegable cerrado.
         /// </summary>
         private void CargarResultados(List<ResultadoVerificacionDV> resultados)
         {
-            gvResultados.DataSource = resultados;
-            gvResultados.DataBind();
+            // Agrupar por tabla
+            var grupos = resultados
+                .GroupBy(r => r.NombreTabla)
+                .Select(g => new { Tabla = g.Key, Items = g.ToList(), TieneError = g.Any(r => !r.EsValido) })
+                .OrderBy(g => g.Tabla)
+                .ToList();
 
-            var tablas = resultados.Select(r => r.NombreTabla).Distinct().ToList();
-            int errores = resultados.Count(r => !r.EsValido);
-            int ok = resultados.Count(r => r.EsValido && r.NombreTabla != "Sistema" && !r.Mensaje.Contains("no tiene registro de control"));
+            var conError = grupos.Where(g => g.TieneError).ToList();
+            var sinError = grupos.Where(g => !g.TieneError).ToList();
 
-            lblTotalTablas.Text = tablas.Count.ToString();
-            lblTotalErrores.Text = errores.ToString();
-            lblTablasOk.Text = ok.ToString();
+            lblTotalTablas.Text = grupos.Count.ToString();
+            lblTotalErrores.Text = conError.Count.ToString();
+            lblTablasOk.Text = sinError.Count.ToString();
+
+            if (resultados.Count == 0)
+            {
+                litResultados.Text = "<p class=\"dv-sin-resultados\">No hay resultados. Presione \"Verificar ahora\".</p>";
+                return;
+            }
+
+            var sb = new StringBuilder();
+
+            // ── Tablas con error (expandidas) ──────────────────────────────
+            if (conError.Count > 0)
+            {
+                sb.Append("<div class=\"dv-grupo-errores\">");
+                sb.Append($"<h4 class=\"dv-grupo-titulo dv-grupo-titulo-error\"><i class=\"fa-solid fa-circle-xmark\"></i> Tablas con errores ({conError.Count})</h4>");
+
+                foreach (var g in conError)
+                {
+                    sb.Append("<details class=\"dv-tabla-grupo dv-tabla-error\" open>");
+                    sb.Append($"<summary class=\"dv-tabla-summary\"><i class=\"fa-solid fa-table\"></i> {HttpUtility.HtmlEncode(g.Tabla)}</summary>");
+                    sb.Append(RenderTablaResultados(g.Items));
+                    sb.Append("</details>");
+                }
+
+                sb.Append("</div>");
+            }
+
+            // ── Tablas correctas (colapsadas) ──────────────────────────────
+            if (sinError.Count > 0)
+            {
+                sb.Append($"<details class=\"dv-seccion-ok\">");
+                sb.Append($"<summary class=\"dv-grupo-titulo dv-grupo-titulo-ok\"><i class=\"fa-solid fa-circle-check\"></i> Tablas correctas ({sinError.Count})</summary>");
+
+                foreach (var g in sinError)
+                {
+                    sb.Append("<details class=\"dv-tabla-grupo dv-tabla-ok\">");
+                    sb.Append($"<summary class=\"dv-tabla-summary\"><i class=\"fa-solid fa-table\"></i> {HttpUtility.HtmlEncode(g.Tabla)}</summary>");
+                    sb.Append(RenderTablaResultados(g.Items));
+                    sb.Append("</details>");
+                }
+
+                sb.Append("</details>");
+            }
+
+            litResultados.Text = sb.ToString();
+        }
+
+        private string RenderTablaResultados(List<ResultadoVerificacionDV> items)
+        {
+            var sb = new StringBuilder();
+            sb.Append("<table class=\"dv-grid dv-grid-detalle\"><thead><tr>");
+            sb.Append("<th>Clave</th><th>Campo</th><th>Estado</th><th>Tipo de alteración</th><th>Mensaje</th>");
+            sb.Append("</tr></thead><tbody>");
+
+            foreach (var r in items)
+            {
+                string claseFila = r.EsValido ? "dv-fila-ok" : "dv-fila-error";
+                string estadoHtml = r.EsValido
+                    ? "<span class=\"dv-estado-ok\">OK</span>"
+                    : "<span class=\"dv-estado-error\">ERROR</span>";
+                sb.Append($"<tr class=\"{claseFila}\">");
+                sb.Append($"<td>{HttpUtility.HtmlEncode(r.ClaveFila)}</td>");
+                sb.Append($"<td>{HttpUtility.HtmlEncode(r.Campo)}</td>");
+                sb.Append($"<td>{estadoHtml}</td>");
+                sb.Append($"<td>{HttpUtility.HtmlEncode(r.TipoAlteracionTexto ?? "")}</td>");
+                sb.Append($"<td>{HttpUtility.HtmlEncode(r.Mensaje)}</td>");
+                sb.Append("</tr>");
+            }
+
+            sb.Append("</tbody></table>");
+            return sb.ToString();
         }
 
         protected void btnVerificar_Click(object sender, EventArgs e)
@@ -128,7 +205,45 @@ namespace gymAppV2.VerificacioDV
 
         protected void btnRestaurar_Click(object sender, EventArgs e)
         {
+            CargarListaBackups();
             pnlRestaurar.Visible = true;
+        }
+
+        protected void btnRefrescarBackups_Click(object sender, EventArgs e)
+        {
+            CargarListaBackups();
+        }
+
+        protected void ddlBackups_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(ddlBackups.SelectedValue))
+                txtRutaBackup.Text = ddlBackups.SelectedValue;
+        }
+
+        private void CargarListaBackups()
+        {
+            ddlBackups.Items.Clear();
+            ddlBackups.Items.Add(new ListItem("— Seleccionar backup —", ""));
+
+            string carpeta = @"C:\GymApp";
+            if (Directory.Exists(carpeta))
+            {
+                var archivos = new List<string>();
+                archivos.AddRange(Directory.GetFiles(carpeta, "*.bak"));
+                archivos.AddRange(Directory.GetFiles(carpeta, "*.bacpac"));
+                archivos.Sort();
+                archivos.Reverse();
+
+                foreach (string a in archivos)
+                    ddlBackups.Items.Add(new ListItem(Path.GetFileName(a), a));
+
+                if (archivos.Count == 0)
+                    ddlBackups.Items.Add(new ListItem("(No se encontraron backups en C:\\GymApp\\)", ""));
+            }
+            else
+            {
+                ddlBackups.Items.Add(new ListItem("(La carpeta C:\\GymApp\\ no existe)", ""));
+            }
         }
 
         protected void btnCancelarRestaurar_Click(object sender, EventArgs e)
@@ -186,7 +301,7 @@ namespace gymAppV2.VerificacioDV
             if (e.Row.RowType == System.Web.UI.WebControls.DataControlRowType.DataRow)
             {
                 EstadoControlDV estado = e.Row.DataItem as EstadoControlDV;
-                if (estado != null && (!estado.TieneControl || estado.FilasDVHVacio > 0 || estado.FilasDVVVacio > 0))
+                if (estado != null && (!estado.TieneControl || estado.FilasDVHVacio > 0))
                 {
                     e.Row.CssClass = "dv-grid-row dv-fila-alerta";
                 }

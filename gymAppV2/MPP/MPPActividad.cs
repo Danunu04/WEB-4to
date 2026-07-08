@@ -35,7 +35,6 @@ namespace MPP
                         costoInterno,
                         precioAlumno,
                         activo,
-                        dvv,
                         dvh
                     FROM [GymApp].[dbo].[Actividades]
                     WHERE activo = 1
@@ -66,7 +65,6 @@ namespace MPP
                         a.costoInterno,
                         a.precioAlumno,
                         a.activo,
-                        a.dvv,
                         a.dvh
                     FROM [GymApp].[dbo].[Actividades] a
                     INNER JOIN [GymApp].[dbo].[Actividad_Alumno] aa ON a.codActividad = aa.codActividad
@@ -105,7 +103,6 @@ namespace MPP
                     Convert.ToDecimal(row["costoInterno"]),
                     Convert.ToDecimal(row["precioAlumno"]),
                     Convert.ToBoolean(row["activo"]),
-                    row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty,
                     row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty
                 );
 

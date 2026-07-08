@@ -78,6 +78,10 @@ namespace gymAppV2.Admin
         /// </summary>
         protected global::System.Web.UI.WebControls.RadioButtonList rblFormatoRestore;
 
+        protected global::System.Web.UI.WebControls.DropDownList ddlBackupsRestore;
+
+        protected global::System.Web.UI.WebControls.Button btnActualizarListaRestore;
+
         /// <summary>
         /// lblRutaRestore control.
         /// </summary>

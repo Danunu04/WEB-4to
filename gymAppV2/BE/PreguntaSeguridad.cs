@@ -11,7 +11,6 @@ namespace BE
         public string Pregunta { get; set; }
         public string Respuesta { get; set; }
         public string Usuario { get; set; }
-        public string DVV { get; set; }
         public string DVH { get; set; }
 
         /// <summary>
@@ -23,13 +22,12 @@ namespace BE
         {
         }
 
-        public PreguntaSeguridad(int id, string pregunta, string respuesta, string usuario, string dvv, string dvh)
+        public PreguntaSeguridad(int id, string pregunta, string respuesta, string usuario, string dvh)
         {
             Id = id;
             Pregunta = pregunta;
             Respuesta = respuesta;
             Usuario = usuario;
-            DVV = dvv;
             DVH = dvh;
         }
     }

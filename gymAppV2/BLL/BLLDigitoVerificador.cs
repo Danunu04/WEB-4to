@@ -40,22 +40,31 @@ namespace BLL
                 {
                     if (tabla.Equals("USUARIOS", StringComparison.OrdinalIgnoreCase))
                     {
-                        resultados.AddRange(mppUsuario.VerificarIntegridadUsuarios());
+                        var tablaCheck = mppDigitoVerificador.VerificarHashTabla(tabla);
+                        if (!tablaCheck.EsValido) resultados.Add(tablaCheck);
+                        AgregarResultadosFilas(resultados, mppUsuario.VerificarIntegridadUsuarios(), tablaCheck.EsValido);
                     }
                     else if (tabla.Equals("PreguntasSeguridad", StringComparison.OrdinalIgnoreCase))
                     {
-                        resultados.AddRange(mppPregunta.VerificarIntegridadPreguntas());
+                        var tablaCheck = mppDigitoVerificador.VerificarHashTabla(tabla);
+                        if (!tablaCheck.EsValido) resultados.Add(tablaCheck);
+                        AgregarResultadosFilas(resultados, mppPregunta.VerificarIntegridadPreguntas(), tablaCheck.EsValido);
                     }
                     else if (tabla.Equals("Evento", StringComparison.OrdinalIgnoreCase))
                     {
-                        resultados.AddRange(mppEvento.VerificarIntegridadEventos());
+                        var tablaCheck = mppDigitoVerificador.VerificarHashTabla(tabla);
+                        if (!tablaCheck.EsValido) resultados.Add(tablaCheck);
+                        AgregarResultadosFilas(resultados, mppEvento.VerificarIntegridadEventos(), tablaCheck.EsValido);
                     }
                     else if (tabla.Equals("USUARIO_Contras", StringComparison.OrdinalIgnoreCase))
                     {
-                        resultados.AddRange(mppUsuario.VerificarIntegridadHistorialContrasenas());
+                        var tablaCheck = mppDigitoVerificador.VerificarHashTabla(tabla);
+                        if (!tablaCheck.EsValido) resultados.Add(tablaCheck);
+                        AgregarResultadosFilas(resultados, mppUsuario.VerificarIntegridadHistorialContrasenas(), tablaCheck.EsValido);
                     }
                     else
                     {
+                        // VerificarIntegridadTabla already does table-level then row-level
                         resultados.AddRange(mppDigitoVerificador.VerificarIntegridadTabla(tabla));
                     }
                 }
@@ -65,6 +74,25 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception("Error al verificar integridad: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Agrega los resultados de verificación fila-por-fila de un MPP especializado.
+        /// Si el chequeo de tabla-nivel ya detectó un error, omite el resumen "todo OK"
+        /// para no contaminar el reporte con un falso positivo mientras hay errores reales.
+        /// </summary>
+        private static void AgregarResultadosFilas(
+            List<ResultadoVerificacionDV> destino,
+            List<ResultadoVerificacionDV> resultadosFilas,
+            bool tablaOk)
+        {
+            foreach (var r in resultadosFilas)
+            {
+                // Si la tabla ya tiene un error a nivel global, omitir los resúmenes "OK".
+                if (!tablaOk && r.EsValido)
+                    continue;
+                destino.Add(r);
             }
         }
 

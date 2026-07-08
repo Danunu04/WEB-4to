@@ -13,7 +13,6 @@ namespace BE
         public decimal Precio { get; set; }
         public bool Activo { get; set; }
         public DateTime FechaModificacion { get; set; }
-        public string DVV { get; set; }
         public string DVH { get; set; }
 
         public PrecioModalidad()

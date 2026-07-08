@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -41,7 +39,7 @@ namespace MPP
             try
             {
                 string consulta = @"
-                    SELECT idDigitoVerificador, nombreTabla, dvhTabla, dvvTabla, fechaCalculo
+                    SELECT idDigitoVerificador, nombreTabla, dvvTabla, cantidadFilas, fechaCalculo
                     FROM [GymApp].[dbo].[DigitoVerificador]
                     WHERE nombreTabla = @NombreTabla";
 
@@ -61,27 +59,29 @@ namespace MPP
 
         /// <summary>
         /// Inserta o actualiza el registro de control de una tabla.
+        /// dvvTabla = SHA256 de la concatenación de todos los dvh de las filas.
+        /// cantidadFilas = cantidad de filas al momento del último recálculo.
         /// </summary>
-        public void GuardarControl(string nombreTabla, string dvhTabla, string dvvTabla)
+        public void GuardarControl(string nombreTabla, string dvvTabla, int cantidadFilas)
         {
             try
             {
                 string consulta = @"
                     IF EXISTS (SELECT 1 FROM [GymApp].[dbo].[DigitoVerificador] WHERE nombreTabla = @NombreTabla)
                         UPDATE [GymApp].[dbo].[DigitoVerificador]
-                        SET dvhTabla = @DVHTabla,
-                            dvvTabla = @DVVTabla,
+                        SET dvvTabla = @DVVTabla,
+                            cantidadFilas = @CantidadFilas,
                             fechaCalculo = GETDATE()
                         WHERE nombreTabla = @NombreTabla
                     ELSE
-                        INSERT INTO [GymApp].[dbo].[DigitoVerificador] (nombreTabla, dvhTabla, dvvTabla)
-                        VALUES (@NombreTabla, @DVHTabla, @DVVTabla)";
+                        INSERT INTO [GymApp].[dbo].[DigitoVerificador] (nombreTabla, dvvTabla, cantidadFilas)
+                        VALUES (@NombreTabla, @DVVTabla, @CantidadFilas)";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@NombreTabla", nombreTabla),
-                    new SqlParameter("@DVHTabla", dvhTabla),
-                    new SqlParameter("@DVVTabla", dvvTabla)
+                    new SqlParameter("@DVVTabla", dvvTabla),
+                    new SqlParameter("@CantidadFilas", cantidadFilas)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
@@ -92,14 +92,141 @@ namespace MPP
             }
         }
 
+        /// <summary>
+        /// Recalcula dvvTabla y cantidadFilas para una tabla sin tocar los dvh de cada fila.
+        /// Llamar después de cualquier INSERT legítimo en tablas con control de integridad.
+        /// </summary>
+        public void ActualizarControlTabla(string nombreTabla)
+        {
+            try
+            {
+                string dvvTabla = CalcularDvvTabla(nombreTabla);
+                int cantidadFilas = ObtenerCantidadFilas(nombreTabla);
+                GuardarControl(nombreTabla, dvvTabla, cantidadFilas);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al actualizar control de {nombreTabla}: " + ex.Message, ex);
+            }
+        }
+
         #endregion
 
         #region Verificación de integridad
 
         /// <summary>
+        /// Verifica el hash de tabla comparando dvvTabla almacenado contra el recalculado
+        /// a partir de los dvh de las filas actuales. También compara cantidadFilas para
+        /// detectar inserciones o eliminaciones. Devuelve un único resultado con TipoAlteracion.
+        /// </summary>
+        public ResultadoVerificacionDV VerificarHashTabla(string nombreTabla)
+        {
+            try
+            {
+                DataRow control = ObtenerControlPorTabla(nombreTabla);
+                if (control == null)
+                {
+                    return new ResultadoVerificacionDV
+                    {
+                        NombreTabla = nombreTabla,
+                        ClaveFila = "-",
+                        Campo = "-",
+                        EsValido = false,
+                        TipoAlteracion = TipoAlteracion.SinAlteracion,
+                        Mensaje = "La tabla no tiene registro de control. Ejecutar recálculo masivo."
+                    };
+                }
+
+                string dvvTablaAlmacenado = control["dvvTabla"].ToString();
+                int cantidadAlmacenada = control["cantidadFilas"] != DBNull.Value
+                    ? Convert.ToInt32(control["cantidadFilas"])
+                    : -1;
+
+                if (!TablaExisteEnDB(nombreTabla))
+                {
+                    return new ResultadoVerificacionDV
+                    {
+                        NombreTabla = nombreTabla,
+                        ClaveFila = "-",
+                        Campo = "-",
+                        EsValido = false,
+                        TipoAlteracion = TipoAlteracion.TablaEliminada,
+                        Mensaje = cantidadAlmacenada > 0
+                            ? $"La tabla fue eliminada del sistema. Tenía {cantidadAlmacenada} filas registradas."
+                            : "La tabla fue eliminada del sistema."
+                    };
+                }
+
+                int cantidadActual = ObtenerCantidadFilas(nombreTabla);
+                string dvvTablaCalculado = CalcularDvvTabla(nombreTabla);
+
+                bool dvvOk = dvvTablaAlmacenado.Equals(dvvTablaCalculado, StringComparison.OrdinalIgnoreCase);
+                bool countOk = cantidadAlmacenada >= 0 && cantidadAlmacenada == cantidadActual;
+
+                if (dvvOk && countOk)
+                {
+                    return new ResultadoVerificacionDV
+                    {
+                        NombreTabla = nombreTabla,
+                        ClaveFila = "-",
+                        Campo = "-",
+                        EsValido = true,
+                        TipoAlteracion = TipoAlteracion.SinAlteracion,
+                        Mensaje = "Tabla verificada correctamente."
+                    };
+                }
+
+                TipoAlteracion tipo;
+                string mensaje;
+
+                if (cantidadActual == 0 && cantidadAlmacenada > 0)
+                {
+                    tipo = TipoAlteracion.TablaVaciada;
+                    mensaje = $"La tabla fue vaciada. Se esperaban {cantidadAlmacenada} filas, no hay ninguna.";
+                }
+                else if (cantidadAlmacenada >= 0 && cantidadActual < cantidadAlmacenada)
+                {
+                    tipo = TipoAlteracion.EliminacionFila;
+                    mensaje = $"Se eliminaron filas. Se esperaban {cantidadAlmacenada}, hay {cantidadActual}.";
+                }
+                else if (cantidadAlmacenada >= 0 && cantidadActual > cantidadAlmacenada)
+                {
+                    tipo = TipoAlteracion.InsercionNoAutorizada;
+                    mensaje = $"Se insertaron filas no registradas. Se esperaban {cantidadAlmacenada}, hay {cantidadActual}.";
+                }
+                else
+                {
+                    tipo = TipoAlteracion.EdicionDato;
+                    mensaje = "Se modificaron datos de una o más filas. Hash de tabla no coincide.";
+                }
+
+                return new ResultadoVerificacionDV
+                {
+                    NombreTabla = nombreTabla,
+                    ClaveFila = "-",
+                    Campo = "-",
+                    EsValido = false,
+                    TipoAlteracion = tipo,
+                    Mensaje = mensaje
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResultadoVerificacionDV
+                {
+                    NombreTabla = nombreTabla,
+                    ClaveFila = "-",
+                    Campo = "-",
+                    EsValido = false,
+                    TipoAlteracion = TipoAlteracion.SinAlteracion,
+                    Mensaje = "Error al verificar tabla: " + ex.Message
+                };
+            }
+        }
+
+        /// <summary>
         /// Verifica la integridad de todas las tablas registradas en DigitoVerificador.
-        /// Si una tabla no tiene control, se reporta como advertencia.
-        /// Si el control no coincide, se evalúa fila por fila.
+        /// Primero hace el chequeo de hash de tabla; si falla, evalúa fila por fila.
         /// </summary>
         public List<ResultadoVerificacionDV> VerificarIntegridadGlobal()
         {
@@ -130,81 +257,29 @@ namespace MPP
         }
 
         /// <summary>
-        /// Verifica la integridad de una tabla específica. Primero compara el hash de tabla;
-        /// si falla, recorre fila por fila.
+        /// Verifica la integridad de una tabla genérica (no encriptada).
+        /// Primero compara el hash de tabla; si falla, recorre fila por fila.
         /// </summary>
         public List<ResultadoVerificacionDV> VerificarIntegridadTabla(string nombreTabla)
         {
             var resultados = new List<ResultadoVerificacionDV>();
 
-            try
+            var resultadoTabla = VerificarHashTabla(nombreTabla);
+            resultados.Add(resultadoTabla);
+
+            if (!resultadoTabla.EsValido && resultadoTabla.TipoAlteracion == TipoAlteracion.EdicionDato)
             {
-                DataRow control = ObtenerControlPorTabla(nombreTabla);
-                if (control == null)
-                {
-                    resultados.Add(new ResultadoVerificacionDV
-                    {
-                        NombreTabla = nombreTabla,
-                        ClaveFila = "-",
-                        Campo = "-",
-                        EsValido = false,
-                        Mensaje = "La tabla no tiene registro de control. Ejecutar recálculo masivo."
-                    });
-                    return resultados;
-                }
-
-                string dvhTablaAlmacenado = control["dvhTabla"].ToString();
-                string dvvTablaAlmacenado = control["dvvTabla"].ToString();
-
-                CalcularHashTabla(nombreTabla, out string dvhTablaCalculado, out string dvvTablaCalculado);
-
-                bool dvhOk = dvhTablaAlmacenado.Equals(dvhTablaCalculado, StringComparison.OrdinalIgnoreCase);
-                bool dvvOk = dvvTablaAlmacenado.Equals(dvvTablaCalculado, StringComparison.OrdinalIgnoreCase);
-
-                if (dvhOk && dvvOk)
-                {
-                    resultados.Add(new ResultadoVerificacionDV
-                    {
-                        NombreTabla = nombreTabla,
-                        ClaveFila = "-",
-                        Campo = "-",
-                        EsValido = true,
-                        Mensaje = "Tabla verificada correctamente."
-                    });
-                    return resultados;
-                }
-
-                // Falló el hash de tabla: evaluar fila por fila.
-                resultados.Add(new ResultadoVerificacionDV
-                {
-                    NombreTabla = nombreTabla,
-                    ClaveFila = "-",
-                    Campo = "-",
-                    EsValido = false,
-                    Mensaje = $"Hash de tabla no coincide. DVH esperado: {dvhTablaAlmacenado}, calculado: {dvhTablaCalculado}; DVV esperado: {dvvTablaAlmacenado}, calculado: {dvvTablaCalculado}."
-                });
-
                 resultados.AddRange(VerificarFilasTabla(nombreTabla));
-            }
-            catch (Exception ex)
-            {
-                resultados.Add(new ResultadoVerificacionDV
-                {
-                    NombreTabla = nombreTabla,
-                    ClaveFila = "-",
-                    Campo = "-",
-                    EsValido = false,
-                    Mensaje = "Error al verificar tabla: " + ex.Message
-                });
             }
 
             return resultados;
         }
 
         /// <summary>
-        /// Recorre las filas de una tabla y verifica su DVH/DVV.
+        /// Recorre las filas de una tabla genérica y verifica su dvh.
+        /// Solo se llama cuando el hash de tabla ya falló.
         /// </summary>
-        private List<ResultadoVerificacionDV> VerificarFilasTabla(string nombreTabla)
+        public List<ResultadoVerificacionDV> VerificarFilasTabla(string nombreTabla)
         {
             var resultados = new List<ResultadoVerificacionDV>();
 
@@ -215,8 +290,7 @@ namespace MPP
                     return resultados;
 
                 List<DataColumn> columnasDatos = dt.Columns.Cast<DataColumn>()
-                    .Where(c => !c.ColumnName.Equals("dvv", StringComparison.OrdinalIgnoreCase)
-                             && !c.ColumnName.Equals("dvh", StringComparison.OrdinalIgnoreCase))
+                    .Where(c => !c.ColumnName.Equals("dvh", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 string[] clavesPrimarias = ObtenerClavesPrimarias(nombreTabla);
@@ -224,83 +298,28 @@ namespace MPP
                 foreach (DataRow row in dt.Rows)
                 {
                     string claveFila = ArmarClaveFila(row, clavesPrimarias);
-
                     string dvhAlmacenado = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
-                    string dvvAlmacenado = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
 
                     var valores = ArmarDiccionarioValores(row, columnasDatos);
+                    string dvhCalculado = dvManager.CalcularDVH(valores);
 
-                    dvManager.CalcularAmbos(valores, out string dvhCalculado, out string dvvCalculado);
+                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado)
+                        && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
 
-                    bool dvhOk = !string.IsNullOrEmpty(dvhAlmacenado) && dvhAlmacenado.Equals(dvhCalculado, StringComparison.OrdinalIgnoreCase);
-                    bool dvvOk = !string.IsNullOrEmpty(dvvAlmacenado) && dvvAlmacenado.Equals(dvvCalculado, StringComparison.OrdinalIgnoreCase);
-
-                    if (dvhOk && dvvOk)
+                    if (dvhOk)
                         continue;
 
-                    // Fila corrupta: intentar identificar campo problemático.
-                    if (!dvhOk)
+                    resultados.Add(new ResultadoVerificacionDV
                     {
-                        resultados.Add(new ResultadoVerificacionDV
-                        {
-                            NombreTabla = nombreTabla,
-                            ClaveFila = claveFila,
-                            Campo = "DVH (fila completa)",
-                            EsValido = false,
-                            Mensaje = "DVH de fila no coincide.",
-                            DVHAlmacenado = dvhAlmacenado,
-                            DVHCalculado = dvhCalculado,
-                            DVVAlmacenado = dvvAlmacenado,
-                            DVVCalculado = dvvCalculado
-                        });
-                    }
-
-                    if (!dvvOk)
-                    {
-                        resultados.Add(new ResultadoVerificacionDV
-                        {
-                            NombreTabla = nombreTabla,
-                            ClaveFila = claveFila,
-                            Campo = "DVV (fila completa)",
-                            EsValido = false,
-                            Mensaje = "DVV de fila no coincide.",
-                            DVHAlmacenado = dvhAlmacenado,
-                            DVHCalculado = dvhCalculado,
-                            DVVAlmacenado = dvvAlmacenado,
-                            DVVCalculado = dvvCalculado
-                        });
-                    }
-
-                    // Identificar campo específico comparando hash individual.
-                    foreach (DataColumn col in columnasDatos)
-                    {
-                        string valorCampo = dvManager.NormalizarValor(row[col]);
-                        string hashCampoActual = criptoManager.GenerarHashSHA256(valorCampo);
-
-                        // Si el DVV actual no se forma con este hash, el campo es sospechoso.
-                        // Para detectar cuál cambió comparamos contra un DVV recalculado sin este campo.
-                        var valoresSinCampo = new Dictionary<string, object>(valores);
-                        valoresSinCampo.Remove(col.ColumnName);
-                        dvManager.CalcularDVV(valoresSinCampo); // no lo usamos directamente
-
-                        // Calculamos el hash de campo esperado original a partir del DVV almacenado:
-                        // DVV_alm = SHA256( hash(c1) + hash(c2) + ... + hash(cN) )
-                        // Si cambió un solo campo, el hash esperado para ese campo sería:
-                        // hash_esperado_campo = SHA256(DVV_alm) ??? no es reversible.
-                        // Estrategia alternativa: marcar el campo si su valor actual es NULL/empty
-                        // o si tiene caracteres sospechosos; es una heurística.
-                        // Implementación simple: reportamos todos los campos no-clave de la fila
-                        // como "revisar", con el hash actual del campo.
-
-                        resultados.Add(new ResultadoVerificacionDV
-                        {
-                            NombreTabla = nombreTabla,
-                            ClaveFila = claveFila,
-                            Campo = col.ColumnName,
-                            EsValido = false,
-                            Mensaje = $"Campo sospechoso (hash actual: {hashCampoActual}). Revisar valor."
-                        });
-                    }
+                        NombreTabla = nombreTabla,
+                        ClaveFila = claveFila,
+                        Campo = "DVH (fila completa)",
+                        EsValido = false,
+                        TipoAlteracion = TipoAlteracion.EdicionDato,
+                        Mensaje = "DVH de fila no coincide. Los datos fueron modificados.",
+                        DVHAlmacenado = dvhAlmacenado,
+                        DVHCalculado = dvhCalculado
+                    });
                 }
             }
             catch (Exception ex)
@@ -347,7 +366,7 @@ namespace MPP
         }
 
         /// <summary>
-        /// Devuelve las tablas del schema que tienen columnas dvv y dvh
+        /// Devuelve las tablas del schema que tienen columna dvh
         /// pero aún no están registradas en DigitoVerificador.
         /// </summary>
         public List<string> ObtenerTablasSinControl()
@@ -358,10 +377,6 @@ namespace MPP
                     SELECT t.TABLE_NAME
                     FROM INFORMATION_SCHEMA.TABLES t
                     WHERE t.TABLE_TYPE = 'BASE TABLE'
-                      AND EXISTS (
-                          SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS c
-                          WHERE c.TABLE_NAME = t.TABLE_NAME
-                            AND c.COLUMN_NAME = 'dvv')
                       AND EXISTS (
                           SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS c
                           WHERE c.TABLE_NAME = t.TABLE_NAME
@@ -388,8 +403,7 @@ namespace MPP
         }
 
         /// <summary>
-        /// Devuelve un resumen del estado de control y de filas con DV vacíos
-        /// para todas las tablas que tienen columnas dvv/dvh.
+        /// Devuelve un resumen del estado de control para todas las tablas con dvh.
         /// </summary>
         public List<EstadoControlDV> ObtenerEstadoControl()
         {
@@ -401,8 +415,6 @@ namespace MPP
                         CASE WHEN dv.idDigitoVerificador IS NULL THEN 0 ELSE 1 END AS TieneControl,
                         dv.fechaCalculo AS FechaCalculo
                     FROM INFORMATION_SCHEMA.TABLES t
-                    INNER JOIN INFORMATION_SCHEMA.COLUMNS cdvv
-                        ON t.TABLE_NAME = cdvv.TABLE_NAME AND cdvv.COLUMN_NAME = 'dvv'
                     INNER JOIN INFORMATION_SCHEMA.COLUMNS cdvh
                         ON t.TABLE_NAME = cdvh.TABLE_NAME AND cdvh.COLUMN_NAME = 'dvh'
                     LEFT JOIN [GymApp].[dbo].[DigitoVerificador] dv
@@ -421,15 +433,13 @@ namespace MPP
 
                     int totalFilas = 0;
                     int filasDVHVacio = 0;
-                    int filasDVVVacio = 0;
 
                     try
                     {
                         string consultaConteo = $@"
                             SELECT
                                 COUNT(*) AS TotalFilas,
-                                SUM(CASE WHEN [dvh] = '' OR [dvh] IS NULL THEN 1 ELSE 0 END) AS FilasDVHVacio,
-                                SUM(CASE WHEN [dvv] = '' OR [dvv] IS NULL THEN 1 ELSE 0 END) AS FilasDVVVacio
+                                SUM(CASE WHEN [dvh] = '' OR [dvh] IS NULL THEN 1 ELSE 0 END) AS FilasDVHVacio
                             FROM [GymApp].[dbo].[{nombreTabla}]";
 
                         DataTable dtConteo = dal._686DPConsultar(consultaConteo, new List<SqlParameter>());
@@ -439,18 +449,15 @@ namespace MPP
                             DataRow r = dtConteo.Rows[0];
                             totalFilas = r["TotalFilas"] != DBNull.Value ? Convert.ToInt32(r["TotalFilas"]) : 0;
                             filasDVHVacio = r["FilasDVHVacio"] != DBNull.Value ? Convert.ToInt32(r["FilasDVHVacio"]) : 0;
-                            filasDVVVacio = r["FilasDVVVacio"] != DBNull.Value ? Convert.ToInt32(r["FilasDVVVacio"]) : 0;
                         }
                     }
                     catch (Exception)
                     {
-                        // Si no se puede contar una tabla en particular, se reporta con valores -1.
                         totalFilas = -1;
                         filasDVHVacio = -1;
-                        filasDVVVacio = -1;
                     }
 
-                    estado.Add(new EstadoControlDV(nombreTabla, tieneControl, totalFilas, filasDVHVacio, filasDVVVacio, fechaCalculo));
+                    estado.Add(new EstadoControlDV(nombreTabla, tieneControl, totalFilas, filasDVHVacio, fechaCalculo));
                 }
 
                 return estado;
@@ -466,9 +473,8 @@ namespace MPP
         #region Recálculo
 
         /// <summary>
-        /// Recalcula DVH/DVV de todas las filas de todas las tablas con control
-        /// y actualiza la tabla DigitoVerificador.
-        /// Solo actualiza los dígitos; no restaura valores de datos.
+        /// Recalcula dvh de todas las filas de todas las tablas con control
+        /// y actualiza dvvTabla y cantidadFilas en DigitoVerificador.
         /// </summary>
         public void RecalcularDigitosGlobal()
         {
@@ -481,59 +487,53 @@ namespace MPP
         }
 
         /// <summary>
-        /// Recalcula DVH/DVV de todas las filas de una tabla y actualiza su control.
-        /// Para tablas con datos encriptados se puede indicar que solo se actualice
-        /// el registro de control, dejando los dígitos de fila calculados por el
-        /// MPP especializado correspondiente.
+        /// Recalcula dvh de todas las filas de una tabla y actualiza su control.
+        /// Cuando actualizarFilas=false, solo recalcula dvvTabla y cantidadFilas a partir
+        /// de los dvh existentes (usado para tablas con datos encriptados donde el MPP
+        /// especializado ya actualizó los dvh de cada fila).
         /// </summary>
         public void RecalcularDigitosTabla(string nombreTabla, bool actualizarFilas = true)
         {
             try
             {
                 DataTable dt = ObtenerFilasParaVerificacion(nombreTabla);
+                int cantidadFilas = dt?.Rows.Count ?? 0;
+
                 if (dt == null || dt.Rows.Count == 0)
                 {
-                    GuardarControl(nombreTabla,
-                        criptoManager.GenerarHashSHA256(string.Empty),
-                        criptoManager.GenerarHashSHA256(string.Empty));
+                    GuardarControl(nombreTabla, criptoManager.GenerarHashSHA256(string.Empty), 0);
                     return;
                 }
 
                 List<DataColumn> columnasDatos = dt.Columns.Cast<DataColumn>()
-                    .Where(c => !c.ColumnName.Equals("dvv", StringComparison.OrdinalIgnoreCase)
-                             && !c.ColumnName.Equals("dvh", StringComparison.OrdinalIgnoreCase))
+                    .Where(c => !c.ColumnName.Equals("dvh", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
+                string[] clavesPrimarias = ObtenerClavesPrimarias(nombreTabla);
                 StringBuilder dvhConcat = new StringBuilder();
-                StringBuilder dvvConcat = new StringBuilder();
 
                 foreach (DataRow row in dt.Rows)
                 {
                     string dvh;
-                    string dvv;
 
                     if (actualizarFilas)
                     {
                         var valores = ArmarDiccionarioValores(row, columnasDatos);
-                        dvManager.CalcularAmbos(valores, out dvh, out dvv);
+                        dvh = dvManager.CalcularDVH(valores);
 
-                        string claveFila = ArmarClaveFila(row, ObtenerClavesPrimarias(nombreTabla));
-                        ActualizarDigitosFila(nombreTabla, claveFila, dvh, dvv);
+                        string claveFila = ArmarClaveFila(row, clavesPrimarias);
+                        ActualizarDigitosFila(nombreTabla, claveFila, dvh);
                     }
                     else
                     {
                         dvh = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
-                        dvv = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
                     }
 
                     dvhConcat.Append(dvh);
-                    dvvConcat.Append(dvv);
                 }
 
-                string dvhTabla = criptoManager.GenerarHashSHA256(dvhConcat.ToString());
-                string dvvTabla = criptoManager.GenerarHashSHA256(dvvConcat.ToString());
-
-                GuardarControl(nombreTabla, dvhTabla, dvvTabla);
+                string dvvTabla = criptoManager.GenerarHashSHA256(dvhConcat.ToString());
+                GuardarControl(nombreTabla, dvvTabla, cantidadFilas);
             }
             catch (Exception ex)
             {
@@ -542,9 +542,9 @@ namespace MPP
         }
 
         /// <summary>
-        /// Actualiza dvv/dvh de una fila específica usando su clave primaria.
+        /// Actualiza el dvh de una fila específica usando su clave primaria.
         /// </summary>
-        private void ActualizarDigitosFila(string nombreTabla, string claveFila, string dvh, string dvv)
+        private void ActualizarDigitosFila(string nombreTabla, string claveFila, string dvh)
         {
             try
             {
@@ -557,8 +557,7 @@ namespace MPP
                 StringBuilder where = new StringBuilder();
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
-                    new SqlParameter("@DVH", dvh),
-                    new SqlParameter("@DVV", dvv)
+                    new SqlParameter("@DVH", dvh)
                 };
 
                 for (int i = 0; i < claves.Length; i++)
@@ -571,14 +570,14 @@ namespace MPP
 
                 string consulta = $@"
                     UPDATE [GymApp].[dbo].[{nombreTabla}]
-                    SET dvh = @DVH, dvv = @DVV
+                    SET dvh = @DVH
                     WHERE {where}";
 
                 dal._686DPEscribir(consulta, parametros);
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al actualizar dígitos de fila {claveFila} en {nombreTabla}: " + ex.Message, ex);
+                throw new Exception($"Error al actualizar dvh de fila {claveFila} en {nombreTabla}: " + ex.Message, ex);
             }
         }
 
@@ -588,8 +587,6 @@ namespace MPP
 
         /// <summary>
         /// Realiza un backup completo de la base de datos en la ruta indicada.
-        /// Requiere permisos de sysadmin, dbcreator o miembro del rol db_backupoperator.
-        /// La operación se ejecuta conectado a master para evitar conflictos con la base destino.
         /// </summary>
         public void RealizarBackup(string rutaDestino)
         {
@@ -632,9 +629,6 @@ namespace MPP
 
         /// <summary>
         /// Restaura la base de datos desde un backup previo.
-        /// ADVERTENCIA: operación destructiva. Requiere permisos de sysadmin o dbcreator.
-        /// La restauración se ejecuta conectado a master, lee los nombres lógicos del backup
-        /// y los mueve a las rutas por defecto de la instancia.
         /// </summary>
         public void RestaurarBackup(string rutaBackup)
         {
@@ -652,7 +646,6 @@ namespace MPP
                 {
                     connMaster.Open();
 
-                    // Leer los nombres lógicos de datos y log del backup.
                     string logicalData;
                     string logicalLog;
                     using (SqlCommand cmd = new SqlCommand("RESTORE FILELISTONLY FROM DISK = @Ruta", connMaster))
@@ -671,7 +664,6 @@ namespace MPP
                         logicalLog = dt.Rows[1]["LogicalName"].ToString();
                     }
 
-                    // Determinar las rutas por defecto de la instancia para los archivos.
                     string mdfPath;
                     string ldfPath;
                     using (SqlCommand cmd = new SqlCommand(@"
@@ -697,8 +689,6 @@ namespace MPP
                         ldfPath = Path.Combine(logPath, $"{nombreBase}_log.ldf");
                     }
 
-                    // Limpiar el pool de conexiones para evitar que conexiones abiertas
-                    // impidan poner la base en SINGLE_USER.
                     SqlConnection.ClearAllPools();
 
                     string consulta = $@"
@@ -731,8 +721,7 @@ namespace MPP
         }
 
         /// <summary>
-        /// Exporta la base de datos a un archivo .bacpac portable usando SqlPackage.exe.
-        /// Compatible con versiones anteriores de SQL Server.
+        /// Exporta la base de datos a un archivo .bacpac usando SqlPackage.exe.
         /// </summary>
         public void ExportarBacpac(string rutaDestino)
         {
@@ -760,7 +749,6 @@ namespace MPP
 
         /// <summary>
         /// Importa un archivo .bacpac, reemplazando la base de datos existente.
-        /// ADVERTENCIA: operación destructiva. Requiere que SqlPackage.exe esté instalado.
         /// </summary>
         public void ImportarBacpac(string rutaBacpac)
         {
@@ -774,7 +762,6 @@ namespace MPP
             {
                 string nombreBase = ObtenerNombreBaseDatos();
 
-                // Eliminar la BD existente para que SqlPackage la recree limpia
                 SqlConnection.ClearAllPools();
                 using (SqlConnection connMaster = new SqlConnection(ObtenerCadenaConexionMaster()))
                 {
@@ -803,23 +790,16 @@ namespace MPP
             }
         }
 
-        /// <summary>
-        /// Busca SqlPackage.exe en las rutas estándar de instalación de SQL Server,
-        /// herramienta global de .NET, SSDT de Visual Studio y PATH del sistema.
-        /// Lanza una excepción descriptiva con instrucciones si no lo encuentra.
-        /// </summary>
         private static string BuscarSqlPackage()
         {
-            var candidatos = new System.Collections.Generic.List<string>();
+            var candidatos = new List<string>();
 
-            // Rutas base de Program Files (32 y 64 bit)
             string pf64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             string pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             string[] basesDirs = string.Equals(pf64, pf86, StringComparison.OrdinalIgnoreCase)
                 ? new[] { pf64 }
                 : new[] { pf64, pf86 };
 
-            // SQL Server DAC bin (versiones 2008 R2 a 2022)
             string[] versiones = { "170", "160", "150", "140", "130", "120", "110" };
             foreach (var dir in basesDirs)
             {
@@ -828,11 +808,9 @@ namespace MPP
                     candidatos.Add(Path.Combine(dir, "Microsoft SQL Server", ver, "DAC", "bin", "SqlPackage.exe"));
             }
 
-            // Herramienta global de .NET: dotnet tool install -g microsoft.sqlpackage
             string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             candidatos.Add(Path.Combine(userProfile, ".dotnet", "tools", "SqlPackage.exe"));
 
-            // SSDT en Visual Studio (2017 / 2019 / 2022)
             string[] aniosVS = { "2022", "2019", "2017" };
             string[] edicionesVS = { "Enterprise", "Professional", "Community", "BuildTools" };
             foreach (var dir in basesDirs)
@@ -849,7 +827,6 @@ namespace MPP
                 if (File.Exists(ruta)) return ruta;
             }
 
-            // Último recurso: buscar en el PATH mediante where.exe
             try
             {
                 var psi = new System.Diagnostics.ProcessStartInfo
@@ -880,9 +857,6 @@ namespace MPP
                 "O instale 'SQL Server Data Tools' (SSDT) desde el instalador de Visual Studio.");
         }
 
-        /// <summary>
-        /// Ejecuta SqlPackage.exe con los argumentos indicados y espera hasta 5 minutos.
-        /// </summary>
         private static void EjecutarSqlPackage(string exe, string args)
         {
             var psi = new System.Diagnostics.ProcessStartInfo
@@ -923,25 +897,18 @@ namespace MPP
             }
         }
 
-        /// <summary>
-        /// Devuelve una cadena de conexión a GymApp sin Network Library, compatible con SqlPackage.exe.
-        /// </summary>
         private string ObtenerCadenaConexionSqlPackage()
         {
             var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
             if (settings == null || string.IsNullOrEmpty(settings.ConnectionString))
                 throw new Exception("No se encontró la cadena de conexión 'GymAppConnection' en Web.config.");
 
-            // SqlPackage no soporta Network Library=dbnmpntw; se omite usando el builder
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(settings.ConnectionString);
             builder.Remove("Network Library");
             builder["TrustServerCertificate"] = true;
             return builder.ConnectionString;
         }
 
-        /// <summary>
-        /// Devuelve el nombre de la base de datos configurada en Web.config.
-        /// </summary>
         private string ObtenerNombreBaseDatos()
         {
             var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
@@ -957,10 +924,6 @@ namespace MPP
             return nombreBase;
         }
 
-        /// <summary>
-        /// Devuelve una cadena de conexión apuntando a la base master,
-        /// tomando como base la configuración de GymAppConnection.
-        /// </summary>
         private string ObtenerCadenaConexionMaster()
         {
             var settings = ConfigurationManager.ConnectionStrings["GymAppConnection"];
@@ -980,53 +943,50 @@ namespace MPP
         #region Utilidades privadas
 
         /// <summary>
-        /// Calcula el hash agregado de una tabla a partir de los dvh/dvv de sus filas.
+        /// Calcula dvvTabla = SHA256 de la concatenación de todos los dvh de las filas actuales.
         /// </summary>
-        private void CalcularHashTabla(string nombreTabla, out string dvhTabla, out string dvvTabla)
+        private string CalcularDvvTabla(string nombreTabla)
         {
             try
             {
-                DataTable dt = ObtenerFilasParaVerificacion(nombreTabla);
+                string consulta = $"SELECT dvh FROM [GymApp].[dbo].[{nombreTabla}]";
+                DataTable dt = dal._686DPConsultar(consulta, new List<SqlParameter>());
 
                 if (dt == null || dt.Rows.Count == 0)
-                {
-                    dvhTabla = criptoManager.GenerarHashSHA256(string.Empty);
-                    dvvTabla = criptoManager.GenerarHashSHA256(string.Empty);
-                    return;
-                }
+                    return criptoManager.GenerarHashSHA256(string.Empty);
 
-                StringBuilder dvhConcat = new StringBuilder();
-                StringBuilder dvvConcat = new StringBuilder();
-
+                StringBuilder concat = new StringBuilder();
                 foreach (DataRow row in dt.Rows)
                 {
-                    string dvh = row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty;
-                    string dvv = row["dvv"] != DBNull.Value ? row["dvv"].ToString() : string.Empty;
-
-                    dvhConcat.Append(dvh);
-                    dvvConcat.Append(dvv);
+                    concat.Append(row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty);
                 }
 
-                dvhTabla = criptoManager.GenerarHashSHA256(dvhConcat.ToString());
-                dvvTabla = criptoManager.GenerarHashSHA256(dvvConcat.ToString());
+                return criptoManager.GenerarHashSHA256(concat.ToString());
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al calcular hash de tabla {nombreTabla}: " + ex.Message, ex);
+                throw new Exception($"Error al calcular dvvTabla de {nombreTabla}: " + ex.Message, ex);
             }
         }
 
         /// <summary>
-        /// Obtiene todas las filas de una tabla incluyendo dvv y dvh.
+        /// Devuelve el COUNT(*) actual de una tabla.
+        /// </summary>
+        private int ObtenerCantidadFilas(string nombreTabla)
+        {
+            string consulta = $"SELECT COUNT(*) FROM [GymApp].[dbo].[{nombreTabla}]";
+            object resultado = dal._686DPEscalar(consulta, new List<SqlParameter>());
+            return resultado != null && resultado != DBNull.Value ? Convert.ToInt32(resultado) : 0;
+        }
+
+        /// <summary>
+        /// Obtiene todas las filas de una tabla incluyendo dvh.
         /// </summary>
         private DataTable ObtenerFilasParaVerificacion(string nombreTabla)
         {
             try
             {
-                string consulta = $@"
-                    SELECT *
-                    FROM [GymApp].[dbo].[{nombreTabla}]";
-
+                string consulta = $"SELECT * FROM [GymApp].[dbo].[{nombreTabla}]";
                 return dal._686DPConsultar(consulta, new List<SqlParameter>());
             }
             catch (Exception ex)
@@ -1062,7 +1022,6 @@ namespace MPP
                     return dt.Rows.Cast<DataRow>().Select(r => r["COLUMN_NAME"].ToString()).ToArray();
                 }
 
-                // Fallback: primera columna de la tabla.
                 string columnas = $@"
                     SELECT TOP 1 COLUMN_NAME
                     FROM INFORMATION_SCHEMA.COLUMNS
@@ -1081,9 +1040,6 @@ namespace MPP
             }
         }
 
-        /// <summary>
-        /// Arma la clave primaria de una fila concatenando valores de las PK.
-        /// </summary>
         private string ArmarClaveFila(DataRow row, string[] clavesPrimarias)
         {
             StringBuilder sb = new StringBuilder();
@@ -1095,9 +1051,20 @@ namespace MPP
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Arma el diccionario de valores de una fila para el cálculo de DVH/DVV.
-        /// </summary>
+        private bool TablaExisteEnDB(string nombreTabla)
+        {
+            try
+            {
+                string consulta = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @NombreTabla AND TABLE_TYPE = 'BASE TABLE'";
+                object resultado = dal._686DPEscalar(consulta, new List<SqlParameter> { new SqlParameter("@NombreTabla", nombreTabla) });
+                return resultado != null && Convert.ToInt32(resultado) > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private Dictionary<string, object> ArmarDiccionarioValores(DataRow row, List<DataColumn> columnasDatos)
         {
             var valores = new Dictionary<string, object>();

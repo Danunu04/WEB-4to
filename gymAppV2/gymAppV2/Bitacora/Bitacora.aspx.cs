@@ -132,35 +132,15 @@ namespace gymAppV2.Bitacora
             CargarBitacora();
         }
 
-        protected void txtBusqueda_TextChanged(object sender, EventArgs e)
+        protected void btnFiltrar_Click(object sender, EventArgs e)
         {
             busquedaActual = txtBusqueda.Text.Trim();
 
-            ViewState["filtro"] = filtroActual;
-            ViewState["busqueda"] = busquedaActual;
-            ViewState["filtroCriticidad"] = filtroCriticidadActual;
-            ViewState["filtroModulo"] = filtroModuloActual;
+            string criticidad = ddlCriticidad.SelectedValue;
+            filtroCriticidadActual = string.IsNullOrEmpty(criticidad) ? null : (int?)Convert.ToInt32(criticidad);
 
-            CargarBitacora();
-        }
-
-        protected void ddlCriticidad_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            string valor = ddlCriticidad.SelectedValue;
-            filtroCriticidadActual = string.IsNullOrEmpty(valor) ? null : (int?)Convert.ToInt32(valor);
-
-            ViewState["filtro"] = filtroActual;
-            ViewState["busqueda"] = busquedaActual;
-            ViewState["filtroCriticidad"] = filtroCriticidadActual;
-            ViewState["filtroModulo"] = filtroModuloActual;
-
-            CargarBitacora();
-        }
-
-        protected void ddlModulo_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            string valor = ddlModulo.SelectedValue;
-            filtroModuloActual = valor == "all" ? null : valor;
+            string modulo = ddlModulo.SelectedValue;
+            filtroModuloActual = modulo == "all" ? null : modulo;
 
             ViewState["filtro"] = filtroActual;
             ViewState["busqueda"] = busquedaActual;

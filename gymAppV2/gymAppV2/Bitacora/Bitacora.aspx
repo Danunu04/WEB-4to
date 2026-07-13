@@ -53,16 +53,17 @@
                 </div>
 
                 <div class="filter-bar">
-                    <asp:TextBox ID="txtBusqueda" runat="server" CssClass="search-input" placeholder="Buscar por usuario o acción..." AutoPostBack="true" OnTextChanged="txtBusqueda_TextChanged"></asp:TextBox>
-                    <asp:DropDownList ID="ddlCriticidad" runat="server" CssClass="filter-select" AutoPostBack="true" OnSelectedIndexChanged="ddlCriticidad_SelectedIndexChanged">
+                    <asp:TextBox ID="txtBusqueda" runat="server" CssClass="search-input" placeholder="Buscar por usuario o acción..."></asp:TextBox>
+                    <asp:DropDownList ID="ddlCriticidad" runat="server" CssClass="filter-select">
                         <asp:ListItem Value="" Text="Todas las criticidades" />
                         <asp:ListItem Value="1" Text="Alta (1)" />
                         <asp:ListItem Value="2" Text="Media Alta (2)" />
                         <asp:ListItem Value="3" Text="Media Baja (3)" />
                         <asp:ListItem Value="4" Text="Baja (4)" />
                     </asp:DropDownList>
-                    <asp:DropDownList ID="ddlModulo" runat="server" CssClass="filter-select" AutoPostBack="true" OnSelectedIndexChanged="ddlModulo_SelectedIndexChanged">
+                    <asp:DropDownList ID="ddlModulo" runat="server" CssClass="filter-select">
                     </asp:DropDownList>
+                    <asp:Button ID="btnFiltrar" runat="server" Text="Filtrar" CssClass="filter-apply-btn" OnClick="btnFiltrar_Click" />
                 </div>
 
                 <div class="filter-buttons">

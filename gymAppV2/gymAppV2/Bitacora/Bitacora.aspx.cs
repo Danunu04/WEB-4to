@@ -169,16 +169,16 @@ namespace gymAppV2.Bitacora
 
         private void ActualizarBotonesFiltro(Dictionary<string, int> stats)
         {
-            btnLogin.Text = "Login (" + stats["Logins"] + ")";
-            btnLogout.Text = "Logout";
-            btnBloqueo.Text = "Bloqueos";
-            btnDesbloqueo.Text = "Desbloqueos";
-            btnCambioContrasena.Text = "Cambio Contraseña";
-            btnBackup.Text = "Backup";
-            btnUsuarioNuevo.Text = "Usuario Nuevo (" + stats["UsuariosNuevos"] + ")";
-            btnActualizacion.Text = "Actualización";
-            btnError.Text = "Error (" + stats["Errores"] + ")";
-            btnTodos.Text = "Todos (" + stats["Total"] + ")";
+            AsignarTextoYVisibilidad(btnTodos, "Todos", stats["Total"]);
+            AsignarTextoYVisibilidad(btnLogin, "Login", stats["Logins"]);
+            AsignarTextoYVisibilidad(btnLogout, "Logout", stats["Logouts"]);
+            AsignarTextoYVisibilidad(btnBloqueo, "Bloqueos", stats["Bloqueos"]);
+            AsignarTextoYVisibilidad(btnDesbloqueo, "Desbloqueos", stats["Desbloqueos"]);
+            AsignarTextoYVisibilidad(btnCambioContrasena, "Cambio Contraseña", stats["CambioContrasenas"]);
+            AsignarTextoYVisibilidad(btnBackup, "Backup", stats["Backups"]);
+            AsignarTextoYVisibilidad(btnUsuarioNuevo, "Usuario Nuevo", stats["UsuariosNuevos"]);
+            AsignarTextoYVisibilidad(btnActualizacion, "Actualización", stats["Actualizaciones"]);
+            AsignarTextoYVisibilidad(btnError, "Error", stats["Errores"]);
 
             // Resaltar visualmente el filtro activo
             foreach (var btn in new[] { btnTodos, btnLogin, btnLogout, btnBloqueo, btnDesbloqueo, btnCambioContrasena, btnBackup, btnUsuarioNuevo, btnActualizacion, btnError })
@@ -188,6 +188,12 @@ namespace gymAppV2.Bitacora
                 else
                     btn.CssClass = "filter-btn";
             }
+        }
+
+        private void AsignarTextoYVisibilidad(Button btn, string textoBase, int cantidad)
+        {
+            btn.Text = $"{textoBase} ({cantidad})";
+            btn.Visible = cantidad > 0;
         }
 
         protected string GetLabelForType(string tipo)

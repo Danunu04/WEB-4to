@@ -123,7 +123,7 @@
     <div class="calendar-container">
         <div class="calendar-header animate-fade-in">
             <div class="calendar-title">
-                <h2>Calendario de Actividades</h2>
+                <h2><asp:Literal ID="litTitulo" runat="server" Text="Calendario de Actividades" /></h2>
                 <p id="currentMonthDisplay"></p>
             </div>
             <div class="calendar-nav">
@@ -143,7 +143,7 @@
                             <line x1="12" y1="5" x2="12" y2="19"/>
                             <line x1="5" y1="12" x2="19" y2="12"/>
                         </svg>
-                        <span>Nueva Actividad</span>
+                        <span><asp:Literal ID="litBtnNueva" runat="server" Text="Nueva Actividad" /></span>
                     </button>
                 </asp:Panel>
 
@@ -154,18 +154,18 @@
 
         <div id="panelClienteInfo" class="cliente-info-panel" style="display: none;">
             <i class="bi bi-info-circle"></i>
-            <span>Se muestran las actividades asociadas a tus alumnos. Si no ves clases, contactá a recepción.</span>
+            <span><asp:Literal ID="litClienteInfo" runat="server" Text="Se muestran las actividades asociadas a tus alumnos. Si no ves clases, contactá a recepción." /></span>
         </div>
 
         <div class="calendar-grid animate-fade-in">
             <div class="calendar-weekdays">
-                <div>Dom</div>
-                <div>Lun</div>
-                <div>Mar</div>
-                <div>Mié</div>
-                <div>Jue</div>
-                <div>Vie</div>
-                <div>Sáb</div>
+                <div><%= T("actividades_dia_dom") %></div>
+                <div><%= T("actividades_dia_lun") %></div>
+                <div><%= T("actividades_dia_mar") %></div>
+                <div><%= T("actividades_dia_mie") %></div>
+                <div><%= T("actividades_dia_jue") %></div>
+                <div><%= T("actividades_dia_vie") %></div>
+                <div><%= T("actividades_dia_sab") %></div>
             </div>
             <div class="calendar-days" id="calendarDays"></div>
         </div>
@@ -177,7 +177,7 @@
     <div id="activityModal" class="modal-overlay" style="display: none;">
         <div class="modal-content" onclick="event.stopPropagation();">
             <div class="modal-header">
-                <h3 class="modal-title">Nueva Actividad</h3>
+                <h3 class="modal-title"><asp:Literal ID="litModalTitulo" runat="server" Text="Nueva Actividad" /></h3>
                 <button type="button" class="modal-close" id="closeModal">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -186,36 +186,36 @@
                 </button>
             </div>
             <div class="form-group">
-                <label>Nombre de la actividad</label>
-                <input type="text" id="activityName" placeholder="Ej: Yoga Flow" />
+                <label><%= T("actividades_campo_nombre") %></label>
+                <input type="text" id="activityName" placeholder="<%= T("actividades_campo_nombre") %>" />
             </div>
             <div class="form-group">
-                <label>Instructor</label>
-                <input type="text" id="instructorName" placeholder="Ej: Ana García" />
+                <label><%= T("actividades_campo_instructor") %></label>
+                <input type="text" id="instructorName" placeholder="<%= T("actividades_campo_instructor") %>" />
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Horario</label>
+                    <label><%= T("actividades_campo_horario") %></label>
                     <input type="time" id="activityTime" />
                 </div>
                 <div class="form-group">
-                    <label>Duración (min)</label>
+                    <label><%= T("actividades_campo_duracion") %></label>
                     <input type="number" id="activityDuration" placeholder="45" />
                 </div>
             </div>
             <div class="form-group">
-                <label>Color</label>
+                <label><%= T("actividades_campo_color") %></label>
                 <select id="activityColor">
-                    <option value="pink">Rosa</option>
-                    <option value="mint">Menta</option>
-                    <option value="lavender">Lavanda</option>
-                    <option value="peach">Durazno</option>
-                    <option value="sky">Celeste</option>
+                    <option value="pink"><%= T("actividades_color_rosa") %></option>
+                    <option value="mint"><%= T("actividades_color_menta") %></option>
+                    <option value="lavender"><%= T("actividades_color_lavanda") %></option>
+                    <option value="peach"><%= T("actividades_color_durazno") %></option>
+                    <option value="sky"><%= T("actividades_color_celeste") %></option>
                 </select>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-secondary" id="cancelActivity">Cancelar</button>
-                <button type="button" class="btn-submit" id="saveActivity">Crear Actividad</button>
+                <button type="button" class="btn-secondary" id="cancelActivity"><%= T("actividades_btn_cancelar") %></button>
+                <button type="button" class="btn-submit" id="saveActivity"><%= T("actividades_btn_crear_act") %></button>
             </div>
         </div>
     </div>
@@ -240,7 +240,10 @@
             }
         })();
 
-        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const monthNames = <%=T("actividades_meses_json")%>;
+        const _actDayFmt = '<%=T("actividades_dia_titulo_fmt").Replace("'","&#39;")%>';
+        const _actVerDetalles = '<%=T("actividades_ver_detalles").Replace("'","&#39;")%>';
+        const _actMas = '<%=T("actividades_mas").Replace("'","&#39;")%>';
 
         let currentDate = new Date();
         let selectedDay = null;
@@ -295,7 +298,7 @@
                 if (activities.length > 3) {
                     const moreClasses = document.createElement('div');
                     moreClasses.className = 'more-classes';
-                    moreClasses.textContent = `+${activities.length - 3} más`;
+                    moreClasses.textContent = `+${activities.length - 3} ${_actMas}`;
                     dayElement.appendChild(moreClasses);
                 }
 
@@ -322,8 +325,9 @@
                 return;
             }
 
+            const dayTitle = _actDayFmt.replace('{0}', day).replace('{1}', monthNames[month]);
             panel.innerHTML = `
-                <h3>Actividades del ${day} de ${monthNames[month]}</h3>
+                <h3>${dayTitle}</h3>
                 ${activities.map(activity => `
                     <div class="selected-class">
                         <div class="selected-class-info">
@@ -333,7 +337,7 @@
                                 <p>${activity.time} - ${activity.instructor}</p>
                             </div>
                         </div>
-                        <button class="btn-details">Ver detalles</button>
+                        <button class="btn-details">${_actVerDetalles}</button>
                     </div>
                 `).join('')}
             `;

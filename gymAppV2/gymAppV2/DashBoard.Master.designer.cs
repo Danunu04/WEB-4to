@@ -199,6 +199,21 @@ namespace gymAppV2 {
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litMenuDashboard;
+        protected global::System.Web.UI.WebControls.Literal litMenuUsuarios;
+        protected global::System.Web.UI.WebControls.Literal litMenuAlumnos;
+        protected global::System.Web.UI.WebControls.Literal litMenuEntrenadores;
+        protected global::System.Web.UI.WebControls.Literal litMenuActividades;
+        protected global::System.Web.UI.WebControls.Literal litMenuRutinas;
+        protected global::System.Web.UI.WebControls.Literal litMenuPermisos;
+        protected global::System.Web.UI.WebControls.Literal litMenuBitacora;
+        protected global::System.Web.UI.WebControls.Literal litMenuRespaldo;
+        protected global::System.Web.UI.WebControls.Literal litMenuPagos;
+        protected global::System.Web.UI.WebControls.Literal litMenuPerfil;
+        protected global::System.Web.UI.WebControls.Literal litMenuIdioma;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liIdioma;
+        protected global::System.Web.UI.WebControls.Literal litMenuCambiarContra;
+        protected global::System.Web.UI.WebControls.Literal litMenuCerrarSesion;
         protected global::System.Web.UI.WebControls.LinkButton lnkLogout;
 
         /// <summary>

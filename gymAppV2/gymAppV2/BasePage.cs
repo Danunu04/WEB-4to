@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Web.UI;
 using BLL;
 using Servicios.Singleton;
 using System.Web;
 using BE;
+using SERVICIOS.Observer;
 
 namespace gymAppV2
 {
@@ -12,11 +14,45 @@ namespace gymAppV2
     /// Centraliza la verificación de login, autorización por perfil, control de integridad
     /// de datos y utilidades de UI.
     /// </summary>
-    public class BasePage : System.Web.UI.Page
+    public class BasePage : System.Web.UI.Page, IIdiomaObserver
     {
         protected BLLRol BllRol { get; private set; }
         protected BLLDigitoVerificador BllDV { get; private set; }
         protected BLLEvento BllEvento { get; private set; }
+
+        // Clave en HttpContext.Items para cachear el diccionario de traducciones del request actual.
+        private const string ITEMS_DICT_KEY = "BasePage_TradDict";
+
+        private Dictionary<string, string> Traducciones
+        {
+            get
+            {
+                if (HttpContext.Current?.Items[ITEMS_DICT_KEY] is Dictionary<string, string> dict)
+                    return dict;
+                var nuevo = new BLLTraduccion().ObtenerDiccionario(GestorIdioma.IdiomaActual);
+                if (HttpContext.Current?.Items != null)
+                    HttpContext.Current.Items[ITEMS_DICT_KEY] = nuevo;
+                return nuevo;
+            }
+        }
+
+        /// <summary>
+        /// Devuelve el texto del tag en el idioma activo. Si el tag no existe devuelve el tag mismo.
+        /// </summary>
+        protected string T(string tag)
+        {
+            return Traducciones.TryGetValue(tag, out var texto) ? texto : tag;
+        }
+
+        /// <summary>
+        /// El Observer se notifica cuando cambia el idioma. Invalida el cache del request
+        /// para que la próxima llamada a T() cargue el nuevo idioma.
+        /// </summary>
+        public virtual void OnIdiomaChanged(IdiomaApp idioma)
+        {
+            if (HttpContext.Current?.Items != null)
+                HttpContext.Current.Items[ITEMS_DICT_KEY] = null;
+        }
 
         // FriendlyUrls (RedirectMode.Permanent) elimina la extensión .aspx de las URLs,
         // por lo que Request.AppRelativeCurrentExecutionFilePath puede devolver la ruta
@@ -45,6 +81,8 @@ namespace gymAppV2
             BllRol = new BLLRol();
             BllDV = new BLLDigitoVerificador();
             BllEvento = new BLLEvento();
+
+            GestorIdioma.Suscribir(this);
 
             var sesion = Singleton.Instancia;
             if (sesion == null || !sesion.IsLogged())

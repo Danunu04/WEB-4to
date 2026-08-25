@@ -45,9 +45,61 @@ namespace gymAppV2.Usuarios
 
             if (!IsPostBack)
             {
+                AplicarIdioma();
                 CargarUsuarios();
                 ActualizarEstadisticas();
             }
+        }
+
+        public override void OnIdiomaChanged(IdiomaApp idioma)
+        {
+            base.OnIdiomaChanged(idioma);
+            AplicarIdioma();
+            ActualizarEstadisticas();
+            // Rebind para que GetEstadoText/GetBloqueadoText devuelvan el nuevo idioma
+            if (Usuarios != null)
+            {
+                gvUsuarios.DataSource = Usuarios;
+                gvUsuarios.DataBind();
+            }
+        }
+
+        private void AplicarIdioma()
+        {
+            litTitulo.Text          = T("usuarios_titulo");
+            litStatTotal.Text       = T("usuarios_stat_total");
+            litStatActivos.Text     = T("usuarios_stat_activos");
+            litStatBloqueados.Text  = T("usuarios_stat_bloqueados");
+            litStatInactivos.Text   = T("usuarios_stat_inactivos");
+            litListaTitulo.Text     = T("usuarios_lista_titulo");
+            litBtnCrear.Text        = T("usuarios_btn_crear");
+            litBtnModificar.Text    = T("usuarios_btn_modificar");
+            litBtnDesbloquear.Text  = T("usuarios_btn_desbloquear");
+            litBtnBlanquear.Text    = T("usuarios_btn_blanquear");
+            litBtnActivar.Text      = T("usuarios_btn_activar");
+            litBtnDesactivar.Text   = T("usuarios_btn_desactivar");
+            litBtnCancelar.Text     = T("btn_cancelar");
+            litBtnGuardar.Text      = T("btn_guardar");
+            litBtnCancelarForm.Text = T("btn_cancelar");
+            lblFormTitle.Text       = T("usuarios_form_titulo");
+
+            // Columnas del GridView (col 0: Usuario, 4: Estado, 5: Bloqueado)
+            ((System.Web.UI.WebControls.TemplateField)gvUsuarios.Columns[0]).HeaderText = T("usuarios_col_usuario");
+            ((System.Web.UI.WebControls.TemplateField)gvUsuarios.Columns[4]).HeaderText = T("usuarios_col_estado");
+            ((System.Web.UI.WebControls.TemplateField)gvUsuarios.Columns[5]).HeaderText = T("usuarios_col_bloqueado");
+
+            // Opciones de dropdowns de filtros
+            ddlEstado.Items[0].Text   = T("usuarios_filtro_todos");
+            ddlEstado.Items[1].Text   = T("usuarios_filtro_activados");
+            ddlEstado.Items[2].Text   = T("usuarios_filtro_desactivados");
+
+            ddlBloqueado.Items[0].Text = T("usuarios_filtro_todos");
+            ddlBloqueado.Items[1].Text = T("usuarios_filtro_bloqueados");
+            ddlBloqueado.Items[2].Text = T("usuarios_filtro_no_bloqueados");
+
+            ddlRol.Items[0].Text = T("usuarios_filtro_todos_roles");
+
+            txtBusqueda.Attributes["placeholder"] = T("usuarios_buscar_placeholder");
         }
 
         // ==================== MÉTODOS PRINCIPALES ====================
@@ -138,13 +190,13 @@ namespace gymAppV2.Usuarios
                 lblInactivos.Text = "0";
             }
 
-            badgeCount.InnerText = lblTotal.Text + " usuarios";
+            badgeCount.InnerText = lblTotal.Text;
         }
 
         private void ActualizarFooter()
         {
             int total = Usuarios?.Count ?? 0;
-            footerText.InnerText = $"Mostrando {total} de {total} usuarios";
+            footerText.InnerText = string.Format(T("msg_mostrando_fmt"), total, total);
         }
 
         /// <summary>
@@ -318,7 +370,7 @@ namespace gymAppV2.Usuarios
         protected void btnCrear_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
-            lblFormTitle.Text = "Nuevo usuario";
+            lblFormTitle.Text = T("usuarios_form_nuevo");
             pnlForm.Visible = true;
             passwordRow.Visible = true;
         }
@@ -334,7 +386,7 @@ namespace gymAppV2.Usuarios
             if (usuario != null)
             {
                 CargarUsuarioEnFormulario(usuario);
-                lblFormTitle.Text = "Modificar usuario";
+                lblFormTitle.Text = T("usuarios_form_modificar");
                 pnlForm.Visible = true;
                 passwordRow.Visible = false;
             }
@@ -344,18 +396,18 @@ namespace gymAppV2.Usuarios
         {
             if (string.IsNullOrEmpty(SelectedUsuario))
             {
-                MostrarError("Seleccione un usuario para desbloquear");
+                MostrarError(T("usuarios_msg_sel_desbloquear"));
                 return;
             }
 
             try
             {
                 bllUsuario.DesbloquearUsuario(SelectedUsuario);
-                MostrarExito($"Usuario '{SelectedUsuario}' desbloqueado correctamente");
+                MostrarExito(T("usuarios_msg_desbloqueado"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al desbloquear: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
 
             CargarUsuarios();
@@ -366,18 +418,18 @@ namespace gymAppV2.Usuarios
         {
             if (string.IsNullOrEmpty(SelectedUsuario))
             {
-                MostrarError("Seleccione un usuario para blanquear la contraseña");
+                MostrarError(T("usuarios_msg_sel_blanquear"));
                 return;
             }
 
             try
             {
                 bllUsuario.BlanquearContrasena(SelectedUsuario);
-                MostrarExito($"Contraseña de '{SelectedUsuario}' blanqueada. Deberá cambiarla en su próximo inicio de sesión.");
+                MostrarExito(T("usuarios_msg_blanqueado"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al blanquear contraseña: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
 
             CargarUsuarios();
@@ -387,7 +439,7 @@ namespace gymAppV2.Usuarios
         {
             if (string.IsNullOrEmpty(SelectedUsuario))
             {
-                MostrarError("Seleccione un usuario para activar");
+                MostrarError(T("usuarios_msg_sel_activar"));
                 return;
             }
 
@@ -398,7 +450,7 @@ namespace gymAppV2.Usuarios
         {
             if (string.IsNullOrEmpty(SelectedUsuario))
             {
-                MostrarError("Seleccione un usuario para desactivar");
+                MostrarError(T("usuarios_msg_sel_desactivar"));
                 return;
             }
 
@@ -420,9 +472,9 @@ namespace gymAppV2.Usuarios
 
             string nombre = txtNombre.Text;
             string apellido = txtApellido.Text;
-            if(!int.TryParse(txtDNI.Text, out int dni))
+            if (!int.TryParse(txtDNI.Text, out int dni))
             {
-                MostrarError("El DNI debe ser un número válido");
+                MostrarError(T("msg_dni_invalido"));
                 return;
             }
             string telefono = txtTelefono.Text.Trim();
@@ -436,7 +488,7 @@ namespace gymAppV2.Usuarios
             string rolSeleccionado = ddlRolForm.SelectedValue;
             if ((rolSeleccionado == "3" || rolSeleccionado == "4") && string.IsNullOrEmpty(txtFechaNacimiento.Text))
             {
-                MostrarError("La fecha de nacimiento es obligatoria");
+                MostrarError(T("alumnos_msg_fecha_oblig"));
                 return;
             }
 
@@ -447,52 +499,49 @@ namespace gymAppV2.Usuarios
 
             try
             {
-                bool esModificacion = !string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == "Modificar usuario";
+                bool esModificacion = !string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == T("usuarios_form_modificar");
 
                 if (esModificacion)
                 {
-                    // Modificar usuario existente
                     int rol = int.Parse(ddlRolForm.SelectedValue);
                     bllUsuario.ModificarUsuario(SelectedUsuario, usuario, nombre, apellido,
                         telefono, email, fechaNacimiento, rol, activo, dni);
-                    MostrarExito("Usuario modificado correctamente");
+                    MostrarExito(T("usuarios_msg_modificado"));
                 }
                 else
                 {
-                    // Crear nuevo usuario
                     switch (ddlRolForm.SelectedValue)
                     {
-                        case "5": // WebMaster
+                        case "5":
                             bllUsuario.CrearUsuario(usuario, contrasenia, 5, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
-                            MostrarExito("WebMaster creado correctamente");
+                            MostrarExito(T("usuarios_msg_creado"));
                             break;
-                        case "1": // Administrador
+                        case "1":
                             bllUsuario.CrearUsuario(usuario, contrasenia, 1, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
-                            MostrarExito("Administrador creado correctamente");
+                            MostrarExito(T("usuarios_msg_creado"));
                             break;
-                        case "2": // Recepcionista
+                        case "2":
                             bllUsuario.CrearUsuario(usuario, contrasenia, 2, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
-                            MostrarExito("Recepcionista creado correctamente");
+                            MostrarExito(T("usuarios_msg_creado"));
                             break;
-                        case "3": // Entrenador
+                        case "3":
                             Entrenador ent = new Entrenador(dni, 0, activo, "", usuario);
                             bllUsuario.CrearUsuario(usuario, contrasenia, 3, nombre, apellido, telefono, email, fechaNacimiento, ent, null, null, activo);
-                            MostrarExito("Entrenador creado correctamente");
+                            MostrarExito(T("usuarios_msg_creado"));
                             break;
-                        case "4": // Cliente
-                            // En esquema normalizado: se crea USUARIOS + ALUMNOS con el mismo DNI
+                        case "4":
                             bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
-                            MostrarExito("Cliente creado correctamente");
+                            MostrarExito(T("usuarios_msg_creado"));
                             break;
                         default:
-                            MostrarError("Seleccione un rol válido");
+                            MostrarError(T("usuarios_msg_rol_invalido"));
                             return;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al guardar usuario: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
                 return;
             }
 
@@ -580,17 +629,17 @@ namespace gymAppV2.Usuarios
                 if (activo)
                 {
                     bllUsuario.ActivarUsuario(usuario);
-                    MostrarExito($"Usuario '{usuario}' activado correctamente");
+                    MostrarExito(T("usuarios_msg_activado"));
                 }
                 else
                 {
                     bllUsuario.DesactivarUsuario(usuario);
-                    MostrarExito($"Usuario '{usuario}' desactivado correctamente");
+                    MostrarExito(T("usuarios_msg_desactivado"));
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al cambiar estado: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
 
             CargarUsuarios();
@@ -646,14 +695,14 @@ namespace gymAppV2.Usuarios
         protected string GetEstadoText(object activo)
         {
             bool a = Convert.ToBoolean(activo);
-            return a ? "Activo" : "Inactivo";
+            return a ? T("usuarios_estado_activo") : T("usuarios_estado_inactivo");
         }
 
         protected string GetBloqueadoText(object bloqueado)
         {
             bool b = Convert.ToBoolean(bloqueado);
             if (b)
-                return "<span class=\"pill pill-blocked\"><i class=\"fa-solid fa-lock\" style=\"font-size:0.65rem\"></i> Bloqueado</span>";
+                return $"<span class=\"pill pill-blocked\"><i class=\"fa-solid fa-lock\" style=\"font-size:0.65rem\"></i> {T("usuarios_bloqueado_si")}</span>";
             else
                 return "<span style=\"color:var(--text-light);font-size:0.82rem\">—</span>";
         }

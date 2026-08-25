@@ -13,5 +13,18 @@ namespace gymAppV2.DashBoard
 
     public partial class WebForm1
     {
+        protected global::System.Web.UI.WebControls.Literal litTitulo;
+        protected global::System.Web.UI.WebControls.Literal litSubtitulo;
+        protected global::System.Web.UI.WebControls.Literal litKpiMiembros;
+        protected global::System.Web.UI.WebControls.Literal litKpiClases;
+        protected global::System.Web.UI.WebControls.Literal litKpiIngresos;
+        protected global::System.Web.UI.WebControls.Literal litKpiRetencion;
+        protected global::System.Web.UI.WebControls.Literal litSemanaTitulo;
+        protected global::System.Web.UI.WebControls.Literal litColActividad;
+        protected global::System.Web.UI.WebControls.Literal litColInstructor;
+        protected global::System.Web.UI.WebControls.Literal litColDia;
+        protected global::System.Web.UI.WebControls.Literal litColHorario;
+        protected global::System.Web.UI.WebControls.Literal litColDuracion;
+        protected global::System.Web.UI.WebControls.Literal litColEstado;
     }
 }

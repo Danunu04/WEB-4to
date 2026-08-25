@@ -51,6 +51,8 @@
     <Compile Include="Singleton\SesionUsuario.cs" />
     <Compile Include="Singleton\ResultadosLogIn.cs" />
     <Compile Include="Singleton\ExcepcionesLogIn.cs" />
+    <Compile Include="Observer\IIdiomaObserver.cs" />
+    <Compile Include="Observer\GestorIdioma.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

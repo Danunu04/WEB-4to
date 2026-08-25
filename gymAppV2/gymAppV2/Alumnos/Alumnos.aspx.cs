@@ -33,15 +33,61 @@ namespace gymAppV2.Alumnos
 
             if (!IsPostBack)
             {
+                AplicarIdioma();
                 CargarAlumnos();
                 CargarUsuariosDropdown();
                 ConfigurarModoSoloLectura();
             }
         }
 
-        /// <summary>
-        /// Para los clientes, el módulo de alumnos es solo lectura de sus alumnos asociados.
-        /// </summary>
+        public override void OnIdiomaChanged(IdiomaApp idioma)
+        {
+            base.OnIdiomaChanged(idioma);
+            AplicarIdioma();
+            CargarAlumnos();
+        }
+
+        private void AplicarIdioma()
+        {
+            litTitulo.Text          = T("alumnos_titulo");
+            litStatTotal.Text       = T("alumnos_stat_total");
+            litStatActivos.Text     = T("alumnos_stat_activos");
+            litStatConRutinas.Text  = T("alumnos_stat_con_rutinas");
+            litStatSinUsuario.Text  = T("alumnos_stat_sin_usuario");
+            litListaTitulo.Text     = T("alumnos_lista_titulo");
+            litBtnCrear.Text        = T("alumnos_btn_crear");
+            litBtnModificar.Text    = T("alumnos_btn_modificar");
+            litBtnEliminar.Text     = T("alumnos_btn_eliminar");
+            litBtnAsociar.Text      = T("alumnos_btn_asociar");
+            litBtnCancelar.Text     = T("btn_cancelar");
+            litBtnGuardar.Text      = T("btn_guardar");
+            lblFormTitle.Text       = T("alumnos_form_titulo");
+            litConfirmarTitulo.Text = T("alumnos_confirmar_elim_titulo");
+            litConfirmarMsg.Text    = T("alumnos_confirmar_elim_msg");
+            litConfirmarAviso.Text  = T("alumnos_confirmar_elim_aviso");
+            litBtnCancelarEliminar.Text  = T("btn_cancelar");
+            litBtnConfirmarEliminar.Text = T("alumnos_btn_eliminar");
+
+            ((TemplateField)gvAlumnos.Columns[1]).HeaderText = T("alumnos_col_alumno");
+            ((TemplateField)gvAlumnos.Columns[6]).HeaderText = T("alumnos_col_estado");
+
+            // Opciones de dropdowns de filtros
+            ddlEstado.Items[0].Text = T("alumnos_filtro_todos");
+            ddlEstado.Items[1].Text = T("alumnos_filtro_activos");
+            ddlEstado.Items[2].Text = T("alumnos_filtro_inactivos");
+
+            // ddlUsuario se carga en CargarUsuariosDropdown con T() para el primer load.
+            // En OnIdiomaChanged los items ya existen: traducimos sus textos directamente.
+            if (ddlUsuario.Items.Count >= 3)
+            {
+                ddlUsuario.Items[0].Text = T("alumnos_filtro_todos");
+                ddlUsuario.Items[1].Text = T("alumnos_filtro_con_usuario");
+                ddlUsuario.Items[2].Text = T("alumnos_filtro_sin_usuario");
+            }
+
+            txtBusqueda.Attributes["placeholder"] = T("alumnos_buscar_placeholder");
+        }
+
         private void ConfigurarModoSoloLectura()
         {
             if (EsSoloLectura)
@@ -100,18 +146,18 @@ namespace gymAppV2.Alumnos
                 gvAlumnos.DataSource = alumnos;
                 gvAlumnos.DataBind();
 
-                // Actualizar estadísticas
                 lblTotal.Text = alumnos.Count.ToString();
                 lblActivos.Text = alumnos.Count(a => a.Activo).ToString();
                 lblConRutinas.Text = alumnos.Count(a => a.TieneRutinas).ToString();
                 lblSinUsuario.Text = alumnos.Count(a => string.IsNullOrEmpty(a.Usuario)).ToString();
 
-                badgeCount.InnerText = lblTotal.Text + " alumnos";
-                footerText.InnerText = $"Mostrando {alumnos.Count} de {alumnos.Count} alumnos";
+                badgeCount.InnerText = lblTotal.Text;
+                footerText.InnerText = string.Format(T("msg_mostrando_fmt"), alumnos.Count, alumnos.Count);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al cargar alumnos: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
+                footerText.InnerText = string.Format(T("msg_mostrando_fmt"), 0, 0);
             }
         }
 
@@ -120,9 +166,9 @@ namespace gymAppV2.Alumnos
             try
             {
                 ddlUsuario.Items.Clear();
-                ddlUsuario.Items.Add(new ListItem("Todos", ""));
-                ddlUsuario.Items.Add(new ListItem("Con usuario", "con_usuario"));
-                ddlUsuario.Items.Add(new ListItem("Sin usuario", "sin_usuario"));
+                ddlUsuario.Items.Add(new ListItem(T("alumnos_filtro_todos"),       ""));
+                ddlUsuario.Items.Add(new ListItem(T("alumnos_filtro_con_usuario"), "con_usuario"));
+                ddlUsuario.Items.Add(new ListItem(T("alumnos_filtro_sin_usuario"), "sin_usuario"));
             }
             catch (Exception)
             {
@@ -136,7 +182,7 @@ namespace gymAppV2.Alumnos
             {
                 var usuarios = bllUsuario.ListarUsuariosClientesDisponibles();
                 ddlUsuarioAsociar.Items.Clear();
-                ddlUsuarioAsociar.Items.Add(new ListItem("-- Sin asociar --", ""));
+                ddlUsuarioAsociar.Items.Add(new ListItem(T("alumnos_sin_asociar"), ""));
 
                 foreach (var usuario in usuarios)
                 {
@@ -148,16 +194,6 @@ namespace gymAppV2.Alumnos
             {
                 // Silencioso - el dropdown queda vacío
             }
-        }
-
-        private void ActualizarEstadisticas()
-        {
-            // Se actualiza desde CargarAlumnos
-        }
-
-        private void ActualizarFooter()
-        {
-            // Se actualiza desde CargarAlumnos
         }
 
         // ==================== EVENTOS DE FILTROS ====================
@@ -194,7 +230,6 @@ namespace gymAppV2.Alumnos
         {
             try
             {
-                // Selection via LinkButton click
                 if (e.CommandName == "Select")
                 {
                     GridViewRow row = (GridViewRow)((LinkButton)e.CommandSource).NamingContainer;
@@ -203,18 +238,15 @@ namespace gymAppV2.Alumnos
                     if (dni.HasValue)
                     {
                         DniSeleccionado = dni.Value;
-                        // Clear other selections
                         foreach (GridViewRow r in gvAlumnos.Rows)
-                        {
                             r.CssClass = "gridview-row";
-                        }
                         row.CssClass = "selected-row";
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al seleccionar alumno: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -222,25 +254,16 @@ namespace gymAppV2.Alumnos
         {
             if (e.Row.RowType == DataControlRowType.DataRow)
             {
-                // Agregar atributos data-label para vista móvil
-                if (e.Row.Cells.Count > 0)
-                {
-                    // Teléfono
-                    if (e.Row.Cells.Count > 1)
-                        e.Row.Cells[1].Attributes["data-label"] = "Teléfono";
-                    // Fecha Nacimiento
-                    if (e.Row.Cells.Count > 2)
-                        e.Row.Cells[2].Attributes["data-label"] = "Fecha Nacimiento";
-                    // Peso
-                    if (e.Row.Cells.Count > 3)
-                        e.Row.Cells[3].Attributes["data-label"] = "Peso";
-                    // Usuario
-                    if (e.Row.Cells.Count > 4)
-                        e.Row.Cells[4].Attributes["data-label"] = "Usuario";
-                    // Estado
-                    if (e.Row.Cells.Count > 5)
-                        e.Row.Cells[5].Attributes["data-label"] = "Estado";
-                }
+                if (e.Row.Cells.Count > 1)
+                    e.Row.Cells[1].Attributes["data-label"] = "Teléfono";
+                if (e.Row.Cells.Count > 2)
+                    e.Row.Cells[2].Attributes["data-label"] = "Fecha Nacimiento";
+                if (e.Row.Cells.Count > 3)
+                    e.Row.Cells[3].Attributes["data-label"] = "Peso";
+                if (e.Row.Cells.Count > 4)
+                    e.Row.Cells[4].Attributes["data-label"] = "Usuario";
+                if (e.Row.Cells.Count > 5)
+                    e.Row.Cells[5].Attributes["data-label"] = "Estado";
             }
         }
 
@@ -248,14 +271,7 @@ namespace gymAppV2.Alumnos
 
         protected void btnExportar_Click(object sender, EventArgs e)
         {
-            try
-            {
-                MostrarAdvertencia("Funcionalidad de exportar en desarrollo");
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al exportar: " + ex.Message);
-            }
+            MostrarAdvertencia("Funcionalidad de exportar en desarrollo");
         }
 
         protected void btnActualizar_Click(object sender, EventArgs e)
@@ -263,11 +279,11 @@ namespace gymAppV2.Alumnos
             try
             {
                 CargarAlumnos();
-                MostrarExito("Lista de alumnos actualizada");
+                MostrarExito(T("alumnos_msg_actualizado"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al actualizar lista: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -276,16 +292,16 @@ namespace gymAppV2.Alumnos
             try
             {
                 LimpiarFormulario();
-                lblFormTitle.Text = "Nuevo Alumno";
+                lblFormTitle.Text = T("alumnos_form_nuevo");
                 EsModificacion = false;
                 DniSeleccionado = null;
                 txtDNI.Enabled = true;
                 CargarUsuariosDisponibles();
                 pnlForm.Visible = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al preparar formulario: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -295,15 +311,14 @@ namespace gymAppV2.Alumnos
             {
                 if (!DniSeleccionado.HasValue)
                 {
-                    MostrarError("Seleccione un alumno de la lista");
+                    MostrarError(T("alumnos_msg_sel_requerido"));
                     return;
                 }
 
                 var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
                 if (alumno == null)
-
                 {
-                    MostrarError("El alumno no existe");
+                    MostrarError(T("alumnos_msg_no_existe"));
                     return;
                 }
 
@@ -321,16 +336,14 @@ namespace gymAppV2.Alumnos
                 CargarUsuariosDisponibles();
 
                 if (!string.IsNullOrEmpty(alumno.Usuario))
-                {
                     ddlUsuarioAsociar.SelectedValue = alumno.Usuario;
-                }
 
-                lblFormTitle.Text = "Modificar Alumno";
+                lblFormTitle.Text = T("alumnos_form_modificar");
                 pnlForm.Visible = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al cargar alumno: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -340,14 +353,14 @@ namespace gymAppV2.Alumnos
             {
                 if (!DniSeleccionado.HasValue)
                 {
-                    MostrarError("Seleccione un alumno de la lista para eliminar");
+                    MostrarError(T("alumnos_msg_sel_eliminar"));
                     return;
                 }
 
                 var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
                 if (alumno == null)
                 {
-                    MostrarError("El alumno no existe");
+                    MostrarError(T("alumnos_msg_no_existe"));
                     return;
                 }
 
@@ -355,9 +368,9 @@ namespace gymAppV2.Alumnos
                 hdnDniAEliminar.Value = alumno.DNI.ToString();
                 pnlConfirmarEliminar.Visible = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al preparar eliminación: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -367,20 +380,20 @@ namespace gymAppV2.Alumnos
             {
                 if (!DniSeleccionado.HasValue)
                 {
-                    MostrarError("Seleccione un alumno de la lista para asociar usuario");
+                    MostrarError(T("alumnos_msg_sel_asociar"));
                     return;
                 }
 
                 var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
                 if (alumno == null)
                 {
-                    MostrarError("El alumno seleccionado no existe");
+                    MostrarError(T("alumnos_msg_no_existe"));
                     return;
                 }
 
                 if (!string.IsNullOrEmpty(alumno.Usuario))
                 {
-                    MostrarAdvertencia($"El alumno ya tiene un usuario asociado: {alumno.Usuario}");
+                    MostrarAdvertencia(T("alumnos_msg_ya_asociado"));
                     return;
                 }
 
@@ -397,120 +410,84 @@ namespace gymAppV2.Alumnos
                 chkActivo.Checked = alumno.Activo;
 
                 CargarUsuariosDisponibles();
-                lblFormTitle.Text = "Asociar Usuario - " + alumno.Apellido + ", " + alumno.Nombre;
+                lblFormTitle.Text = T("alumnos_btn_asociar") + " - " + alumno.Apellido + ", " + alumno.Nombre;
                 pnlForm.Visible = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al preparar asociación: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
         protected void btnCancelar_Click(object sender, EventArgs e)
         {
-            try
-            {
-                DniSeleccionado = null;
-                CargarAlumnos();
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al cancelar: " + ex.Message);
-            }
+            DniSeleccionado = null;
+            CargarAlumnos();
         }
 
         protected void btnCloseForm_Click(object sender, EventArgs e)
         {
-            try
-            {
-                pnlForm.Visible = false;
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al cerrar formulario: " + ex.Message);
-            }
+            pnlForm.Visible = false;
         }
 
         protected void btnCancelarForm_Click(object sender, EventArgs e)
         {
-            try
-            {
-                pnlForm.Visible = false;
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al cancelar: " + ex.Message);
-            }
+            pnlForm.Visible = false;
         }
 
         protected void btnCloseConfirm_Click(object sender, EventArgs e)
         {
-            try
-            {
-                pnlConfirmarEliminar.Visible = false;
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al cerrar confirmación: " + ex.Message);
-            }
+            pnlConfirmarEliminar.Visible = false;
         }
 
         protected void btnCancelarEliminar_Click(object sender, EventArgs e)
         {
-            try
-            {
-                pnlConfirmarEliminar.Visible = false;
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al cancelar eliminación: " + ex.Message);
-            }
+            pnlConfirmarEliminar.Visible = false;
         }
 
         protected void btnGuardar_Click(object sender, EventArgs e)
         {
             try
             {
-                // Validaciones
                 if (string.IsNullOrEmpty(txtDNI.Text))
                 {
-                    MostrarError("El DNI es obligatorio");
+                    MostrarError(T("alumnos_msg_dni_obligatorio"));
                     return;
                 }
 
                 if (!int.TryParse(txtDNI.Text, out int dni))
                 {
-                    MostrarError("El DNI debe ser un número válido");
+                    MostrarError(T("alumnos_msg_dni_invalido"));
                     return;
                 }
 
                 if (string.IsNullOrEmpty(txtNombre.Text))
                 {
-                    MostrarError("El nombre es obligatorio");
+                    MostrarError(T("alumnos_msg_nombre_oblig"));
                     return;
                 }
 
                 if (string.IsNullOrEmpty(txtApellido.Text))
                 {
-                    MostrarError("El apellido es obligatorio");
+                    MostrarError(T("alumnos_msg_apellido_oblig"));
                     return;
                 }
 
                 if (string.IsNullOrEmpty(txtFechaNacimiento.Text))
                 {
-                    MostrarError("La fecha de nacimiento es obligatoria");
+                    MostrarError(T("alumnos_msg_fecha_oblig"));
                     return;
                 }
 
                 if (!DateTime.TryParse(txtFechaNacimiento.Text, out DateTime fechaNacimiento))
                 {
-                    MostrarError("La fecha de nacimiento no es válida");
+                    MostrarError(T("alumnos_msg_fecha_invalida"));
                     return;
                 }
 
                 if (fechaNacimiento > DateTime.Now)
                 {
-                    MostrarError("La fecha de nacimiento no puede ser futura");
+                    MostrarError(T("alumnos_msg_fecha_futura"));
                     return;
                 }
 
@@ -519,7 +496,7 @@ namespace gymAppV2.Alumnos
                 {
                     if (p <= 0 || p >= 500)
                     {
-                        MostrarError("El peso debe estar entre 0 y 500 kg");
+                        MostrarError(T("alumnos_msg_peso_invalido"));
                         return;
                     }
                     peso = p;
@@ -529,22 +506,18 @@ namespace gymAppV2.Alumnos
 
                 if (EsModificacion)
                 {
-                    // Modificar alumno existente - solo campos específicos de ALUMNOS
                     var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
                     if (alumno == null)
                     {
-                        MostrarError("El alumno no existe");
+                        MostrarError(T("alumnos_msg_no_existe"));
                         return;
                     }
 
-                    // Los datos personales (Nombre, Apellido, Telefono, FechaNacimiento) están en USUARIOS
-                    // Aquí solo actualizamos Peso y Activo que son específicos de ALUMNOS
                     alumno.Peso = peso;
                     alumno.Activo = chkActivo.Checked;
 
                     bllAlumno.ActualizarAlumno(alumno);
 
-                    // Manejar asociación de usuario
                     string usuarioSeleccionado = ddlUsuarioAsociar.SelectedValue;
                     if (!string.IsNullOrEmpty(usuarioSeleccionado) && string.IsNullOrEmpty(alumno.Usuario))
                     {
@@ -560,24 +533,21 @@ namespace gymAppV2.Alumnos
                     bllEvento.RegistrarModificacionAlumno(ObtenerUsuarioActual(), alumno.DNI);
                     bllEvento.RegistrarCambioDatosAlumno(ObtenerUsuarioActual(), alumno.DNI, "datos alumno");
 
-                    MostrarExito($"Alumno modificado correctamente");
+                    MostrarExito(T("alumnos_msg_modificado"));
                 }
                 else
                 {
-                    // Crear nuevo alumno - en esquema normalizado se crea USUARIOS primero con datos personales
                     if (bllAlumno.AlumnoExiste(dni))
                     {
-                        MostrarError($"Ya existe un alumno con DNI {dni}");
+                        MostrarError(T("alumnos_msg_ya_existe"));
                         return;
                     }
 
-                    // Los datos personales se guardan en USUARIOS, no en ALUMNOS
-                    // Se usa BLLUsuario.CrearUsuario con rol=4 para crear Cliente (crea USUARIOS + ALUMNOS)
                     string usuarioName = $"cliente_{dni}";
 
-                    var bllUsuario = new BLL.BLLUsuario();
-                    string contrasena = bllUsuario.GenerarContrasenaSegura();
-                    bllUsuario.CrearUsuario(
+                    var bllUsuarioLocal = new BLL.BLLUsuario();
+                    string contrasena = bllUsuarioLocal.GenerarContrasenaSegura();
+                    bllUsuarioLocal.CrearUsuario(
                         usuarioName,
                         contrasena,
                         4, // Rol Cliente
@@ -587,10 +557,9 @@ namespace gymAppV2.Alumnos
                         null, // email
                         fechaNacimiento,
                         null, // datosEntrenador
-                        dni // dniAlumno
+                        dni   // dniAlumno
                     );
 
-                    // Actualizar el peso en ALUMNOS (ya creado por CrearUsuario)
                     var alumno = bllAlumno.ObtenerAlumno(dni);
                     if (alumno != null)
                     {
@@ -599,17 +568,16 @@ namespace gymAppV2.Alumnos
                         bllAlumno.ActualizarAlumno(alumno);
                     }
 
-                    MostrarExito($"Alumno creado correctamente");
-
+                    MostrarExito(T("alumnos_msg_creado"));
                     bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
                 }
 
                 pnlForm.Visible = false;
                 CargarAlumnos();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError(ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -619,20 +587,20 @@ namespace gymAppV2.Alumnos
             {
                 if (!int.TryParse(hdnDniAEliminar.Value, out int dni))
                 {
-                    MostrarError("DNI inválido");
+                    MostrarError(T("msg_error_generico"));
                     return;
                 }
 
                 bllAlumno.EliminarAlumno(dni);
-                MostrarExito($"Alumno eliminado correctamente");
+                MostrarExito(T("alumnos_msg_eliminado"));
                 bllEvento.RegistrarBajaAlumno(ObtenerUsuarioActual(), dni);
 
                 pnlConfirmarEliminar.Visible = false;
                 CargarAlumnos();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MostrarError("Error al eliminar alumno: " + ex.Message);
+                MostrarError(T("msg_error_generico"));
             }
         }
 
@@ -653,7 +621,7 @@ namespace gymAppV2.Alumnos
             txtPeso.Text = "";
             chkActivo.Checked = true;
             ddlUsuarioAsociar.Items.Clear();
-            ddlUsuarioAsociar.Items.Add(new ListItem("-- Sin asociar --", ""));
+            ddlUsuarioAsociar.Items.Add(new ListItem(T("alumnos_sin_asociar"), ""));
         }
 
         private void MostrarInfo(string mensaje)
@@ -695,7 +663,7 @@ namespace gymAppV2.Alumnos
         protected string GetEstadoText(object activo)
         {
             bool a = Convert.ToBoolean(activo);
-            return a ? "Activo" : "Inactivo";
+            return a ? T("alumnos_estado_activo") : T("alumnos_estado_inactivo");
         }
     }
 }

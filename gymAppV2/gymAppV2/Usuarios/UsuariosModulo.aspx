@@ -23,8 +23,8 @@
         <div class="usuarios-header">
             <div class="usuarios-title">
                 <i class="fa-solid fa-users"></i>
-                Gestión de Usuarios
-                <span class="badge-count" id="badgeCount" runat="server">0 usuarios</span>
+                <asp:Literal ID="litTitulo" runat="server" Text="Gestión de Usuarios" />
+                <span class="badge-count" id="badgeCount" runat="server">0</span>
             </div>
         </div>
 
@@ -32,29 +32,29 @@
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon stat-icon-teal"><i class="fa-solid fa-users"></i></div>
-                <div class="stat-info"><p>Total usuarios</p><h4><asp:Label ID="lblTotal" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatTotal" runat="server" Text="Total usuarios" /></p><h4><asp:Label ID="lblTotal" runat="server" Text="0"></asp:Label></h4></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-orange"><i class="fa-solid fa-circle-check"></i></div>
-                <div class="stat-info"><p>Activos</p><h4><asp:Label ID="lblActivos" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatActivos" runat="server" Text="Activos" /></p><h4><asp:Label ID="lblActivos" runat="server" Text="0"></asp:Label></h4></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-red"><i class="fa-solid fa-lock"></i></div>
-                <div class="stat-info"><p>Bloqueados</p><h4><asp:Label ID="lblBloqueados" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatBloqueados" runat="server" Text="Bloqueados" /></p><h4><asp:Label ID="lblBloqueados" runat="server" Text="0"></asp:Label></h4></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-yellow"><i class="fa-solid fa-circle-xmark"></i></div>
-                <div class="stat-info"><p>Inactivos</p><h4><asp:Label ID="lblInactivos" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatInactivos" runat="server" Text="Inactivos" /></p><h4><asp:Label ID="lblInactivos" runat="server" Text="0"></asp:Label></h4></div>
             </div>
         </div>
 
         <!-- Filters -->
         <div class="filter-card">
             <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;align-self:flex-end;padding-bottom:9px;">
-                <i class="fa-solid fa-sliders" style="margin-right:6px"></i>Filtros
+                <i class="fa-solid fa-sliders" style="margin-right:6px"></i><%= T("usuarios_label_filtros") %>
             </div>
             <div class="filter-group">
-                <label>Estado</label>
+                <label><%= T("usuarios_label_estado") %></label>
                 <asp:DropDownList ID="ddlEstado" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlEstado_SelectedIndexChanged">
                     <asp:ListItem Value="">Todos</asp:ListItem>
                     <asp:ListItem Value="activo">Activados</asp:ListItem>
@@ -62,7 +62,7 @@
                 </asp:DropDownList>
             </div>
             <div class="filter-group">
-                <label>Bloqueados</label>
+                <label><%= T("usuarios_label_bloqueados") %></label>
                 <asp:DropDownList ID="ddlBloqueado" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlBloqueado_SelectedIndexChanged">
                     <asp:ListItem Value="">Todos</asp:ListItem>
                     <asp:ListItem Value="bloqueado">Bloqueados</asp:ListItem>
@@ -70,7 +70,7 @@
                 </asp:DropDownList>
             </div>
             <div class="filter-group">
-                <label>Rol</label>
+                <label><%= T("usuarios_label_rol") %></label>
                 <asp:DropDownList ID="ddlRol" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlRol_SelectedIndexChanged">
                     <asp:ListItem Value="">Todos los roles</asp:ListItem>
                     <asp:ListItem Value="WebMaster">WebMaster</asp:ListItem>
@@ -81,14 +81,14 @@
                 </asp:DropDownList>
             </div>
             <div class="search-wrap">
-                <label>Buscar</label>
+                <label><%= T("usuarios_label_buscar") %></label>
                 <div class="search-inner">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <asp:TextBox ID="txtBusqueda" runat="server" CssClass="search-input" placeholder="Nombre, apellido o usuario..." AutoPostBack="true" OnTextChanged="txtBusqueda_TextChanged"></asp:TextBox>
                 </div>
             </div>
             <button id="btnFiltrar" runat="server" class="btn-filter" onserverclick="btnFiltrar_Click">
-                <i class="fa-solid fa-magnifying-glass"></i> Filtrar
+                <i class="fa-solid fa-magnifying-glass"></i> <%= T("usuarios_btn_filtrar") %>
             </button>
         </div>
 
@@ -98,13 +98,13 @@
             <!-- Table -->
             <div class="table-card">
                 <div class="table-card-header">
-                    <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--pink)"></i>Lista de usuarios</h3>
+                    <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--pink)"></i><asp:Literal ID="litListaTitulo" runat="server" Text="Lista de usuarios" /></h3>
                     <div class="table-actions-row">
                         <button id="btnExportar" runat="server" class="btn-action btn-actualizar" title="Exportar" onserverclick="btnExportar_Click">
-                            <i class="fa-solid fa-file-export"></i> Exportar
+                            <i class="fa-solid fa-file-export"></i> <%= T("usuarios_btn_exportar") %>
                         </button>
                         <button id="btnActualizar" runat="server" class="btn-action btn-modificar" title="Actualizar" onserverclick="btnActualizar_Click">
-                            <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+                            <i class="fa-solid fa-arrows-rotate"></i> <%= T("usuarios_btn_actualizar") %>
                         </button>
                     </div>
                 </div>
@@ -152,35 +152,35 @@
                     <EmptyDataTemplate>
                         <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
                             <i class="fa-solid fa-users-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <p>No se encontraron usuarios</p>
+                            <p><%= T("usuarios_sin_resultados") %></p>
                         </div>
                     </EmptyDataTemplate>
                 </asp:GridView>
                 </div>
                 <div class="table-footer">
-                    <span class="table-footer-text" id="footerText" runat="server">Mostrando 0 de 0 usuarios</span>
+                    <span class="table-footer-text" id="footerText" runat="server"></span>
                 </div>
                 <div class="table-actions" style="display:flex;justify-content:flex-end;gap:0.5rem;padding-top:1rem;border-top:1px solid var(--border-color);margin:4px;">
                     <button id="btnCrear" runat="server" class="btn-action btn-crear" onserverclick="btnCrear_Click">
-                        <i class="fa-solid fa-plus"></i> Crear
+                        <i class="fa-solid fa-plus"></i> <asp:Literal ID="litBtnCrear" runat="server" Text="Crear" />
                     </button>
                     <button id="btnModificar" runat="server" class="btn-action btn-modificar" onserverclick="btnModificar_Click">
-                        <i class="fa-solid fa-pen"></i> Modificar
+                        <i class="fa-solid fa-pen"></i> <asp:Literal ID="litBtnModificar" runat="server" Text="Modificar" />
                     </button>
                     <button id="btnDesbloquear" runat="server" class="btn-action btn-desbloquear" onserverclick="btnDesbloquear_Click">
-                        <i class="fa-solid fa-lock-open"></i> Desbloquear
+                        <i class="fa-solid fa-lock-open"></i> <asp:Literal ID="litBtnDesbloquear" runat="server" Text="Desbloquear" />
                     </button>
                     <button id="btnBlanquearContrasena" runat="server" class="btn-action btn-desbloquear" onserverclick="btnBlanquearContrasena_Click" title="Fuerza al usuario a cambiar su contraseña en el próximo inicio de sesión">
-                        <i class="fa-solid fa-key"></i> Blanquear contraseña
+                        <i class="fa-solid fa-key"></i> <asp:Literal ID="litBtnBlanquear" runat="server" Text="Blanquear contraseña" />
                     </button>
                     <button id="btnActivar" runat="server" class="btn-action btn-activar" onserverclick="btnActivar_Click">
-                        <i class="fa-solid fa-circle-check"></i> Activar
+                        <i class="fa-solid fa-circle-check"></i> <asp:Literal ID="litBtnActivar" runat="server" Text="Activar" />
                     </button>
                     <button id="btnDesactivar" runat="server" class="btn-action btn-desactivar" onserverclick="btnDesactivar_Click">
-                        <i class="fa-solid fa-circle-xmark"></i> Desactivar
+                        <i class="fa-solid fa-circle-xmark"></i> <asp:Literal ID="litBtnDesactivar" runat="server" Text="Desactivar" />
                     </button>
                     <button id="btnCancelar" runat="server" class="btn-action btn-cancelar" onserverclick="btnCancelar_Click">
-                        <i class="fa-solid fa-xmark"></i> Cancelar
+                        <i class="fa-solid fa-xmark"></i> <asp:Literal ID="litBtnCancelar" runat="server" Text="Cancelar" />
                     </button>
                 </div>
             </div>
@@ -190,7 +190,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:0.9375rem;border-bottom:1px solid var(--border-color);margin-bottom:1.25rem;">
                     <h3 style="margin:0;font-size:1.125rem;font-weight:600;color:var(--text-color);display:flex;align-items:center;gap:0.5rem;">
                         <i class="fa-solid fa-id-card" style="color:var(--pink);"></i>
-                        <asp:Label ID="lblFormTitle" runat="server" Text="Detalle del usuario"></asp:Label>
+                        <asp:Label ID="lblFormTitle" runat="server" Text="Detalle del usuario" />
                     </h3>
                     <button id="btnCloseForm" runat="server" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:0.5rem;border-radius:0.375rem;font-size:1rem;" onserverclick="btnCloseForm_Click">
                         <i class="fa-solid fa-xmark"></i>
@@ -302,10 +302,10 @@
 
                     <div style="display:flex;gap:0.75rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border-color);">
                         <button id="btnGuardar" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnGuardar_Click" type="button">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                            <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
                         </button>
                         <button id="btnCancelarForm" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnCancelarForm_Click" type="button">
-                            <i class="fa-solid fa-xmark"></i> Cancelar
+                            <i class="fa-solid fa-xmark"></i> <asp:Literal ID="litBtnCancelarForm" runat="server" Text="Cancelar" />
                         </button>
                     </div>
             </asp:Panel>

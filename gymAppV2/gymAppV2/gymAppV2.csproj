@@ -99,6 +99,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Idioma\Idioma.aspx" />
+    <Content Include="Idioma\Idioma.css" />
     <Content Include="About.aspx" />
     <Content Include="AccesoDenegado.aspx" />
     <Content Include="Admin\BackupRestore.aspx" />
@@ -372,6 +374,13 @@
     </Compile>
     <Compile Include="WebForm1.aspx.designer.cs">
       <DependentUpon>WebForm1.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Idioma\Idioma.aspx.cs">
+      <DependentUpon>Idioma.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Idioma\Idioma.aspx.designer.cs">
+      <DependentUpon>Idioma.aspx</DependentUpon>
     </Compile>
     <Compile Include="Rutinas\Rutinas.aspx.cs">
       <DependentUpon>Rutinas.aspx</DependentUpon>

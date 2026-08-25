@@ -52,19 +52,19 @@
     <div class="rutinas-container">
         <div class="rutinas-header">
             <div class="rutinas-title">
-                <h1>Rutinas</h1>
-                <p>Gestión de rutinas de entrenamiento</p>
+                <h1><asp:Literal ID="litTitulo" runat="server" Text="Rutinas" /></h1>
+                <p><asp:Literal ID="litSubtitulo" runat="server" Text="Gestión de rutinas de entrenamiento" /></p>
             </div>
         </div>
 
         <asp:Panel ID="pnlCliente" runat="server" Visible="false" CssClass="rutinas-empty">
             <i class="bi bi-list-check"></i>
-            <p>Aquí se mostrarán las rutinas asociadas a tus alumnos.</p>
+            <p><asp:Literal ID="litClienteMsg" runat="server" Text="Aquí se mostrarán las rutinas asociadas a tus alumnos." /></p>
         </asp:Panel>
 
         <asp:Panel ID="pnlAdmin" runat="server" Visible="false" CssClass="rutinas-empty">
             <i class="bi bi-tools"></i>
-            <p>Módulo de rutinas en desarrollo.</p>
+            <p><asp:Literal ID="litAdminMsg" runat="server" Text="Módulo de rutinas en desarrollo." /></p>
         </asp:Panel>
     </div>
 </asp:Content>

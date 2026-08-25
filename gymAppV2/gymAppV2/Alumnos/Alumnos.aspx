@@ -1,7 +1,7 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Alumnos.aspx.cs" Inherits="gymAppV2.Alumnos.Alumnos" MasterPageFile="~/DashBoard.Master" EnableEventValidation="false" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <title>Gestión de Alumnos - GymApp</title>me sa
+    <title>Gestión de Alumnos - GymApp</title>
     <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=1") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
@@ -12,8 +12,8 @@
         <div class="alumnos-header">
             <div class="alumnos-title">
                 <i class="fa-solid fa-user-graduate"></i>
-                Gestión de Alumnos
-                <span class="badge-count" id="badgeCount" runat="server">0 alumnos</span>
+                <asp:Literal ID="litTitulo" runat="server" Text="Gestión de Alumnos" />
+                <span class="badge-count" id="badgeCount" runat="server">0</span>
             </div>
         </div>
 
@@ -21,29 +21,29 @@
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon stat-icon-pink"><i class="fa-solid fa-users"></i></div>
-                <div class="stat-info"><p>Total alumnos</p><h4><asp:Label ID="lblTotal" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatTotal" runat="server" Text="Total alumnos" /></p><h4><asp:Label ID="lblTotal" runat="server" Text="0"></asp:Label></h4></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-mint"><i class="fa-solid fa-calendar-check"></i></div>
-                <div class="stat-info"><p>Activos</p><h4><asp:Label ID="lblActivos" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatActivos" runat="server" Text="Activos" /></p><h4><asp:Label ID="lblActivos" runat="server" Text="0"></asp:Label></h4></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-lavender"><i class="fa-solid fa-dumbbell"></i></div>
-                <div class="stat-info"><p>Con rutinas</p><h4><asp:Label ID="lblConRutinas" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatConRutinas" runat="server" Text="Con rutinas" /></p><h4><asp:Label ID="lblConRutinas" runat="server" Text="0"></asp:Label></h4></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-peach"><i class="fa-solid fa-user-group"></i></div>
-                <div class="stat-info"><p>Sin usuario</p><h4><asp:Label ID="lblSinUsuario" runat="server" Text="0"></asp:Label></h4></div>
+                <div class="stat-info"><p><asp:Literal ID="litStatSinUsuario" runat="server" Text="Sin usuario" /></p><h4><asp:Label ID="lblSinUsuario" runat="server" Text="0"></asp:Label></h4></div>
             </div>
         </div>
 
         <!-- Filters -->
         <div class="filter-card">
             <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;align-self:flex-end;padding-bottom:9px;">
-                <i class="fa-solid fa-sliders" style="margin-right:6px"></i>Filtros
+                <i class="fa-solid fa-sliders" style="margin-right:6px"></i><%= T("alumnos_label_filtros") %>
             </div>
             <div class="filter-group">
-                <label>Estado</label>
+                <label><%= T("alumnos_label_estado") %></label>
                 <asp:DropDownList ID="ddlEstado" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlEstado_SelectedIndexChanged">
                     <asp:ListItem Value="">Todos</asp:ListItem>
                     <asp:ListItem Value="activo">Activos</asp:ListItem>
@@ -51,20 +51,20 @@
                 </asp:DropDownList>
             </div>
             <div class="filter-group">
-                <label>Usuario asociado</label>
+                <label><%= T("alumnos_label_usuario") %></label>
                 <asp:DropDownList ID="ddlUsuario" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlUsuario_SelectedIndexChanged">
                     <asp:ListItem Value="">Todos</asp:ListItem>
                 </asp:DropDownList>
             </div>
             <div class="search-wrap">
-                <label>Buscar</label>
+                <label><%= T("alumnos_label_buscar") %></label>
                 <div class="search-inner">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <asp:TextBox ID="txtBusqueda" runat="server" CssClass="search-input" placeholder="Nombre, apellido o DNI..." AutoPostBack="true" OnTextChanged="txtBusqueda_TextChanged"></asp:TextBox>
                 </div>
             </div>
             <button id="btnFiltrar" runat="server" class="btn-filter" onserverclick="btnFiltrar_Click">
-                <i class="fa-solid fa-magnifying-glass"></i> Filtrar
+                <i class="fa-solid fa-magnifying-glass"></i> <%= T("alumnos_btn_filtrar") %>
             </button>
         </div>
 
@@ -74,7 +74,7 @@
             <!-- Table -->
             <div class="table-card">
                 <div class="table-card-header">
-                    <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--pink)"></i>Lista de alumnos</h3>
+                    <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--pink)"></i><asp:Literal ID="litListaTitulo" runat="server" Text="Lista de alumnos" /></h3>
                 </div>
                 <asp:GridView ID="gvAlumnos" runat="server" AutoGenerateColumns="false" CssClass="table"
                     GridLines="None" AllowPaging="true" PageSize="10" OnPageIndexChanging="gvAlumnos_PageIndexChanging"
@@ -123,28 +123,28 @@
                     <EmptyDataTemplate>
                         <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
                             <i class="fa-solid fa-user-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <p>No se encontraron alumnos</p>
+                            <p><%= T("alumnos_sin_resultados") %></p>
                         </div>
                     </EmptyDataTemplate>
                 </asp:GridView>
                 <div class="table-footer">
-                    <span class="table-footer-text" id="footerText" runat="server">Mostrando 0 de 0 alumnos</span>
+                    <span class="table-footer-text" id="footerText" runat="server"></span>
                 </div>
                 <div class="table-actions">
                     <button id="btnCrear" runat="server" class="btn-action btn-crear" onserverclick="btnCrear_Click">
-                        <i class="fa-solid fa-plus"></i> Crear
+                        <i class="fa-solid fa-plus"></i> <asp:Literal ID="litBtnCrear" runat="server" Text="Crear" />
                     </button>
                     <button id="btnModificar" runat="server" class="btn-action btn-modificar" onserverclick="btnModificar_Click">
-                        <i class="fa-solid fa-pen"></i> Modificar
+                        <i class="fa-solid fa-pen"></i> <asp:Literal ID="litBtnModificar" runat="server" Text="Modificar" />
                     </button>
                     <button id="btnEliminar" runat="server" class="btn-action btn-eliminar" onserverclick="btnEliminar_Click">
-                        <i class="fa-solid fa-trash"></i> Eliminar
+                        <i class="fa-solid fa-trash"></i> <asp:Literal ID="litBtnEliminar" runat="server" Text="Eliminar" />
                     </button>
                     <button id="btnAsociarUsuario" runat="server" class="btn-action btn-asociar" onserverclick="btnAsociarUsuario_Click">
-                        <i class="fa-solid fa-link"></i> Asociar Usuario
+                        <i class="fa-solid fa-link"></i> <asp:Literal ID="litBtnAsociar" runat="server" Text="Asociar Usuario" />
                     </button>
                     <button id="btnCancelar" runat="server" class="btn-action btn-cancelar" onserverclick="btnCancelar_Click">
-                        <i class="fa-solid fa-xmark"></i> Cancelar
+                        <i class="fa-solid fa-xmark"></i> <asp:Literal ID="litBtnCancelar" runat="server" Text="Cancelar" />
                     </button>
                 </div>
             </div>
@@ -154,7 +154,7 @@
                 <div class="detail-header">
                     <h3>
                         <i class="fa-solid fa-user-graduate"></i>
-                        <asp:Label ID="lblFormTitle" runat="server" Text="Detalle del alumno"></asp:Label>
+                        <asp:Label ID="lblFormTitle" runat="server" Text="Detalle del alumno" />
                     </h3>
                     <button id="btnCloseForm" runat="server" class="btn-icon" style="min-width:auto;padding:8px;" onserverclick="btnCloseForm_Click">
                         <i class="fa-solid fa-xmark"></i>
@@ -210,7 +210,7 @@
                     <div class="form-row">
                         <div class="form-field full">
                             <button id="btnGuardar" runat="server" class="btn-guardar" onserverclick="btnGuardar_Click">
-                                <i class="fa-solid fa-floppy-disk"></i> Guardar
+                                <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
                             </button>
                         </div>
                     </div>
@@ -224,26 +224,26 @@
     <asp:Panel ID="pnlConfirmarEliminar" runat="server" Visible="false" CssClass="modal-overlay">
         <div class="modal-content modal-sm">
             <div class="modal-header modal-header-warning">
-                <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmar Eliminación</h3>
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> <asp:Literal ID="litConfirmarTitulo" runat="server" Text="Confirmar Eliminación" /></h3>
                 <button id="btnCloseConfirm" runat="server" class="btn-close" onserverclick="btnCloseConfirm_Click">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <p><strong>¿Está seguro que desea eliminar este alumno?</strong></p>
+                <p><strong><asp:Literal ID="litConfirmarMsg" runat="server" Text="¿Está seguro que desea eliminar este alumno?" /></strong></p>
                 <p class="text-danger">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    Esta acción eliminará también todas sus rutinas asociadas.
+                    <asp:Literal ID="litConfirmarAviso" runat="server" Text="Esta acción eliminará también todas sus rutinas asociadas." />
                 </p>
                 <p>Alumno: <asp:Label ID="lblAlumnoAEliminar" runat="server" Font-Bold="true"></asp:Label></p>
                 <asp:HiddenField ID="hdnDniAEliminar" runat="server" />
             </div>
             <div class="modal-footer">
                 <button id="btnCancelarEliminar" runat="server" class="btn-action btn-cancelar" onserverclick="btnCancelarEliminar_Click">
-                    Cancelar
+                    <asp:Literal ID="litBtnCancelarEliminar" runat="server" Text="Cancelar" />
                 </button>
                 <button id="btnConfirmarEliminar" runat="server" class="btn-action btn-eliminar" onserverclick="btnConfirmarEliminar_Click">
-                    Eliminar
+                    <asp:Literal ID="litBtnConfirmarEliminar" runat="server" Text="Eliminar" />
                 </button>
             </div>
         </div>

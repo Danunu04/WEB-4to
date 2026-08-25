@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using BE;
 using gymAppV2;
 using Servicios.Singleton;
 
@@ -25,6 +26,8 @@ namespace gymAppV2.Rutinas
 
             if (!IsPostBack)
             {
+                AplicarIdioma();
+
                 // El Cliente solo debería ver rutinas de sus alumnos asociados.
                 pnlCliente.Visible = EsCliente;
                 pnlAdmin.Visible = !EsCliente;
@@ -34,6 +37,20 @@ namespace gymAppV2.Rutinas
                     PrepararFiltroPorAlumnosAsociados();
                 }
             }
+        }
+
+        public override void OnIdiomaChanged(IdiomaApp idioma)
+        {
+            base.OnIdiomaChanged(idioma);
+            AplicarIdioma();
+        }
+
+        private void AplicarIdioma()
+        {
+            litTitulo.Text     = T("rutinas_titulo");
+            litSubtitulo.Text  = T("rutinas_subtitulo");
+            litClienteMsg.Text = T("rutinas_cliente_msg");
+            litAdminMsg.Text   = T("rutinas_admin_msg");
         }
 
         /// <summary>

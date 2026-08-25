@@ -25,13 +25,18 @@ namespace BE
         // Campo de verificación horizontal por fila
         public string USUARIO_DVH { get; set; }
 
+        // Idioma preferido del usuario ('ES', 'EN', 'PT', 'FR', 'JA').
+        // No forma parte del cálculo DVH — es un campo operativo.
+        public string USUARIO_Idioma { get; set; }
+
         public Usuario()
         {
         }
 
         public Usuario(string usuario, string contras, bool activo, bool bloqueado, int intentos, int rol,
                        string tipo, int dni, string nombre, string apellido, string telefono,
-                       string email, DateTime? fechaNacimiento, string dvh, bool primerLogin = true)
+                       string email, DateTime? fechaNacimiento, string dvh, bool primerLogin = true,
+                       string idioma = "ES")
         {
             USUARIO_Usuario = usuario;
             USUARIO_Contras = contras;
@@ -48,6 +53,7 @@ namespace BE
             Email = email;
             FechaNacimiento = fechaNacimiento;
             USUARIO_DVH = dvh;
+            USUARIO_Idioma = idioma;
         }
     }
 }

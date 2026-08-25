@@ -139,6 +139,26 @@ namespace MPP
         }
 
         /// <summary>
+        /// Actualiza el idioma preferido de un usuario sin tocar el DVH.
+        /// Idioma no forma parte del hash de integridad.
+        /// </summary>
+        public void ActualizarIdioma(string usuario, string codigoIdioma)
+        {
+            string consulta = @"
+                UPDATE [GymApp].[dbo].[USUARIOS]
+                SET Idioma = @Idioma
+                WHERE usr = @Usuario";
+
+            List<SqlParameter> parametros = new List<SqlParameter>
+            {
+                new SqlParameter("@Usuario", usuario),
+                new SqlParameter("@Idioma", codigoIdioma ?? "ES")
+            };
+
+            dal._686DPEscribir(consulta, parametros);
+        }
+
+        /// <summary>
         /// Recalcula los dígitos verificadores de todos los usuarios existentes.
         /// Necesario para la inicialización del control de integridad, ya que los
         /// campos personales se almacenan encriptados y el cálculo requiere el
@@ -366,7 +386,8 @@ namespace MPP
                 us.email,
                 us.fechaNacimiento,
                 us.primerLogin,
-                us.dvh
+                us.dvh,
+                us.Idioma
             FROM [GymApp].[dbo].[USUARIOS] as us
             WHERE us.usr = @Usuario";
 
@@ -395,7 +416,8 @@ namespace MPP
                         DesencriptarCampoPersonal(row["email"] != DBNull.Value ? row["email"].ToString() : string.Empty),
                         DesencriptarFechaPersonal(row["fechaNacimiento"]),
                         row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
-                        row["primerLogin"] != DBNull.Value && Convert.ToBoolean(row["primerLogin"])
+                        row["primerLogin"] != DBNull.Value && Convert.ToBoolean(row["primerLogin"]),
+                        row["Idioma"] != DBNull.Value ? row["Idioma"].ToString() : "ES"
                     );
                 }
 

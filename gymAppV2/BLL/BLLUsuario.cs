@@ -692,6 +692,24 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Persiste el idioma preferido del usuario en la base de datos.
+        /// Se llama al cambiar idioma desde la UI y al cerrar sesión.
+        /// No afecta el DVH porque Idioma es un campo operativo fuera del hash.
+        /// </summary>
+        public void GuardarIdioma(string usuario, string codigoIdioma)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(usuario)) return;
+                mppUsuario.ActualizarIdioma(usuario, codigoIdioma);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al guardar idioma del usuario: " + ex.Message, ex);
+            }
+        }
+
         public void BlanquearContrasena(string usuario)
         {
             try

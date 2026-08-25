@@ -7,9 +7,9 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
     <div class="animate-fade-in">
         <div class="mb-6">
-            <h1 class="font-display text-2xl font-bold">Panel de Administración</h1>
+            <h1 class="font-display text-2xl font-bold"><asp:Literal ID="litTitulo" runat="server" Text="Panel de Administración" /></h1>
     <p>&nbsp;</p>
-            <p class="text-muted text-sm">Bienvenido al panel de gestión</p>
+            <p class="text-muted text-sm"><asp:Literal ID="litSubtitulo" runat="server" Text="Bienvenido al panel de gestión" /></p>
         </div>
 
         <!-- KPI Cards -->
@@ -25,7 +25,7 @@
                     </div>
                     <div class="kpi-card-trend up">&nbsp;</div>
                 </div>
-                <p class="kpi-card-label">Miembros Activos</p>
+                <p class="kpi-card-label"><asp:Literal ID="litKpiMiembros" runat="server" Text="Miembros Activos" /></p>
                 <p class="kpi-card-value tabular-nums">1,247</p>
             </div>
 
@@ -39,7 +39,7 @@
                         8.2%
                     </div>
                 </div>
-                <p class="kpi-card-label">Clases este Mes</p>
+                <p class="kpi-card-label"><asp:Literal ID="litKpiClases" runat="server" Text="Clases este Mes" /></p>
                 <p class="kpi-card-value tabular-nums">342</p>
             </div>
 
@@ -53,7 +53,7 @@
                         2.1%
                     </div>
                 </div>
-                <p class="kpi-card-label">Ingresos (Mes)</p>
+                <p class="kpi-card-label"><asp:Literal ID="litKpiIngresos" runat="server" Text="Ingresos (Mes)" /></p>
                 <p class="kpi-card-value tabular-nums">$48.2K</p>
             </div>
 
@@ -67,24 +67,24 @@
                         4.3%
                     </div>
                 </div>
-                <p class="kpi-card-label">Tasa Retención</p>
+                <p class="kpi-card-label"><asp:Literal ID="litKpiRetencion" runat="server" Text="Tasa Retención" /></p>
                 <p class="kpi-card-value tabular-nums">87%</p>
             </div>
         </div>
 
         <!-- Tabla única de Actividades Semanales -->
         <div class="card">
-            <h3 class="card-title">Actividades de la Semana</h3>
+            <h3 class="card-title"><asp:Literal ID="litSemanaTitulo" runat="server" Text="Actividades de la Semana" /></h3>
             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Actividad</th>
-                            <th>Instructor</th>
-                            <th>Día</th>
-                            <th>Horario</th>
-                            <th>Duración</th>
-                            <th>Estado</th>
+                            <th><asp:Literal ID="litColActividad" runat="server" Text="Actividad" /></th>
+                            <th><asp:Literal ID="litColInstructor" runat="server" Text="Instructor" /></th>
+                            <th><asp:Literal ID="litColDia" runat="server" Text="Día" /></th>
+                            <th><asp:Literal ID="litColHorario" runat="server" Text="Horario" /></th>
+                            <th><asp:Literal ID="litColDuracion" runat="server" Text="Duración" /></th>
+                            <th><asp:Literal ID="litColEstado" runat="server" Text="Estado" /></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,7 +99,7 @@
                             <td>Lunes</td>
                             <td class="font-mono tabular-nums">08:00</td>
                             <td class="text-muted">60 min</td>
-                            <td><span class="badge badge-mint">Completada</span></td>
+                            <td><span class="badge badge-mint"><%= T("dash_badge_completada") %></span></td>
                         </tr>
                         <tr>
                             <td>
@@ -112,7 +112,7 @@
                             <td>Martes</td>
                             <td class="font-mono tabular-nums">09:30</td>
                             <td class="text-muted">45 min</td>
-                            <td><span class="badge badge-mint">Completada</span></td>
+                            <td><span class="badge badge-mint"><%= T("dash_badge_completada") %></span></td>
                         </tr>
                         <tr>
                             <td>
@@ -125,7 +125,7 @@
                             <td>Miércoles</td>
                             <td class="font-mono tabular-nums">11:00</td>
                             <td class="text-muted">50 min</td>
-                            <td><span class="badge badge-lavender">Pendiente</span></td>
+                            <td><span class="badge badge-lavender"><%= T("dash_badge_pendiente") %></span></td>
                         </tr>
                         <tr>
                             <td>
@@ -138,7 +138,7 @@
                             <td>Jueves</td>
                             <td class="font-mono tabular-nums">17:00</td>
                             <td class="text-muted">30 min</td>
-                            <td><span class="badge badge-lavender">Pendiente</span></td>
+                            <td><span class="badge badge-lavender"><%= T("dash_badge_pendiente") %></span></td>
                         </tr>
                         <tr>
                             <td>
@@ -151,7 +151,7 @@
                             <td>Viernes</td>
                             <td class="font-mono tabular-nums">19:00</td>
                             <td class="text-muted">55 min</td>
-                            <td><span class="badge badge-lavender">Pendiente</span></td>
+                            <td><span class="badge badge-lavender"><%= T("dash_badge_pendiente") %></span></td>
                         </tr>
                         <tr>
                             <td>
@@ -164,7 +164,7 @@
                             <td>Sábado</td>
                             <td class="font-mono tabular-nums">10:00</td>
                             <td class="text-muted">45 min</td>
-                            <td><span class="badge badge-peach">Programada</span></td>
+                            <td><span class="badge badge-peach"><%= T("dash_badge_programada") %></span></td>
                         </tr>
                     </tbody>
                 </table>

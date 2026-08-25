@@ -7,6 +7,7 @@ using Servicios.Singleton;
 using BE;
 using BLL;
 using SERVICIOS;
+using SERVICIOS.Observer;
 
 namespace gymAppV2.LogIn
 {
@@ -94,6 +95,12 @@ namespace gymAppV2.LogIn
                         BllUsuario.LogearUsuario(userBD);
                         FormsAuthentication.SetAuthCookie(userBD.USUARIO_Usuario, false);
 
+                        if (!string.IsNullOrEmpty(userBD.USUARIO_Idioma)
+                            && System.Enum.TryParse<IdiomaApp>(userBD.USUARIO_Idioma, out IdiomaApp idiomaUsuarioDV))
+                        {
+                            GestorIdioma.CambiarIdioma(idiomaUsuarioDV);
+                        }
+
                         bool esAdmin = userBD.USUARIO_Rol == PerfilesSistema.RolAdministrador
                                     || userBD.USUARIO_Rol == PerfilesSistema.RolWebMaster;
 
@@ -133,6 +140,13 @@ namespace gymAppV2.LogIn
                     BllUsuario.LogearUsuario(userBD);
 
                     FormsAuthentication.SetAuthCookie(userBD.USUARIO_Usuario, false);
+
+                    // Aplicar el idioma guardado del usuario en la sesión.
+                    if (!string.IsNullOrEmpty(userBD.USUARIO_Idioma)
+                        && System.Enum.TryParse<IdiomaApp>(userBD.USUARIO_Idioma, out IdiomaApp idiomaUsuario))
+                    {
+                        GestorIdioma.CambiarIdioma(idiomaUsuario);
+                    }
 
                     BllEvento.RegistrarLogin(userBD.USUARIO_Usuario);
 

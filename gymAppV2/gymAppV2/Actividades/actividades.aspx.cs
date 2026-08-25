@@ -33,6 +33,8 @@ namespace gymAppV2.Actividades
 
             if (!IsPostBack)
             {
+                AplicarIdioma();
+
                 // Los Clientes no pueden crear actividades.
                 pnlNuevaActividad.Visible = !EsCliente;
 
@@ -41,6 +43,20 @@ namespace gymAppV2.Actividades
 
                 CargarActividades();
             }
+        }
+
+        public override void OnIdiomaChanged(IdiomaApp idioma)
+        {
+            base.OnIdiomaChanged(idioma);
+            AplicarIdioma();
+        }
+
+        private void AplicarIdioma()
+        {
+            litTitulo.Text      = T("actividades_titulo");
+            litBtnNueva.Text    = T("actividades_btn_nueva");
+            litClienteInfo.Text = T("actividades_cliente_info");
+            litModalTitulo.Text = T("actividades_modal_titulo");
         }
 
         /// <summary>

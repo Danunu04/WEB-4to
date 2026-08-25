@@ -4,13 +4,18 @@ using BE;
 using Servicios.Singleton;
 using BLL;
 using System.Web.UI;
+using SERVICIOS.Observer;
+using System.Collections.Generic;
 
 namespace gymAppV2
 {
-    public partial class DashBoardMaster : System.Web.UI.MasterPage
+    public partial class DashBoardMaster : System.Web.UI.MasterPage, IIdiomaObserver
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            GestorIdioma.Suscribir(this);
+            AplicarIdioma(GestorIdioma.IdiomaActual);
+
             if (!IsPostBack)
             {
                 if (!Singleton.Instancia.IsLogged())
@@ -84,6 +89,57 @@ namespace gymAppV2
         }
 
         /// <summary>
+        /// Aplica las traducciones del menú al idioma dado.
+        /// Implementación del patrón Observer: se llama cuando cambia el idioma.
+        /// </summary>
+        public void OnIdiomaChanged(IdiomaApp idioma)
+        {
+            AplicarIdioma(idioma);
+        }
+
+        private void AplicarIdioma(IdiomaApp idioma)
+        {
+            try
+            {
+                var dict = new BLLTraduccion().ObtenerDiccionario(idioma);
+                litMenuDashboard.Text    = Traducir(dict, "menu_dashboard");
+                litMenuUsuarios.Text     = Traducir(dict, "menu_usuarios");
+                litMenuAlumnos.Text      = Traducir(dict, "menu_alumnos");
+                litMenuEntrenadores.Text = Traducir(dict, "menu_entrenadores");
+                litMenuActividades.Text  = Traducir(dict, "menu_actividades");
+                litMenuRutinas.Text      = Traducir(dict, "menu_rutinas");
+                litMenuPermisos.Text     = Traducir(dict, "menu_permisos");
+                litMenuBitacora.Text     = Traducir(dict, "menu_bitacora");
+                litMenuRespaldo.Text     = Traducir(dict, "menu_respaldo");
+                litMenuPagos.Text        = Traducir(dict, "menu_pagos");
+                litMenuPerfil.Text       = Traducir(dict, "menu_perfil");
+                litMenuIdioma.Text       = Traducir(dict, "menu_idioma");
+                litMenuCambiarContra.Text = Traducir(dict, "menu_cambiar_contra");
+                litMenuCerrarSesion.Text = Traducir(dict, "menu_cerrar_sesion");
+            }
+            catch
+            {
+                // Si falla la carga de traducciones, los textos por defecto del .master quedan intactos.
+            }
+        }
+
+        private static string Traducir(Dictionary<string, string> dict, string tag)
+        {
+            return dict.TryGetValue(tag, out var texto) ? texto : tag;
+        }
+
+        // Usado desde el .master con <%= TraducirTag("tag") %> para incrustar textos en JS.
+        protected string TraducirTag(string tag)
+        {
+            try
+            {
+                var dict = new BLLTraduccion().ObtenerDiccionario(GestorIdioma.IdiomaActual);
+                return Traducir(dict, tag);
+            }
+            catch { return tag; }
+        }
+
+        /// <summary>
         /// Muestra u oculta las opciones del menú lateral según el perfil del usuario logueado.
         /// </summary>
         private void ConfigurarMenuSegunRol()
@@ -108,6 +164,17 @@ namespace gymAppV2
         {
             var usuario = Singleton.Instancia.Usuario;
             string usuarioNombre = usuario?.USUARIO_Usuario ?? "desconocido";
+
+            // Persistir el último idioma usado antes de destruir la sesión.
+            try
+            {
+                if (!string.IsNullOrEmpty(usuarioNombre) && usuarioNombre != "desconocido")
+                    new BLLUsuario().GuardarIdioma(usuarioNombre, GestorIdioma.IdiomaActual.ToString());
+            }
+            catch
+            {
+                // No impedir el logout si falla la persistencia del idioma.
+            }
 
             // Invalidar la cookie de autenticación de forms antes de destruir la sesión.
             // El orden es importante: primero la cookie, luego la sesión.

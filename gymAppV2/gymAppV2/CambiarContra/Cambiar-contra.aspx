@@ -6,7 +6,7 @@
 <head runat="server">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cambiar Contraseña</title>
+    <title><%=T("cambio_titulo")%></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -136,18 +136,18 @@
 
         <div class="BloqueRosa alto-auto">
             <div class="cambio-card">
-                <h1 class="titulo">Cambiar Contraseña</h1>
+                <h1 class="titulo"><%=T("cambio_titulo")%></h1>
                 <p style="color: #FAECE7; font-size: 1rem; margin-top: 0.5rem; margin-bottom: 1.25rem;">
-                    Complete los campos para actualizar su contraseña.
+                    <%=T("cambio_subtitulo")%>
                 </p>
 
                 <div class="form-group">
-                    <label class="form-label" for="<%= txtUsuario.ClientID %>">Usuario</label>
+                    <label class="form-label" for="<%= txtUsuario.ClientID %>"><%=T("cambio_label_usuario")%></label>
                     <asp:TextBox ID="txtUsuario" runat="server" CssClass="form-control" MaxLength="50" />
                 </div>
 
                 <div class="form-group" id="grupoContrasenaActual" runat="server">
-                    <label class="form-label" for="<%= txtContrasenaActual.ClientID %>">Contraseña actual</label>
+                    <label class="form-label" for="<%= txtContrasenaActual.ClientID %>"><%=T("cambio_label_contra_actual")%></label>
                     <asp:TextBox ID="txtContrasenaActual" runat="server" TextMode="Password" CssClass="form-control" MaxLength="128" />
                     <asp:RequiredFieldValidator
                         ID="rfvContrasenaActual"
@@ -160,7 +160,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="<%= txtNuevaContrasena.ClientID %>">Nueva contraseña</label>
+                    <label class="form-label" for="<%= txtNuevaContrasena.ClientID %>"><%=T("cambio_label_nueva_contra")%></label>
                     <asp:TextBox ID="txtNuevaContrasena" runat="server" TextMode="Password" CssClass="form-control" MaxLength="128" />
                     <asp:RequiredFieldValidator
                         ID="rfvNuevaContrasena"
@@ -179,11 +179,11 @@
                         ValidationGroup="CambioContrasenaGroup"
                         CssClass="text-danger"
                         Display="Dynamic" />
-                    <span class="cambio-hint">Mínimo 6 caracteres, una mayúscula y un carácter especial.</span>
+                    <span class="cambio-hint"><%=T("cambio_hint_contra")%></span>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="<%= txtConfirmarContrasena.ClientID %>">Confirmar nueva contraseña</label>
+                    <label class="form-label" for="<%= txtConfirmarContrasena.ClientID %>"><%=T("cambio_label_confirmar")%></label>
                     <asp:TextBox ID="txtConfirmarContrasena" runat="server" TextMode="Password" CssClass="form-control" MaxLength="128" />
                     <asp:RequiredFieldValidator
                         ID="rfvConfirmarContrasena"

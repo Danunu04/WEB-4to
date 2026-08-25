@@ -319,5 +319,23 @@ namespace gymAppV2.Alumnos
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnConfirmarEliminar;
+
+        protected global::System.Web.UI.WebControls.Literal litTitulo;
+        protected global::System.Web.UI.WebControls.Literal litStatTotal;
+        protected global::System.Web.UI.WebControls.Literal litStatActivos;
+        protected global::System.Web.UI.WebControls.Literal litStatConRutinas;
+        protected global::System.Web.UI.WebControls.Literal litStatSinUsuario;
+        protected global::System.Web.UI.WebControls.Literal litListaTitulo;
+        protected global::System.Web.UI.WebControls.Literal litBtnCrear;
+        protected global::System.Web.UI.WebControls.Literal litBtnModificar;
+        protected global::System.Web.UI.WebControls.Literal litBtnEliminar;
+        protected global::System.Web.UI.WebControls.Literal litBtnAsociar;
+        protected global::System.Web.UI.WebControls.Literal litBtnCancelar;
+        protected global::System.Web.UI.WebControls.Literal litBtnGuardar;
+        protected global::System.Web.UI.WebControls.Literal litConfirmarTitulo;
+        protected global::System.Web.UI.WebControls.Literal litConfirmarMsg;
+        protected global::System.Web.UI.WebControls.Literal litConfirmarAviso;
+        protected global::System.Web.UI.WebControls.Literal litBtnCancelarEliminar;
+        protected global::System.Web.UI.WebControls.Literal litBtnConfirmarEliminar;
     }
 }

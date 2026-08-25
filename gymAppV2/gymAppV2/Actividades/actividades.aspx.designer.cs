@@ -40,5 +40,10 @@ namespace gymAppV2.Actividades
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.HiddenField hdnActividadesJson;
+
+        protected global::System.Web.UI.WebControls.Literal litTitulo;
+        protected global::System.Web.UI.WebControls.Literal litBtnNueva;
+        protected global::System.Web.UI.WebControls.Literal litClienteInfo;
+        protected global::System.Web.UI.WebControls.Literal litModalTitulo;
     }
 }

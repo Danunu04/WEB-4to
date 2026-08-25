@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Web.UI;
 using BE;
 using BLL;
 using Servicios.Singleton;
+using SERVICIOS.Observer;
 
 namespace gymAppV2.CambiarContra
 {
@@ -11,15 +13,13 @@ namespace gymAppV2.CambiarContra
     {
         private BLLUsuario _bllUsuario;
         private BLLEvento _bllEvento;
+        private Dictionary<string, string> _dict;
 
         private BLLUsuario BllUsuario
         {
             get
             {
-                if (_bllUsuario == null)
-                {
-                    _bllUsuario = new BLLUsuario();
-                }
+                if (_bllUsuario == null) _bllUsuario = new BLLUsuario();
                 return _bllUsuario;
             }
         }
@@ -28,28 +28,28 @@ namespace gymAppV2.CambiarContra
         {
             get
             {
-                if (_bllEvento == null)
-                {
-                    _bllEvento = new BLLEvento();
-                }
+                if (_bllEvento == null) _bllEvento = new BLLEvento();
                 return _bllEvento;
             }
         }
 
-        /// <summary>
-        /// Indica si el usuario llegó desde el flujo de recuperación por pregunta de seguridad
-        /// o porque la cuenta fue bloqueada. En ese modo no exigimos la contraseña actual.
-        /// </summary>
+        // Helper de traducción: carga el diccionario una vez por request.
+        protected string T(string tag)
+        {
+            if (_dict == null)
+            {
+                try { _dict = new BLLTraduccion().ObtenerDiccionario(GestorIdioma.IdiomaActual); }
+                catch { _dict = new Dictionary<string, string>(); }
+            }
+            return _dict.TryGetValue(tag, out var val) ? val : tag;
+        }
+
         private bool ModoRecuperacion
         {
             get { return ViewState["ModoRecuperacion"] as bool? ?? false; }
             set { ViewState["ModoRecuperacion"] = value; }
         }
 
-        /// <summary>
-        /// Indica si el usuario llegó desde el primer login y debe configurar preguntas de seguridad
-        /// después de cambiar la contraseña.
-        /// </summary>
         private bool ModoPrimerLogin
         {
             get { return ViewState["ModoPrimerLogin"] as bool? ?? false; }
@@ -58,13 +58,14 @@ namespace gymAppV2.CambiarContra
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Durante una pausa de integridad, los usuarios no administradores no pueden
-            // operar ni siquiera en esta página de cambio de contraseña.
             if (SistemaEnPausa() && !UsuarioActualEsAdmin())
             {
                 Redirigir("~/VerificacioDV/VerificacioDV.aspx");
                 return;
             }
+
+            // Aplicar traducciones en cada carga (initial + PostBack para validators).
+            AplicarIdioma();
 
             if (!IsPostBack)
             {
@@ -75,8 +76,6 @@ namespace gymAppV2.CambiarContra
                 if (!string.IsNullOrWhiteSpace(usuarioQuery) &&
                     string.Equals(modoQuery, "primerLogin", StringComparison.OrdinalIgnoreCase))
                 {
-                    // El modo primer login solo es válido si el usuario acaba de iniciar sesión
-                    // y la marca primerLogin está activa en la base de datos.
                     if (!sesionActiva)
                     {
                         Redirigir("~/LogIn/LogIn.aspx");
@@ -102,9 +101,6 @@ namespace gymAppV2.CambiarContra
                 else if (!string.IsNullOrWhiteSpace(usuarioQuery) &&
                          string.Equals(modoQuery, "recuperacion", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Modo recuperación: solo válido si se presenta el token generado por
-                    // PreguntasSeguridad.aspx, la cuenta está bloqueada y el usuario autenticado
-                    // coincide con el que inició el flujo.
                     string usuario = usuarioQuery.Trim();
 
                     if (sesionActiva && !EsUsuarioEnSesion(usuario))
@@ -127,7 +123,6 @@ namespace gymAppV2.CambiarContra
                 }
                 else
                 {
-                    // Sin parámetros de recuperación/primerLogin y sin sesión: no se permite el cambio de contraseña.
                     Redirigir("~/LogIn/LogIn.aspx");
                     return;
                 }
@@ -136,9 +131,21 @@ namespace gymAppV2.CambiarContra
             }
         }
 
-        /// <summary>
-        /// Devuelve true si el usuario indicado coincide con el usuario logueado en el singleton.
-        /// </summary>
+        private void AplicarIdioma()
+        {
+            // Botones server-side
+            btnGuardar.Text  = T("cambio_btn_guardar");
+            btnCancelar.Text = T("cambio_btn_cancelar");
+            lnkVolverLogin.Text = T("cambio_link_volver");
+
+            // Mensajes de error de los validadores ASP.NET
+            rfvContrasenaActual.ErrorMessage  = T("cambio_val_contra_actual");
+            rfvNuevaContrasena.ErrorMessage   = T("cambio_val_nueva_contra");
+            revNuevaContrasena.ErrorMessage   = T("cambio_val_contra_regex");
+            rfvConfirmarContrasena.ErrorMessage = T("cambio_val_confirmar");
+            cvConfirmarContrasena.ErrorMessage  = T("cambio_val_no_coinciden");
+        }
+
         private bool EsUsuarioEnSesion(string usuario)
         {
             try
@@ -147,15 +154,9 @@ namespace gymAppV2.CambiarContra
                 return sesion != null && sesion.Usuario != null
                     && string.Equals(sesion.Usuario.USUARIO_Usuario, usuario, StringComparison.OrdinalIgnoreCase);
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
-        /// <summary>
-        /// Configura la pantalla en modo cambio normal para el usuario logueado.
-        /// </summary>
         private void ConfigurarModoNormal()
         {
             Usuario usuarioLogueado = Singleton.Instancia.Usuario;
@@ -168,9 +169,6 @@ namespace gymAppV2.CambiarContra
             ConfigurarModo(usuarioLogueado.USUARIO_Usuario, false, false);
         }
 
-        /// <summary>
-        /// Configura los campos para el modo indicado.
-        /// </summary>
         private void ConfigurarModo(string usuario, bool primerLogin, bool recuperacion)
         {
             txtUsuario.Text = usuario;
@@ -180,10 +178,6 @@ namespace gymAppV2.CambiarContra
             ModoRecuperacion = recuperacion;
         }
 
-        /// <summary>
-        /// Valida que el flujo de recuperación provenga realmente de PreguntasSeguridad.aspx
-        /// verificando el token de un solo uso y que la cuenta esté bloqueada.
-        /// </summary>
         private bool ValidarFlujoRecuperacion(string usuario)
         {
             string token = Request.QueryString["token"];
@@ -200,116 +194,95 @@ namespace gymAppV2.CambiarContra
                 if (usuarioBD == null || !usuarioBD.USUARIO_Activo)
                     return false;
 
-                return true; // Token válido + usuario activo es suficiente para el flujo de recuperación.
+                return true;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
         protected void btnGuardar_Click(object sender, EventArgs e)
         {
-            if (!Page.IsValid)
-            {
-                return;
-            }
+            if (!Page.IsValid) return;
 
             string usuario = txtUsuario.Text.Trim();
             string contrasenaActual = txtContrasenaActual.Text;
             string nuevaContrasena = txtNuevaContrasena.Text;
             string confirmarContrasena = txtConfirmarContrasena.Text;
 
-            // Validación server-side de coincidencia (refuerzo del CompareValidator).
             if (nuevaContrasena != confirmarContrasena)
             {
-                MostrarMensaje("Las contraseñas nuevas no coinciden.", "danger");
+                MostrarMensaje(T("cambio_msg_no_coinciden"), "danger");
                 return;
             }
 
             try
             {
-                // En modo recuperación (login bloqueado o pregunta de seguridad correcta)
-                // no se verifica ni se toma en cuenta la contraseña actual.
                 if (!ModoRecuperacion)
                 {
                     bool loginValido = BllUsuario.ValidarLogin(usuario, contrasenaActual);
                     if (!loginValido)
                     {
-                        MostrarMensaje("La contraseña actual es incorrecta.", "danger");
+                        MostrarMensaje(T("cambio_msg_contra_incorrecta"), "danger");
                         return;
                     }
                 }
 
                 BllUsuario.CambiarContrasena(usuario, nuevaContrasena);
 
-                // En modo recuperación, asegurar que se desbloquee el usuario y se reinicien los intentos.
                 if (ModoRecuperacion)
                 {
                     try
                     {
                         BllUsuario.DesbloquearUsuario(usuario);
                         BllUsuario.ReestablecerIntentos(usuario);
-                        // Invalidar el token de recuperación para evitar reuso.
                         Session.Remove("Recuperacion_" + usuario);
                     }
                     catch (Exception exRestablecer)
                     {
-                        MostrarMensaje("Contraseña actualizada, pero no se pudo desbloquear el usuario: " + exRestablecer.Message, "danger");
+                        MostrarMensaje(T("cambio_msg_ok") + " — " + exRestablecer.Message, "danger");
                         return;
                     }
                 }
 
-                // Si hay sesión activa, mantenerla; si es recuperación, redirigir al login;
-                // si es primer login, redirigir a la configuración de preguntas de seguridad.
                 if (ModoRecuperacion)
                 {
                     System.Web.Security.FormsAuthentication.SignOut();
                     try { Singleton.Instancia.LogOut(); } catch { }
-                    MostrarMensaje("Contraseña actualizada. Inicie sesión con su nueva contraseña.", "success");
-                    MostrarToast("Contraseña actualizada. Inicie sesión con su nueva contraseña.", "success");
+                    string msg = T("cambio_msg_ok_recuperacion");
+                    MostrarMensaje(msg, "success");
+                    MostrarToast(msg, "success");
                     RedirigirConDelay("~/LogIn/LogIn.aspx", 2000);
                 }
                 else if (ModoPrimerLogin)
                 {
-                    MostrarMensaje("Contraseña actualizada. Ahora configure sus preguntas de seguridad.", "success");
-                    MostrarToast("Contraseña actualizada. Ahora configure sus preguntas de seguridad.", "success");
+                    string msg = T("cambio_msg_ok_primer_login");
+                    MostrarMensaje(msg, "success");
+                    MostrarToast(msg, "success");
                     RedirigirConDelay($"~/LogIn/ConfigurarPreguntas.aspx?usuario={Server.UrlEncode(usuario)}&modo=primerLogin", 1500);
                 }
                 else
                 {
-                    MostrarMensaje("Contraseña actualizada correctamente.", "success");
-                    MostrarToast("Contraseña actualizada correctamente.", "success");
+                    string msg = T("cambio_msg_ok");
+                    MostrarMensaje(msg, "success");
+                    MostrarToast(msg, "success");
                     RedirigirConDelay("~/DashBoard/WebForm1.aspx", 1500);
                 }
             }
-            catch (ThreadAbortException)
-            {
-                // ThreadAbortException es esperado al usar Response.Redirect.
-            }
+            catch (ThreadAbortException) { }
             catch (Exception ex)
             {
                 string mensaje = ex.Message;
 
-                // Mensaje amigable para contraseña ya utilizada.
                 if (mensaje.Contains("reutilizar"))
-                {
-                    mensaje = "No puedes reutilizar una contraseña anterior.";
-                }
+                    mensaje = T("cambio_msg_reutilizar");
 
                 MostrarMensaje(mensaje, "danger");
 
                 try
                 {
                     if (!string.IsNullOrEmpty(usuario))
-                    {
                         BllEvento.RegistrarError(usuario, $"Error al cambiar contraseña: {ex.Message}");
-                    }
                 }
-                catch
-                {
-                    // No bloquear el flujo si falla el registro del evento.
-                }
+                catch { }
             }
         }
 
@@ -343,10 +316,6 @@ namespace gymAppV2.CambiarContra
             Redirigir("/Inicio/Default.aspx");
         }
 
-        /// <summary>
-        /// Muestra u oculta el campo de contraseña actual según el modo de acceso.
-        /// Solo se exige cuando el usuario tiene sesión activa (está logueado).
-        /// </summary>
         private void ConfigurarVisibilidadContrasenaActual()
         {
             bool requiereContrasenaActual = !ModoRecuperacion;
@@ -358,9 +327,6 @@ namespace gymAppV2.CambiarContra
             lblMensaje.Visible = false;
         }
 
-        /// <summary>
-        /// Muestra un mensaje en el label de estado con la estética del login.
-        /// </summary>
         private void MostrarMensaje(string mensaje, string tipo = "danger")
         {
             lblMensaje.Text = mensaje;
@@ -370,9 +336,6 @@ namespace gymAppV2.CambiarContra
             lblMensaje.Visible = true;
         }
 
-        /// <summary>
-        /// Muestra un toast de notificación usando el mismo estilo del dashboard.
-        /// </summary>
         private void MostrarToast(string mensaje, string tipo)
         {
             string mensajeEscapado = System.Security.SecurityElement.Escape(mensaje);
@@ -390,9 +353,6 @@ namespace gymAppV2.CambiarContra
             ClientScript.RegisterStartupScript(this.GetType(), "toast_" + DateTime.Now.Ticks, script);
         }
 
-        /// <summary>
-        /// Redirige a la URL indicada terminando la request de forma segura.
-        /// </summary>
         private void Redirigir(string url)
         {
             try
@@ -400,15 +360,9 @@ namespace gymAppV2.CambiarContra
                 Response.Redirect(ResolveUrl(url), false);
                 Context.ApplicationInstance.CompleteRequest();
             }
-            catch (ThreadAbortException)
-            {
-                // ThreadAbortException es esperado al usar Response.Redirect.
-            }
+            catch (ThreadAbortException) { }
         }
 
-        /// <summary>
-        /// Muestra un toast y redirige tras un delay.
-        /// </summary>
         private void RedirigirConDelay(string url, int delayMs)
         {
             string urlResuelta = ResolveUrl(url);
@@ -418,40 +372,21 @@ namespace gymAppV2.CambiarContra
             ClientScript.RegisterStartupScript(this.GetType(), "redirect_" + DateTime.Now.Ticks, script);
         }
 
-        /// <summary>
-        /// Indica si el sistema está pausado por un error de integridad de datos.
-        /// </summary>
         private bool SistemaEnPausa()
         {
-            try
-            {
-                var bllDV = new BLLDigitoVerificador();
-                return bllDV.ExisteErrorIntegridad();
-            }
-            catch
-            {
-                return true;
-            }
+            try { return new BLLDigitoVerificador().ExisteErrorIntegridad(); }
+            catch { return true; }
         }
 
-        /// <summary>
-        /// Indica si el usuario logueado actualmente es administrador.
-        /// </summary>
         private bool UsuarioActualEsAdmin()
         {
             try
             {
                 var sesion = Singleton.Instancia;
-                if (sesion == null || sesion.Usuario == null)
-                    return false;
-
-                var bllRol = new BLLRol();
-                return bllRol.UsuarioActualEsAdmin();
+                if (sesion == null || sesion.Usuario == null) return false;
+                return new BLLRol().UsuarioActualEsAdmin();
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
     }
 }

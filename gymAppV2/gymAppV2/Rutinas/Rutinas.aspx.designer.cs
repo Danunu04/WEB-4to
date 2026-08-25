@@ -31,5 +31,10 @@ namespace gymAppV2.Rutinas
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Panel pnlAdmin;
+
+        protected global::System.Web.UI.WebControls.Literal litTitulo;
+        protected global::System.Web.UI.WebControls.Literal litSubtitulo;
+        protected global::System.Web.UI.WebControls.Literal litClienteMsg;
+        protected global::System.Web.UI.WebControls.Literal litAdminMsg;
     }
 }

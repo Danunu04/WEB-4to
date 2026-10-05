@@ -1,0 +1,162 @@
+/* =============================================
+   PERMISOS MODULE CSS
+   ============================================= */
+
+.permisos-container *, .permisos-container *::before, .permisos-container *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.permisos-container {
+  --sky: #B5D5FF;
+  --sky-light: #E5F0FF;
+  --sky-dark: #0369A1;
+  --border: #E8E0D5;
+  --surface: #ffffff;
+  --text: #2D2D2D;
+  --text-muted: #6B6B6B;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(181, 213, 255, 0.15);
+  padding: 2rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.permisos-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.permisos-header i {
+  width: 44px; height: 44px;
+  background: var(--sky-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--sky-dark);
+  font-size: 1.1rem;
+}
+
+.permisos-title-text { display: flex; flex-direction: column; }
+
+.permisos-title-text h1 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.permisos-title-text p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.15rem;
+}
+
+.permisos-empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.permisos-empty i {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+  color: var(--sky-dark);
+}
+
+.permisos-empty h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.15rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Matriz de permisos por rol ── */
+.permisos-card {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.permisos-ayuda {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1rem !important;
+}
+
+.permisos-tabla-wrap { overflow-x: auto; }
+
+.permisos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.permisos-tabla th {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025rem;
+  color: var(--text-muted);
+  padding: 0.625rem 0.5rem;
+  border-bottom: 0.0625rem solid var(--border);
+  white-space: nowrap;
+}
+
+.permisos-tabla td {
+  text-align: center;
+  padding: 0.625rem 0.5rem;
+  border-bottom: 0.0625rem solid var(--border);
+}
+
+.permisos-tabla tbody tr:hover { background: var(--sky-light); }
+
+.permisos-tabla .col-permiso { text-align: left; min-width: 13rem; }
+
+.permiso-nombre { display: block; font-weight: 600; color: var(--text); }
+.permiso-clave { display: block; font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+.permisos-tabla input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--sky-dark);
+  cursor: pointer;
+}
+
+.permisos-tabla input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.6; }
+
+.permisos-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btn-permisos {
+  background: var(--sky-dark);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn-permisos:hover { opacity: 0.9; }
+
+.btn-permisos.secundario {
+  background: var(--sky-light);
+  color: var(--sky-dark);
+}
+
+@media screen and (max-width: 768px) {
+  .permisos-container { padding: 1rem; }
+}

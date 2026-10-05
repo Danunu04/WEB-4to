@@ -254,5 +254,56 @@ namespace SERVICIOS
             Array.Resize(ref ivBytes, 16);
             return ivBytes;
         }
+
+        /// <summary>
+        /// Desencripta un campo personal leído de la base (ej. nombre, apellido, teléfono).
+        /// Si el valor no puede desencriptarse, se asume que todavía está en texto plano
+        /// (fila legacy no migrada) y se devuelve tal cual, en vez de lanzar una excepción.
+        /// Cualquier módulo que haga JOIN contra USUARIOS para mostrar datos personales
+        /// (Alumnos, Entrenadores, Rutinas, Pagos, etc.) debe pasar esos campos por acá:
+        /// se guardan encriptados desde MPPUsuario.CrearUsuario/ActualizarDatosPersonales.
+        /// </summary>
+        public string DesencriptarCampoPersonal(string valor)
+        {
+            if (string.IsNullOrEmpty(valor))
+                return null;
+
+            try
+            {
+                return DesencriptarAES256(valor);
+            }
+            catch
+            {
+                return valor;
+            }
+        }
+
+        /// <summary>
+        /// Desencripta una fecha personal (guardada como texto "yyyy-MM-dd" encriptado).
+        /// Si falla, intenta parsear el valor crudo como fecha en texto plano (migración gradual).
+        /// </summary>
+        public DateTime? DesencriptarFechaPersonal(object valorBD)
+        {
+            if (valorBD == null || valorBD == DBNull.Value)
+                return null;
+
+            string textoEncriptado = valorBD.ToString();
+            if (string.IsNullOrEmpty(textoEncriptado))
+                return null;
+
+            try
+            {
+                string textoPlano = DesencriptarAES256(textoEncriptado);
+                if (DateTime.TryParse(textoPlano, out DateTime fecha))
+                    return fecha;
+            }
+            catch
+            {
+                if (DateTime.TryParse(textoEncriptado, out DateTime fechaPlana))
+                    return fechaPlana;
+            }
+
+            return null;
+        }
     }
 }

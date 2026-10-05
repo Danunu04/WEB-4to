@@ -591,6 +591,178 @@
   border: 1px solid #90cdf4;
 }
 
+/* ── FORMULARIO FLOTANTE (mismo estilo que Alumnos) ────────────────────── */
+/* Las reglas van con .usuarios-container delante para ganarle a Bootstrap
+   (DashBoard.Master), que también define .modal-content, .modal-footer y .btn-close. */
+.usuarios-container .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.usuarios-container .modal-content {
+  background: var(--surface);
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 45rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.3);
+}
+
+.usuarios-container .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 0.0625rem solid var(--border);
+}
+
+.usuarios-container .modal-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.usuarios-container .modal-header h3 i { color: var(--pink); }
+
+.usuarios-container .btn-close {
+  background: transparent;
+  border: none;
+  opacity: 1;
+  width: auto;
+  height: auto;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.usuarios-container .btn-close:hover { color: var(--text); }
+
+.usuarios-container .modal-body {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.usuarios-container .modal-footer {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 0.0625rem solid var(--border);
+  justify-content: flex-end;
+  background: var(--surface);
+}
+
+.usuarios-container .modal-footer .btn-action {
+  width: auto;
+  flex: 1;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.usuarios-container .btn-cancelar { background: var(--bg); color: var(--text-muted); border: 0.09375rem solid var(--bg); }
+.usuarios-container .btn-cancelar:hover { background: #E8EDE9; border-color: var(--text-muted); }
+
+.usuarios-container .btn-guardar { background: var(--pink); color: #fff; border: 0.09375rem solid var(--pink); }
+.usuarios-container .btn-guardar:hover { background: var(--pink-dark); border-color: var(--pink-dark); }
+
+.usuarios-container .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.usuarios-container .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+.usuarios-container .form-field.full { grid-column: 1 / -1; }
+
+.usuarios-container .form-field label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025rem;
+}
+
+.usuarios-container .form-field input,
+.usuarios-container .form-field select {
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color .2s, background .2s;
+}
+
+.usuarios-container .form-field input:focus,
+.usuarios-container .form-field select:focus {
+  border-color: var(--pink);
+  background: #fff;
+}
+
+.usuarios-container .form-field input::placeholder { color: var(--text-light); }
+
+.usuarios-container .field-error {
+  color: var(--red);
+  font-size: 0.75rem;
+}
+
+.usuarios-container .field-hint {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Recuadro informativo según el rol elegido (Entrenador / Cliente) */
+.usuarios-container .rol-info {
+  padding: 0.9375rem;
+  background: var(--pink-light);
+  border-radius: var(--radius-sm);
+  border-left: 0.25rem solid var(--pink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.usuarios-container .rol-info label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pink-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.usuarios-container .rol-info small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
 /* ── RESPONSIVE ────────────────────── */
 @media screen and (max-width: 1024px) {
   .usuarios-container .main-grid {

@@ -19,6 +19,7 @@ namespace BE
         public const int RolEntrenador = 3;
         public const int RolCliente = 4;
         public const int RolWebMaster = 5;
+        public const int RolFamiliar = 6;
 
         public const string WebMaster = "Web master";
         public const string Administrador = "Administrador";
@@ -31,6 +32,7 @@ namespace BE
         public const string Restore = "restore";
         public const string DV = "dv";
         public const string ClienteDocente = "Cliente/docente";
+        public const string Familiar = "Familiar";
 
         /// <summary>
         /// Devuelve el nombre del perfil principal asociado a un rol numérico.
@@ -49,6 +51,8 @@ namespace BE
                     return Profesores;
                 case RolCliente:
                     return ClienteDocente;
+                case RolFamiliar:
+                    return Familiar;
                 default:
                     return Usuario;
             }
@@ -91,6 +95,12 @@ namespace BE
                     return new List<string>
                     {
                         ClienteDocente
+                    }.AsReadOnly();
+
+                case RolFamiliar:
+                    return new List<string>
+                    {
+                        Familiar
                     }.AsReadOnly();
 
                 default:

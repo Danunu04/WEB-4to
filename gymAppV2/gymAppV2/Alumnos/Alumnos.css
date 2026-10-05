@@ -610,10 +610,42 @@ tbody tr:last-child td { border-bottom: none; }
 
 .modal-footer {
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.75rem;
   padding: 0.9rem 1.25rem;
   border-top: 1px solid var(--border);
   justify-content: flex-end;
+  background: var(--surface);
+}
+
+/* Botones del pie: comparten el ancho en lugar de ocupar el 100% cada uno */
+.modal-footer .btn-action {
+  width: auto;
+  flex: 1;
+}
+
+/* Pies de botones anidados dentro del cuerpo (pasos del asistente) */
+.modal-body .modal-footer {
+  padding: 0.9rem 0 0;
+  margin-top: 0.75rem;
+}
+
+/* Formulario de alta/modificación como ventana flotante */
+.modal-content.modal-form {
+  max-width: 45rem;
+}
+
+.modal-content {
+  color: var(--text);
+}
+
+/* Bootstrap (cargado en DashBoard.Master) también define .btn-close con opacidad 0.5
+   y tamaño fijo; acá se usa el ícono de Font Awesome, así que se anulan esos estilos. */
+.btn-close {
+  opacity: 1;
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
 }
 
 /* ── RESPONSIVE ────────────────────── */

@@ -6,6 +6,7 @@ using System.Web.UI.WebControls;
 using BLL;
 using BE;
 using gymAppV2;
+using gymAppV2.WebServices;
 using Servicios.Singleton;
 
 namespace gymAppV2.Alumnos
@@ -15,12 +16,91 @@ namespace gymAppV2.Alumnos
         private BLLAlumno bllAlumno;
         private BLLUsuario bllUsuario;
         private BLLEvento bllEvento;
-        private int? DniSeleccionado { get; set; }
-        private bool EsModificacion { get; set; }
+
+        /// <summary>
+        /// Pasos del asistente de alta/vínculo. Un único panel modal (pnlAsistente) cambia
+        /// de contenido según el paso actual, guardado en ViewState para sobrevivir postbacks.
+        /// </summary>
+        private enum PasoAsistente
+        {
+            Ninguno = 0,
+            PreguntarTutor = 1,             // menor de edad: ¿asociar con un familiar?
+            BuscarUsuarioVinculo = 2,       // pedir DNI (+ parentesco) del usuario a vincular
+            ConfirmarVinculoExistente = 3,  // el usuario buscado ya existe -> confirmar vínculo
+            CompletarDatosVinculo = 4,      // el usuario buscado no existe -> crearlo como Familiar
+            ConfirmarAlumnoExistente = 5,   // (alta principal) la persona ya existe -> confirmar alta como Alumno
+            CompletarDatosAlumno = 6        // (alta principal) la persona no existe -> crear Usuario+Alumno
+        }
+
+        // Propiedades respaldadas por ViewState: una propiedad de C# común no sobrevive
+        // entre dos postbacks distintos (ej. click en la fila para seleccionar, y luego
+        // click en "Eliminar"/"Guardar" en un postback aparte) porque cada postback crea
+        // una instancia nueva de la página. ViewState sí viaja en el __VIEWSTATE oculto.
+        private int? DniSeleccionado
+        {
+            get { return ViewState["DniSeleccionado"] as int?; }
+            set { ViewState["DniSeleccionado"] = value; }
+        }
+
+        private bool EsModificacion
+        {
+            get { return ViewState["EsModificacion"] as bool? ?? false; }
+            set { ViewState["EsModificacion"] = value; }
+        }
 
         private bool EsSoloLectura
         {
-            get { return Singleton.Instancia.Usuario?.USUARIO_Rol == 4; }
+            get { return Singleton.Instancia.Usuario?.USUARIO_Rol == 4 || Singleton.Instancia.Usuario?.USUARIO_Rol == 6; }
+        }
+
+        private PasoAsistente Paso
+        {
+            get { return (PasoAsistente)(ViewState["PasoAsistente"] ?? PasoAsistente.Ninguno); }
+            set { ViewState["PasoAsistente"] = value; }
+        }
+
+        // DNI de la persona que se está evaluando actualmente en el asistente
+        // (el propio alumno, o el usuario/familiar que se está buscando para vincular).
+        private int? DniEvaluado
+        {
+            get { return ViewState["DniEvaluado"] as int?; }
+            set { ViewState["DniEvaluado"] = value; }
+        }
+
+        // DNI del alumno (nuevo o ya existente) sobre el que se está trabajando en el asistente.
+        private int? DniAlumnoPendiente
+        {
+            get { return ViewState["DniAlumnoPendiente"] as int?; }
+            set { ViewState["DniAlumnoPendiente"] = value; }
+        }
+
+        // true cuando el asistente se abrió desde "Vincular familiar" sobre un alumno ya existente
+        // en la grilla (en vez de venir del flujo de alta de un alumno nuevo).
+        private bool VincularAAlumnoExistente
+        {
+            get { return ViewState["VincularAAlumnoExistente"] as bool? ?? false; }
+            set { ViewState["VincularAAlumnoExistente"] = value; }
+        }
+
+        // Usuario/parentesco al que hay que vincular el alumno una vez resuelto.
+        // Null = auto-vincular a su propio titular (caso mayor de edad sin tutor).
+        private string VinculoUsuarioObjetivo
+        {
+            get { return ViewState["VinculoUsuarioObjetivo"] as string; }
+            set { ViewState["VinculoUsuarioObjetivo"] = value; }
+        }
+
+        private string VinculoParentescoObjetivo
+        {
+            get { return ViewState["VinculoParentescoObjetivo"] as string; }
+            set { ViewState["VinculoParentescoObjetivo"] = value; }
+        }
+
+        // Credenciales autogeneradas durante el flujo, para mostrarlas una única vez al terminar.
+        private List<string> CredencialesGeneradas
+        {
+            get { return ViewState["CredencialesGeneradas"] as List<string> ?? new List<string>(); }
+            set { ViewState["CredencialesGeneradas"] = value; }
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -35,7 +115,6 @@ namespace gymAppV2.Alumnos
             {
                 AplicarIdioma();
                 CargarAlumnos();
-                CargarUsuariosDropdown();
                 ConfigurarModoSoloLectura();
             }
         }
@@ -76,8 +155,6 @@ namespace gymAppV2.Alumnos
             ddlEstado.Items[1].Text = T("alumnos_filtro_activos");
             ddlEstado.Items[2].Text = T("alumnos_filtro_inactivos");
 
-            // ddlUsuario se carga en CargarUsuariosDropdown con T() para el primer load.
-            // En OnIdiomaChanged los items ya existen: traducimos sus textos directamente.
             if (ddlUsuario.Items.Count >= 3)
             {
                 ddlUsuario.Items[0].Text = T("alumnos_filtro_todos");
@@ -86,6 +163,7 @@ namespace gymAppV2.Alumnos
             }
 
             txtBusqueda.Attributes["placeholder"] = T("alumnos_buscar_placeholder");
+            litFamiliaresVacio.Text = T("alumnos_familiares_vacio");
         }
 
         private void ConfigurarModoSoloLectura()
@@ -107,14 +185,22 @@ namespace gymAppV2.Alumnos
         {
             try
             {
-                var alumnos = bllAlumno.ListarAlumnos() ?? new List<Alumno>();
+                List<Alumno> alumnos;
 
-                // Un Cliente solo ve los alumnos asociados a su usuario
-                if (EsSoloLectura)
+                // La consulta a la base la hace el web service (WebServices/AlumnosWS.asmx):
+                // la página le pide los alumnos por SOAP y solo se encarga de mostrarlos.
+                using (var ws = AlumnosWSCliente.Crear(this))
                 {
-                    string usuarioActual = Singleton.Instancia.Usuario?.USUARIO_Usuario;
-                    alumnos = alumnos.Where(a => !string.IsNullOrEmpty(a.Usuario)
-                        && a.Usuario.Equals(usuarioActual, StringComparison.OrdinalIgnoreCase)).ToList();
+                    // Un Cliente/Familiar solo ve los alumnos vinculados a su cuenta
+                    // (el servicio toma el usuario de la cookie de login)
+                    if (EsSoloLectura)
+                    {
+                        alumnos = ws.ObtenerMisAlumnos() ?? new List<Alumno>();
+                    }
+                    else
+                    {
+                        alumnos = ws.ListarAlumnos() ?? new List<Alumno>();
+                    }
                 }
 
                 // Aplicar filtros
@@ -128,9 +214,9 @@ namespace gymAppV2.Alumnos
                 {
                     string filtro = ddlUsuario.SelectedValue;
                     if (filtro == "con_usuario")
-                        alumnos = alumnos.Where(a => !string.IsNullOrEmpty(a.Usuario)).ToList();
+                        alumnos = alumnos.Where(a => a.Familiares.Count > 0).ToList();
                     else if (filtro == "sin_usuario")
-                        alumnos = alumnos.Where(a => string.IsNullOrEmpty(a.Usuario)).ToList();
+                        alumnos = alumnos.Where(a => a.Familiares.Count == 0).ToList();
                 }
 
                 if (!string.IsNullOrEmpty(txtBusqueda.Text))
@@ -149,7 +235,7 @@ namespace gymAppV2.Alumnos
                 lblTotal.Text = alumnos.Count.ToString();
                 lblActivos.Text = alumnos.Count(a => a.Activo).ToString();
                 lblConRutinas.Text = alumnos.Count(a => a.TieneRutinas).ToString();
-                lblSinUsuario.Text = alumnos.Count(a => string.IsNullOrEmpty(a.Usuario)).ToString();
+                lblSinUsuario.Text = alumnos.Count(a => a.Familiares.Count == 0).ToString();
 
                 badgeCount.InnerText = lblTotal.Text;
                 footerText.InnerText = string.Format(T("msg_mostrando_fmt"), alumnos.Count, alumnos.Count);
@@ -158,41 +244,6 @@ namespace gymAppV2.Alumnos
             {
                 MostrarError(T("msg_error_generico"));
                 footerText.InnerText = string.Format(T("msg_mostrando_fmt"), 0, 0);
-            }
-        }
-
-        private void CargarUsuariosDropdown()
-        {
-            try
-            {
-                ddlUsuario.Items.Clear();
-                ddlUsuario.Items.Add(new ListItem(T("alumnos_filtro_todos"),       ""));
-                ddlUsuario.Items.Add(new ListItem(T("alumnos_filtro_con_usuario"), "con_usuario"));
-                ddlUsuario.Items.Add(new ListItem(T("alumnos_filtro_sin_usuario"), "sin_usuario"));
-            }
-            catch (Exception)
-            {
-                // Silencioso
-            }
-        }
-
-        private void CargarUsuariosDisponibles()
-        {
-            try
-            {
-                var usuarios = bllUsuario.ListarUsuariosClientesDisponibles();
-                ddlUsuarioAsociar.Items.Clear();
-                ddlUsuarioAsociar.Items.Add(new ListItem(T("alumnos_sin_asociar"), ""));
-
-                foreach (var usuario in usuarios)
-                {
-                    string texto = $"{usuario.USUARIO_Usuario} ({usuario.Apellido}, {usuario.Nombre})";
-                    ddlUsuarioAsociar.Items.Add(new ListItem(texto, usuario.USUARIO_Usuario));
-                }
-            }
-            catch (Exception)
-            {
-                // Silencioso - el dropdown queda vacío
             }
         }
 
@@ -296,7 +347,9 @@ namespace gymAppV2.Alumnos
                 EsModificacion = false;
                 DniSeleccionado = null;
                 txtDNI.Enabled = true;
-                CargarUsuariosDisponibles();
+                btnGuardar.Visible = false;
+                btnContinuarAlta.Visible = true;
+                pnlFamiliares.Visible = false;
                 pnlForm.Visible = true;
             }
             catch (Exception)
@@ -333,12 +386,12 @@ namespace gymAppV2.Alumnos
                 txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
                 chkActivo.Checked = alumno.Activo;
 
-                CargarUsuariosDisponibles();
-
-                if (!string.IsNullOrEmpty(alumno.Usuario))
-                    ddlUsuarioAsociar.SelectedValue = alumno.Usuario;
+                CargarFamiliares(alumno);
 
                 lblFormTitle.Text = T("alumnos_form_modificar");
+                btnGuardar.Visible = true;
+                btnContinuarAlta.Visible = false;
+                pnlFamiliares.Visible = true;
                 pnlForm.Visible = true;
             }
             catch (Exception)
@@ -374,6 +427,10 @@ namespace gymAppV2.Alumnos
             }
         }
 
+        /// <summary>
+        /// Botón "Vincular familiar" de la barra de acciones: abre el asistente para vincular
+        /// una cuenta de usuario (titular o familiar) a un alumno ya existente en la grilla.
+        /// </summary>
         protected void btnAsociarUsuario_Click(object sender, EventArgs e)
         {
             try
@@ -391,27 +448,14 @@ namespace gymAppV2.Alumnos
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(alumno.Usuario))
-                {
-                    MostrarAdvertencia(T("alumnos_msg_ya_asociado"));
-                    return;
-                }
-
-                EsModificacion = true;
-                DniSeleccionado = alumno.DNI;
-
-                txtDNI.Text = alumno.DNI.ToString();
-                txtDNI.Enabled = false;
-                txtNombre.Text = alumno.Nombre ?? "";
-                txtApellido.Text = alumno.Apellido ?? "";
-                txtTelefono.Text = alumno.Telefono ?? "";
-                txtFechaNacimiento.Text = alumno.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
-                txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
-                chkActivo.Checked = alumno.Activo;
-
-                CargarUsuariosDisponibles();
-                lblFormTitle.Text = T("alumnos_btn_asociar") + " - " + alumno.Apellido + ", " + alumno.Nombre;
-                pnlForm.Visible = true;
+                DniAlumnoPendiente = alumno.DNI;
+                VincularAAlumnoExistente = true;
+                VinculoUsuarioObjetivo = null;
+                VinculoParentescoObjetivo = null;
+                Paso = PasoAsistente.BuscarUsuarioVinculo;
+                txtAsistenteDniVinculo.Text = "";
+                ddlAsistenteParentesco.SelectedIndex = 0;
+                MostrarAsistente();
             }
             catch (Exception)
             {
@@ -445,49 +489,457 @@ namespace gymAppV2.Alumnos
             pnlConfirmarEliminar.Visible = false;
         }
 
-        protected void btnGuardar_Click(object sender, EventArgs e)
+        // ==================== ASISTENTE DE ALTA (edad, tutor, familiares) ====================
+
+        /// <summary>
+        /// Botón "Confirmar" del formulario de alta. Valida DNI y fecha de nacimiento,
+        /// calcula la edad y arranca el flujo correspondiente (mayor: buscar por DNI /
+        /// menor: preguntar por un familiar).
+        /// </summary>
+        protected void btnContinuarAlta_Click(object sender, EventArgs e)
         {
             try
             {
-                if (string.IsNullOrEmpty(txtDNI.Text))
+                if (EsModificacion) return;
+
+                if (string.IsNullOrWhiteSpace(txtDNI.Text))
                 {
                     MostrarError(T("alumnos_msg_dni_obligatorio"));
                     return;
                 }
-
-                if (!int.TryParse(txtDNI.Text, out int dni))
+                if (!int.TryParse(txtDNI.Text.Trim(), out int dni) || txtDNI.Text.Trim().Length < 7 || txtDNI.Text.Trim().Length > 8)
                 {
                     MostrarError(T("alumnos_msg_dni_invalido"));
                     return;
                 }
-
-                if (string.IsNullOrEmpty(txtNombre.Text))
-                {
-                    MostrarError(T("alumnos_msg_nombre_oblig"));
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(txtApellido.Text))
-                {
-                    MostrarError(T("alumnos_msg_apellido_oblig"));
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(txtFechaNacimiento.Text))
+                if (string.IsNullOrWhiteSpace(txtFechaNacimiento.Text))
                 {
                     MostrarError(T("alumnos_msg_fecha_oblig"));
                     return;
                 }
-
                 if (!DateTime.TryParse(txtFechaNacimiento.Text, out DateTime fechaNacimiento))
                 {
                     MostrarError(T("alumnos_msg_fecha_invalida"));
                     return;
                 }
-
                 if (fechaNacimiento > DateTime.Now)
                 {
                     MostrarError(T("alumnos_msg_fecha_futura"));
+                    return;
+                }
+
+                if (bllAlumno.AlumnoExiste(dni))
+                {
+                    MostrarError(T("alumnos_msg_ya_existe"));
+                    return;
+                }
+
+                VincularAAlumnoExistente = false;
+                int edad = BLLUsuario.CalcularEdad(fechaNacimiento);
+
+                if (edad >= 18)
+                {
+                    ResolverAlumnoPrincipal(dni, vincularA: null, parentesco: null);
+                }
+                else
+                {
+                    DniAlumnoPendiente = dni;
+                    Paso = PasoAsistente.PreguntarTutor;
+                    MostrarAsistente();
+                }
+            }
+            catch (Exception)
+            {
+                MostrarError(T("msg_error_generico"));
+            }
+        }
+
+        /// <summary>
+        /// Busca a la persona (alumno principal) por DNI y decide el siguiente paso:
+        /// si ya existe como Usuario, pide confirmar el alta como Alumno; si no, pide completar datos.
+        /// </summary>
+        private void ResolverAlumnoPrincipal(int dni, string vincularA, string parentesco)
+        {
+            DniEvaluado = dni;
+            DniAlumnoPendiente = dni;
+            VinculoUsuarioObjetivo = vincularA;
+            VinculoParentescoObjetivo = parentesco;
+
+            var usuarioExistente = bllUsuario.ObtenerUsuarioPorDni(dni);
+            if (usuarioExistente == null)
+            {
+                Paso = PasoAsistente.CompletarDatosAlumno;
+                txtAsistenteUsuarioSugerido.Text = $"cliente_{dni}";
+                txtAsistenteContrasena.Text = "";
+            }
+            else
+            {
+                Paso = PasoAsistente.ConfirmarAlumnoExistente;
+                lblAsistenteMensaje.Text = string.Format(T("alumnos_asistente_confirmar_alumno_fmt"),
+                    usuarioExistente.Apellido, usuarioExistente.Nombre, dni, usuarioExistente.USUARIO_Tipo);
+            }
+            MostrarAsistente();
+        }
+
+        protected void btnAsistenteTutorSi_Click(object sender, EventArgs e)
+        {
+            Paso = PasoAsistente.BuscarUsuarioVinculo;
+            txtAsistenteDniVinculo.Text = "";
+            ddlAsistenteParentesco.SelectedIndex = 0;
+            MostrarAsistente();
+        }
+
+        protected void btnAsistenteTutorNo_Click(object sender, EventArgs e)
+        {
+            if (!DniAlumnoPendiente.HasValue) { CerrarAsistente(); return; }
+            ResolverAlumnoPrincipal(DniAlumnoPendiente.Value, vincularA: null, parentesco: null);
+        }
+
+        protected void btnAsistenteBuscarVinculo_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!int.TryParse(txtAsistenteDniVinculo.Text, out int dniVinculo))
+                {
+                    MostrarError(T("alumnos_msg_dni_invalido"));
+                    return;
+                }
+
+                if (DniAlumnoPendiente.HasValue && dniVinculo == DniAlumnoPendiente.Value)
+                {
+                    MostrarError(T("alumnos_asistente_error_mismo_dni"));
+                    return;
+                }
+
+                DniEvaluado = dniVinculo;
+                VinculoParentescoObjetivo = ddlAsistenteParentesco.SelectedValue;
+
+                var usuarioExistente = bllUsuario.ObtenerUsuarioPorDni(dniVinculo);
+                if (usuarioExistente == null)
+                {
+                    Paso = PasoAsistente.CompletarDatosVinculo;
+                    txtAsistenteVinculoNombre.Text = "";
+                    txtAsistenteVinculoApellido.Text = "";
+                    txtAsistenteVinculoTelefono.Text = "";
+                    txtAsistenteVinculoEmail.Text = "";
+                    txtAsistenteVinculoFechaNac.Text = "";
+                    txtAsistenteUsuarioSugerido.Text = $"familiar_{dniVinculo}";
+                    txtAsistenteContrasena.Text = "";
+                }
+                else
+                {
+                    if (BLLUsuario.CalcularEdad(usuarioExistente.FechaNacimiento ?? DateTime.Now) < 18)
+                    {
+                        MostrarError(T("alumnos_asistente_error_tutor_menor"));
+                        return;
+                    }
+                    Paso = PasoAsistente.ConfirmarVinculoExistente;
+                    lblAsistenteMensaje.Text = string.Format(T("alumnos_asistente_confirmar_vinculo_fmt"),
+                        usuarioExistente.Apellido, usuarioExistente.Nombre, dniVinculo);
+                }
+                MostrarAsistente();
+            }
+            catch (Exception)
+            {
+                MostrarError(T("msg_error_generico"));
+            }
+        }
+
+        protected void btnAsistenteConfirmarVinculoSi_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var usuario = bllUsuario.ObtenerUsuarioPorDni(DniEvaluado.Value);
+                if (usuario == null)
+                {
+                    MostrarError(T("alumnos_msg_no_existe"));
+                    return;
+                }
+                FinalizarVinculo(usuario.USUARIO_Usuario, VinculoParentescoObjetivo);
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
+            }
+        }
+
+        protected void btnAsistenteCrearVinculo_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(txtAsistenteVinculoNombre.Text) || string.IsNullOrEmpty(txtAsistenteVinculoApellido.Text))
+                {
+                    MostrarError(T("alumnos_msg_nombre_oblig"));
+                    return;
+                }
+                if (!DateTime.TryParse(txtAsistenteVinculoFechaNac.Text, out DateTime fechaNac))
+                {
+                    MostrarError(T("alumnos_msg_fecha_invalida"));
+                    return;
+                }
+                if (BLLUsuario.CalcularEdad(fechaNac) < 18)
+                {
+                    MostrarError(T("alumnos_asistente_error_tutor_menor"));
+                    return;
+                }
+
+                string usuarioFamiliar = string.IsNullOrEmpty(txtAsistenteUsuarioSugerido.Text)
+                    ? $"familiar_{DniEvaluado}"
+                    : txtAsistenteUsuarioSugerido.Text.Trim();
+                string contrasena = txtAsistenteContrasena.Text;
+                bool autogenerada = string.IsNullOrEmpty(contrasena);
+                if (autogenerada) contrasena = bllUsuario.GenerarContrasenaSegura();
+
+                bllUsuario.CrearUsuario(
+                    usuarioFamiliar, contrasena, 6, // Rol Familiar
+                    txtAsistenteVinculoNombre.Text.Trim(), txtAsistenteVinculoApellido.Text.Trim(),
+                    string.IsNullOrEmpty(txtAsistenteVinculoTelefono.Text) ? null : txtAsistenteVinculoTelefono.Text,
+                    string.IsNullOrEmpty(txtAsistenteVinculoEmail.Text) ? null : txtAsistenteVinculoEmail.Text,
+                    fechaNac, null, DniEvaluado.Value);
+
+                if (autogenerada) RegistrarCredencialGenerada(usuarioFamiliar, contrasena, T("alumnos_rol_familiar"));
+
+                FinalizarVinculo(usuarioFamiliar, VinculoParentescoObjetivo);
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Una vez resuelto (creado o encontrado) el usuario a vincular, decide si ya se puede
+        /// cerrar (vínculo sobre un alumno existente) o si todavía falta crear/confirmar al
+        /// propio alumno (menor con tutor recién resuelto).
+        /// </summary>
+        private void FinalizarVinculo(string usuario, string parentesco)
+        {
+            if (VincularAAlumnoExistente)
+            {
+                bllAlumno.AsociarFamiliar(DniAlumnoPendiente.Value, usuario, parentesco);
+                MostrarExito(T("alumnos_msg_familiar_vinculado"));
+                CerrarAsistente();
+                MostrarCredencialesFinal();
+                CargarAlumnos();
+                DniSeleccionado = DniAlumnoPendiente;
+                return;
+            }
+
+            ResolverAlumnoPrincipal(DniAlumnoPendiente.Value, vincularA: usuario, parentesco: parentesco);
+        }
+
+        protected void btnAsistenteConfirmarAlumnoSi_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int dni = DniEvaluado.Value;
+                decimal? peso = null;
+                if (!string.IsNullOrEmpty(txtPeso.Text) && decimal.TryParse(txtPeso.Text, out decimal p))
+                    peso = p;
+
+                var alumno = new Alumno(dni, peso, false, chkActivo.Checked, "");
+                bllAlumno.CrearAlumno(alumno);
+
+                var usuarioExistente = bllUsuario.ObtenerUsuarioPorDni(dni);
+                string usuarioVinculo = VinculoUsuarioObjetivo ?? usuarioExistente.USUARIO_Usuario;
+                string parentesco = VinculoUsuarioObjetivo != null ? VinculoParentescoObjetivo : "Titular";
+                bllAlumno.AsociarFamiliar(dni, usuarioVinculo, parentesco);
+
+                bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
+                MostrarExito(T("alumnos_msg_creado"));
+                CerrarAsistente();
+                MostrarCredencialesFinal();
+                CargarAlumnos();
+                DniSeleccionado = dni;
+                pnlForm.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
+            }
+        }
+
+        protected void btnAsistenteConfirmarAlumnoNo_Click(object sender, EventArgs e)
+        {
+            CerrarAsistente();
+        }
+
+        protected void btnAsistenteCrearAlumno_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int dni = DniEvaluado.Value;
+                string usuarioNuevo = string.IsNullOrEmpty(txtAsistenteUsuarioSugerido.Text)
+                    ? $"cliente_{dni}"
+                    : txtAsistenteUsuarioSugerido.Text.Trim();
+
+                if (bllUsuario.UsuarioExiste(usuarioNuevo))
+                {
+                    MostrarError(T("alumnos_asistente_error_usuario_existe"));
+                    return;
+                }
+
+                string contrasena = txtAsistenteContrasena.Text;
+                bool autogenerada = string.IsNullOrEmpty(contrasena);
+                if (autogenerada) contrasena = bllUsuario.GenerarContrasenaSegura();
+
+                decimal? peso = null;
+                if (!string.IsNullOrEmpty(txtPeso.Text) && decimal.TryParse(txtPeso.Text, out decimal p))
+                    peso = p;
+
+                bllUsuario.CrearUsuario(
+                    usuarioNuevo, contrasena, 4, // Cliente
+                    txtNombre.Text.Trim(), txtApellido.Text.Trim(),
+                    string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text,
+                    null,
+                    DateTime.Parse(txtFechaNacimiento.Text),
+                    null, dni);
+
+                var alumno = bllAlumno.ObtenerAlumno(dni);
+                if (alumno != null)
+                {
+                    alumno.Peso = peso;
+                    alumno.Activo = chkActivo.Checked;
+                    bllAlumno.ActualizarAlumno(alumno);
+                }
+
+                if (autogenerada) RegistrarCredencialGenerada(usuarioNuevo, contrasena, T("alumnos_rol_titular"));
+
+                if (!string.IsNullOrEmpty(VinculoUsuarioObjetivo))
+                {
+                    // CrearUsuario ya auto-vinculó al propio titular; si viene de un flujo de
+                    // tutor, hay que reemplazar ese vínculo por el del familiar correspondiente.
+                    bllAlumno.DesasociarFamiliar(dni, usuarioNuevo);
+                    bllAlumno.AsociarFamiliar(dni, VinculoUsuarioObjetivo, VinculoParentescoObjetivo);
+                }
+
+                bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
+                MostrarExito(T("alumnos_msg_creado"));
+                CerrarAsistente();
+                MostrarCredencialesFinal();
+                CargarAlumnos();
+                DniSeleccionado = dni;
+                pnlForm.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
+            }
+        }
+
+        protected void btnAsistenteCerrar_Click(object sender, EventArgs e)
+        {
+            CerrarAsistente();
+        }
+
+        protected void btnCerrarCredenciales_Click(object sender, EventArgs e)
+        {
+            pnlCredenciales.Visible = false;
+        }
+
+        private void MostrarAsistente()
+        {
+            pnlAsistente.Visible = true;
+            pnlAsistentePreguntarTutor.Visible = Paso == PasoAsistente.PreguntarTutor;
+            pnlAsistenteBuscarVinculo.Visible = Paso == PasoAsistente.BuscarUsuarioVinculo;
+            pnlAsistenteConfirmarAlumno.Visible = Paso == PasoAsistente.ConfirmarAlumnoExistente;
+            pnlAsistenteConfirmarVinculo.Visible = Paso == PasoAsistente.ConfirmarVinculoExistente;
+            pnlAsistenteDatosVinculo.Visible = Paso == PasoAsistente.CompletarDatosVinculo;
+            pnlAsistenteCredenciales.Visible = Paso == PasoAsistente.CompletarDatosAlumno || Paso == PasoAsistente.CompletarDatosVinculo;
+            btnAsistenteCrearAlumno.Visible = Paso == PasoAsistente.CompletarDatosAlumno;
+            btnAsistenteCrearVinculo.Visible = Paso == PasoAsistente.CompletarDatosVinculo;
+
+            switch (Paso)
+            {
+                case PasoAsistente.PreguntarTutor:
+                    lblAsistenteTitulo.Text = T("alumnos_asistente_titulo_tutor");
+                    lblAsistenteMensaje.Text = T("alumnos_asistente_msg_tutor");
+                    break;
+                case PasoAsistente.BuscarUsuarioVinculo:
+                    lblAsistenteTitulo.Text = VincularAAlumnoExistente
+                        ? T("alumnos_asistente_titulo_vincular")
+                        : T("alumnos_asistente_titulo_tutor_dni");
+                    break;
+                case PasoAsistente.ConfirmarAlumnoExistente:
+                case PasoAsistente.ConfirmarVinculoExistente:
+                    lblAsistenteTitulo.Text = T("alumnos_asistente_titulo_confirmar");
+                    break;
+                case PasoAsistente.CompletarDatosAlumno:
+                    lblAsistenteTitulo.Text = T("alumnos_asistente_titulo_datos");
+                    break;
+                case PasoAsistente.CompletarDatosVinculo:
+                    lblAsistenteTitulo.Text = T("alumnos_asistente_titulo_datos_familiar");
+                    break;
+            }
+        }
+
+        private void CerrarAsistente()
+        {
+            Paso = PasoAsistente.Ninguno;
+            DniEvaluado = null;
+            DniAlumnoPendiente = null;
+            VinculoUsuarioObjetivo = null;
+            VinculoParentescoObjetivo = null;
+            VincularAAlumnoExistente = false;
+            pnlAsistente.Visible = false;
+        }
+
+        private void RegistrarCredencialGenerada(string usuario, string contrasena, string rolLabel)
+        {
+            var lista = CredencialesGeneradas;
+            lista.Add($"{rolLabel}: {usuario} / {contrasena}");
+            CredencialesGeneradas = lista;
+        }
+
+        private void MostrarCredencialesFinal()
+        {
+            var lista = CredencialesGeneradas;
+            if (lista.Count > 0)
+            {
+                litCredenciales.Text = string.Join("<br/>", lista.Select(System.Web.HttpUtility.HtmlEncode));
+                pnlCredenciales.Visible = true;
+                CredencialesGeneradas = new List<string>();
+            }
+        }
+
+        // ==================== FAMILIARES (modificar alumno existente) ====================
+
+        private void CargarFamiliares(Alumno alumno)
+        {
+            rptFamiliares.DataSource = alumno.Familiares;
+            rptFamiliares.DataBind();
+            litFamiliaresVacio.Visible = alumno.Familiares.Count == 0;
+        }
+
+        protected void rptFamiliares_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            try
+            {
+                if (e.CommandName == "Quitar" && DniSeleccionado.HasValue)
+                {
+                    string usuario = e.CommandArgument.ToString();
+                    bllAlumno.DesasociarFamiliar(DniSeleccionado.Value, usuario);
+                    MostrarExito(T("alumnos_msg_familiar_desvinculado"));
+
+                    var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
+                    if (alumno != null) CargarFamiliares(alumno);
+                    CargarAlumnos();
+                }
+            }
+            catch (Exception)
+            {
+                MostrarError(T("msg_error_generico"));
+            }
+        }
+
+        // ==================== GUARDAR (solo modificación: peso/activo) ====================
+
+        protected void btnGuardar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!EsModificacion || !DniSeleccionado.HasValue)
+                {
                     return;
                 }
 
@@ -502,76 +954,21 @@ namespace gymAppV2.Alumnos
                     peso = p;
                 }
 
-                string telefono = string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text;
-
-                if (EsModificacion)
+                var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
+                if (alumno == null)
                 {
-                    var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
-                    if (alumno == null)
-                    {
-                        MostrarError(T("alumnos_msg_no_existe"));
-                        return;
-                    }
-
-                    alumno.Peso = peso;
-                    alumno.Activo = chkActivo.Checked;
-
-                    bllAlumno.ActualizarAlumno(alumno);
-
-                    string usuarioSeleccionado = ddlUsuarioAsociar.SelectedValue;
-                    if (!string.IsNullOrEmpty(usuarioSeleccionado) && string.IsNullOrEmpty(alumno.Usuario))
-                    {
-                        bllAlumno.AsociarUsuario(alumno.DNI, usuarioSeleccionado);
-                        bllEvento.RegistrarAsociarUsuario(ObtenerUsuarioActual(), alumno.DNI);
-                    }
-                    else if (string.IsNullOrEmpty(usuarioSeleccionado) && !string.IsNullOrEmpty(alumno.Usuario))
-                    {
-                        bllAlumno.DesasociarUsuario(alumno.DNI);
-                        bllEvento.RegistrarDesasociarUsuario(ObtenerUsuarioActual(), alumno.DNI);
-                    }
-
-                    bllEvento.RegistrarModificacionAlumno(ObtenerUsuarioActual(), alumno.DNI);
-                    bllEvento.RegistrarCambioDatosAlumno(ObtenerUsuarioActual(), alumno.DNI, "datos alumno");
-
-                    MostrarExito(T("alumnos_msg_modificado"));
-                }
-                else
-                {
-                    if (bllAlumno.AlumnoExiste(dni))
-                    {
-                        MostrarError(T("alumnos_msg_ya_existe"));
-                        return;
-                    }
-
-                    string usuarioName = $"cliente_{dni}";
-
-                    var bllUsuarioLocal = new BLL.BLLUsuario();
-                    string contrasena = bllUsuarioLocal.GenerarContrasenaSegura();
-                    bllUsuarioLocal.CrearUsuario(
-                        usuarioName,
-                        contrasena,
-                        4, // Rol Cliente
-                        txtNombre.Text.Trim(),
-                        txtApellido.Text.Trim(),
-                        telefono,
-                        null, // email
-                        fechaNacimiento,
-                        null, // datosEntrenador
-                        dni   // dniAlumno
-                    );
-
-                    var alumno = bllAlumno.ObtenerAlumno(dni);
-                    if (alumno != null)
-                    {
-                        alumno.Peso = peso;
-                        alumno.Activo = chkActivo.Checked;
-                        bllAlumno.ActualizarAlumno(alumno);
-                    }
-
-                    MostrarExito(T("alumnos_msg_creado"));
-                    bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
+                    MostrarError(T("alumnos_msg_no_existe"));
+                    return;
                 }
 
+                alumno.Peso = peso;
+                alumno.Activo = chkActivo.Checked;
+                bllAlumno.ActualizarAlumno(alumno);
+
+                bllEvento.RegistrarModificacionAlumno(ObtenerUsuarioActual(), alumno.DNI);
+                bllEvento.RegistrarCambioDatosAlumno(ObtenerUsuarioActual(), alumno.DNI, "datos alumno");
+
+                MostrarExito(T("alumnos_msg_modificado"));
                 pnlForm.Visible = false;
                 CargarAlumnos();
             }
@@ -620,8 +1017,6 @@ namespace gymAppV2.Alumnos
             txtFechaNacimiento.Text = "";
             txtPeso.Text = "";
             chkActivo.Checked = true;
-            ddlUsuarioAsociar.Items.Clear();
-            ddlUsuarioAsociar.Items.Add(new ListItem(T("alumnos_sin_asociar"), ""));
         }
 
         private void MostrarInfo(string mensaje)

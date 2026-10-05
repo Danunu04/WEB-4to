@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BE
 {
@@ -20,8 +22,13 @@ namespace BE
         // Campo de verificación
         public string DVH { get; set; }
 
-        // Referencia al usuario (solo el usr, no datos personales)
-        public string Usuario { get; set; }
+        // Usuarios vinculados (tabla intermedia ALUMNOS_USUARIOS): el propio titular
+        // y/o uno o más familiares (madre/padre/tutor). Reemplaza a la vieja columna
+        // única ALUMNOS.usr, que solo soportaba un usuario por alumno.
+        public List<AlumnoUsuarioVinculo> Familiares { get; set; } = new List<AlumnoUsuarioVinculo>();
+
+        // Conveniencia para la grilla: primer usuario vinculado, o vacío si no tiene ninguno.
+        public string Usuario => Familiares.FirstOrDefault()?.Usuario ?? string.Empty;
 
         // Propiedades de solo lectura para visualización (se llenan desde USUARIOS via JOIN)
         // Se usan en la UI para mostrar/buscar alumnos pero no se persisten en ALUMNOS
@@ -41,16 +48,6 @@ namespace BE
             TieneRutinas = tieneRutinas;
             Activo = activo;
             DVH = dvh;
-        }
-
-        public Alumno(int dni, decimal? peso, bool tieneRutinas, bool activo, string dvh, string usuario)
-        {
-            DNI = dni;
-            Peso = peso;
-            TieneRutinas = tieneRutinas;
-            Activo = activo;
-            DVH = dvh;
-            Usuario = usuario;
         }
     }
 }

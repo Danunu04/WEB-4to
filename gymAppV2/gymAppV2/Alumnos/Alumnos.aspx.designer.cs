@@ -249,13 +249,31 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.WebControls.CheckBox chkActivo;
 
         /// <summary>
-        /// ddlUsuarioAsociar control.
+        /// pnlFamiliares control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlUsuarioAsociar;
+        protected global::System.Web.UI.WebControls.Panel pnlFamiliares;
+
+        /// <summary>
+        /// litFamiliaresVacio control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litFamiliaresVacio;
+
+        /// <summary>
+        /// rptFamiliares control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptFamiliares;
 
         /// <summary>
         /// btnGuardar control.
@@ -265,6 +283,24 @@ namespace gymAppV2.Alumnos
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnGuardar;
+
+        /// <summary>
+        /// btnCancelarForm control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarForm;
+
+        /// <summary>
+        /// btnContinuarAlta control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnContinuarAlta;
 
         /// <summary>
         /// pnlConfirmarEliminar control.
@@ -319,6 +355,166 @@ namespace gymAppV2.Alumnos
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnConfirmarEliminar;
+
+        /// <summary>
+        /// pnlAsistente control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistente;
+
+        /// <summary>
+        /// lblAsistenteTitulo control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Label lblAsistenteTitulo;
+
+        /// <summary>
+        /// btnAsistenteCerrar control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteCerrar;
+
+        /// <summary>
+        /// lblAsistenteMensaje control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Label lblAsistenteMensaje;
+
+        /// <summary>
+        /// pnlAsistentePreguntarTutor control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistentePreguntarTutor;
+
+        /// <summary>
+        /// btnAsistenteTutorNo control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteTutorNo;
+
+        /// <summary>
+        /// btnAsistenteTutorSi control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteTutorSi;
+
+        /// <summary>
+        /// pnlAsistenteBuscarVinculo control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistenteBuscarVinculo;
+
+        /// <summary>
+        /// txtAsistenteDniVinculo control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteDniVinculo;
+
+        /// <summary>
+        /// ddlAsistenteParentesco control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.DropDownList ddlAsistenteParentesco;
+
+        /// <summary>
+        /// btnAsistenteBuscarVinculo control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteBuscarVinculo;
+
+        /// <summary>
+        /// pnlAsistenteConfirmarAlumno control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistenteConfirmarAlumno;
+
+        /// <summary>
+        /// btnAsistenteConfirmarAlumnoNo control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteConfirmarAlumnoNo;
+
+        /// <summary>
+        /// btnAsistenteConfirmarAlumnoSi control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteConfirmarAlumnoSi;
+
+        /// <summary>
+        /// pnlAsistenteConfirmarVinculo control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistenteConfirmarVinculo;
+
+        /// <summary>
+        /// btnAsistenteConfirmarVinculoNo control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteConfirmarVinculoNo;
+
+        /// <summary>
+        /// btnAsistenteConfirmarVinculoSi control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteConfirmarVinculoSi;
+
+        /// <summary>
+        /// pnlAsistenteDatosVinculo control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistenteDatosVinculo;
+
+        /// <summary>
+        /// txtAsistenteVinculoApellido control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteVinculoApellido;
+
+        /// <summary>
+        /// txtAsistenteVinculoNombre control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteVinculoNombre;
+
+        /// <summary>
+        /// txtAsistenteVinculoTelefono control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteVinculoTelefono;
+
+        /// <summary>
+        /// txtAsistenteVinculoEmail control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteVinculoEmail;
+
+        /// <summary>
+        /// txtAsistenteVinculoFechaNac control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteVinculoFechaNac;
+
+        /// <summary>
+        /// pnlAsistenteCredenciales control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAsistenteCredenciales;
+
+        /// <summary>
+        /// txtAsistenteUsuarioSugerido control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteUsuarioSugerido;
+
+        /// <summary>
+        /// txtAsistenteContrasena control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.TextBox txtAsistenteContrasena;
+
+        /// <summary>
+        /// btnAsistenteCrearAlumno control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteCrearAlumno;
+
+        /// <summary>
+        /// btnAsistenteCrearVinculo control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAsistenteCrearVinculo;
+
+        /// <summary>
+        /// pnlCredenciales control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlCredenciales;
+
+        /// <summary>
+        /// btnCerrarCredenciales control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales;
+
+        /// <summary>
+        /// litCredenciales control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Literal litCredenciales;
+
+        /// <summary>
+        /// btnCerrarCredenciales2 control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales2;
 
         protected global::System.Web.UI.WebControls.Literal litTitulo;
         protected global::System.Web.UI.WebControls.Literal litStatTotal;

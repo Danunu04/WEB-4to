@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Alumnos - GymApp</title>
-    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=1") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=2") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -149,18 +149,21 @@
                 </div>
             </div>
 
-            <!-- Form -->
-            <asp:Panel ID="pnlForm" runat="server" Visible="false" CssClass="detail-card">
-                <div class="detail-header">
+        </div><!-- /main-content-vertical -->
+
+        <!-- Formulario de alta/modificación (ventana flotante) -->
+        <asp:Panel ID="pnlForm" runat="server" Visible="false" CssClass="modal-overlay">
+            <div class="modal-content modal-form">
+                <div class="modal-header">
                     <h3>
                         <i class="fa-solid fa-user-graduate"></i>
                         <asp:Label ID="lblFormTitle" runat="server" Text="Detalle del alumno" />
                     </h3>
-                    <button id="btnCloseForm" runat="server" class="btn-icon" style="min-width:auto;padding:8px;" onserverclick="btnCloseForm_Click">
+                    <button id="btnCloseForm" runat="server" class="btn-close" onserverclick="btnCloseForm_Click">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
-                <div class="detail-body">
+                <div class="modal-body detail-body">
                     <div class="form-row">
                         <div class="form-field">
                             <label>DNI *</label>
@@ -199,26 +202,40 @@
                             <label>Estado</label>
                             <asp:CheckBox ID="chkActivo" runat="server" />
                         </div>
-                        <div class="form-field">
-                            <label>Asociar Usuario Cliente</label>
-                            <asp:DropDownList ID="ddlUsuarioAsociar" runat="server">
-                                <asp:ListItem Value="">-- Sin asociar --</asp:ListItem>
-                            </asp:DropDownList>
-                        </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-field full">
-                            <button id="btnGuardar" runat="server" class="btn-guardar" onserverclick="btnGuardar_Click">
-                                <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
-                            </button>
+                    <asp:Panel ID="pnlFamiliares" runat="server" Visible="false">
+                        <div class="form-row">
+                            <div class="form-field full">
+                                <label><%= T("alumnos_lbl_familiares") %></label>
+                                <asp:Literal ID="litFamiliaresVacio" runat="server" Visible="false" />
+                                <asp:Repeater ID="rptFamiliares" runat="server" OnItemCommand="rptFamiliares_ItemCommand">
+                                    <ItemTemplate>
+                                        <div class="user-pill user-with" style="display:inline-flex;gap:8px;align-items:center;margin:2px 4px 2px 0;">
+                                            <span><%# Eval("NombreUsuario") %> <%# Eval("ApellidoUsuario") %> (<%# Eval("Parentesco") ?? "" %>) — <%# Eval("Usuario") %></span>
+                                            <asp:LinkButton runat="server" CommandName="Quitar" CommandArgument='<%# Eval("Usuario") %>' Text="✕" ToolTip="Quitar" />
+                                        </div>
+                                    </ItemTemplate>
+                                </asp:Repeater>
+                            </div>
                         </div>
-                    </div>
+                    </asp:Panel>
+
                 </div>
-            </asp:Panel>
+                <div class="modal-footer">
+                    <button id="btnCancelarForm" runat="server" class="btn-action btn-cancelar" onserverclick="btnCancelarForm_Click">
+                        <%= T("btn_cancelar") %>
+                    </button>
+                    <button id="btnContinuarAlta" runat="server" class="btn-action btn-guardar" onserverclick="btnContinuarAlta_Click">
+                        <i class="fa-solid fa-arrow-right"></i> <%= T("btn_confirmar") %>
+                    </button>
+                    <button id="btnGuardar" runat="server" class="btn-action btn-guardar" onserverclick="btnGuardar_Click">
+                        <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
+                    </button>
+                </div>
+            </div>
+        </asp:Panel>
 
-        </div><!-- /main-content-vertical -->
-    </div>
 
     <!-- Panel de Confirmación Eliminación -->
     <asp:Panel ID="pnlConfirmarEliminar" runat="server" Visible="false" CssClass="modal-overlay">
@@ -248,4 +265,128 @@
             </div>
         </div>
     </asp:Panel>
+
+    <!-- Asistente de alta: edad, búsqueda por DNI, tutor/familiar -->
+    <asp:Panel ID="pnlAsistente" runat="server" Visible="false" CssClass="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-people-roof"></i> <asp:Label ID="lblAsistenteTitulo" runat="server" /></h3>
+                <button id="btnAsistenteCerrar" runat="server" class="btn-close" onserverclick="btnAsistenteCerrar_Click">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><asp:Label ID="lblAsistenteMensaje" runat="server" /></p>
+
+                <asp:Panel ID="pnlAsistentePreguntarTutor" runat="server" Visible="false" CssClass="modal-footer">
+                    <button id="btnAsistenteTutorNo" runat="server" class="btn-action btn-cancelar" onserverclick="btnAsistenteTutorNo_Click"><%= T("alumnos_asistente_btn_no") %></button>
+                    <button id="btnAsistenteTutorSi" runat="server" class="btn-action btn-guardar" onserverclick="btnAsistenteTutorSi_Click"><%= T("alumnos_asistente_btn_si") %></button>
+                </asp:Panel>
+
+                <asp:Panel ID="pnlAsistenteBuscarVinculo" runat="server" Visible="false">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label><%= T("alumnos_asistente_lbl_dni_familiar") %></label>
+                            <asp:TextBox ID="txtAsistenteDniVinculo" runat="server" placeholder="Ej: 30456789"></asp:TextBox>
+                        </div>
+                        <div class="form-field">
+                            <label><%= T("alumnos_asistente_lbl_parentesco") %></label>
+                            <asp:DropDownList ID="ddlAsistenteParentesco" runat="server">
+                                <asp:ListItem Value="Madre">Madre</asp:ListItem>
+                                <asp:ListItem Value="Padre">Padre</asp:ListItem>
+                                <asp:ListItem Value="Tutor">Tutor</asp:ListItem>
+                                <asp:ListItem Value="Otro">Otro</asp:ListItem>
+                            </asp:DropDownList>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="btnAsistenteBuscarVinculo" runat="server" class="btn-action btn-guardar" onserverclick="btnAsistenteBuscarVinculo_Click">
+                            <i class="fa-solid fa-magnifying-glass"></i> <%= T("alumnos_asistente_btn_buscar") %>
+                        </button>
+                    </div>
+                </asp:Panel>
+
+                <asp:Panel ID="pnlAsistenteConfirmarAlumno" runat="server" Visible="false" CssClass="modal-footer">
+                    <button id="btnAsistenteConfirmarAlumnoNo" runat="server" class="btn-action btn-cancelar" onserverclick="btnAsistenteConfirmarAlumnoNo_Click"><%= T("alumnos_asistente_btn_no") %></button>
+                    <button id="btnAsistenteConfirmarAlumnoSi" runat="server" class="btn-action btn-guardar" onserverclick="btnAsistenteConfirmarAlumnoSi_Click"><%= T("alumnos_asistente_btn_si") %></button>
+                </asp:Panel>
+
+                <asp:Panel ID="pnlAsistenteConfirmarVinculo" runat="server" Visible="false" CssClass="modal-footer">
+                    <button id="btnAsistenteConfirmarVinculoNo" runat="server" class="btn-action btn-cancelar" onserverclick="btnAsistenteCerrar_Click"><%= T("alumnos_asistente_btn_no") %></button>
+                    <button id="btnAsistenteConfirmarVinculoSi" runat="server" class="btn-action btn-guardar" onserverclick="btnAsistenteConfirmarVinculoSi_Click"><%= T("alumnos_asistente_btn_si") %></button>
+                </asp:Panel>
+
+                <asp:Panel ID="pnlAsistenteDatosVinculo" runat="server" Visible="false">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Apellido/s *</label>
+                            <asp:TextBox ID="txtAsistenteVinculoApellido" runat="server"></asp:TextBox>
+                        </div>
+                        <div class="form-field">
+                            <label>Nombre/s *</label>
+                            <asp:TextBox ID="txtAsistenteVinculoNombre" runat="server"></asp:TextBox>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Teléfono</label>
+                            <asp:TextBox ID="txtAsistenteVinculoTelefono" runat="server"></asp:TextBox>
+                        </div>
+                        <div class="form-field">
+                            <label>Email</label>
+                            <asp:TextBox ID="txtAsistenteVinculoEmail" runat="server"></asp:TextBox>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field full">
+                            <label>Fecha de Nacimiento *</label>
+                            <asp:TextBox ID="txtAsistenteVinculoFechaNac" runat="server" TextMode="Date"></asp:TextBox>
+                        </div>
+                    </div>
+                </asp:Panel>
+
+                <asp:Panel ID="pnlAsistenteCredenciales" runat="server" Visible="false">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label><%= T("alumnos_asistente_lbl_usuario") %></label>
+                            <asp:TextBox ID="txtAsistenteUsuarioSugerido" runat="server"></asp:TextBox>
+                        </div>
+                        <div class="form-field">
+                            <label><%= T("alumnos_asistente_lbl_contrasena") %></label>
+                            <asp:TextBox ID="txtAsistenteContrasena" runat="server" TextMode="Password"></asp:TextBox>
+                        </div>
+                    </div>
+                    <p style="font-size:0.8rem;color:var(--text-muted)"><%= T("alumnos_asistente_hint_contrasena") %></p>
+                    <div class="modal-footer">
+                        <button id="btnAsistenteCrearAlumno" runat="server" class="btn-action btn-guardar" onserverclick="btnAsistenteCrearAlumno_Click">
+                            <i class="fa-solid fa-check"></i> <%= T("alumnos_asistente_btn_confirmar") %>
+                        </button>
+                        <button id="btnAsistenteCrearVinculo" runat="server" class="btn-action btn-guardar" onserverclick="btnAsistenteCrearVinculo_Click">
+                            <i class="fa-solid fa-check"></i> <%= T("alumnos_asistente_btn_confirmar") %>
+                        </button>
+                    </div>
+                </asp:Panel>
+            </div>
+        </div>
+    </asp:Panel>
+
+    <!-- Credenciales generadas: se muestran una única vez -->
+    <asp:Panel ID="pnlCredenciales" runat="server" Visible="false" CssClass="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key"></i> <%= T("alumnos_credenciales_titulo") %></h3>
+                <button id="btnCerrarCredenciales" runat="server" class="btn-close" onserverclick="btnCerrarCredenciales_Click">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger"><i class="fa-solid fa-circle-exclamation"></i> <%= T("alumnos_credenciales_aviso") %></p>
+                <p><asp:Literal ID="litCredenciales" runat="server" /></p>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCerrarCredenciales2" runat="server" class="btn-action btn-guardar" onserverclick="btnCerrarCredenciales_Click">OK</button>
+            </div>
+        </div>
+    </asp:Panel>
+    </div><!-- /alumnos-container -->
 </asp:Content>

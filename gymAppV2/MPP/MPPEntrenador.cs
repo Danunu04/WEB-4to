@@ -14,11 +14,26 @@ namespace MPP
     {
         private DalGeneral dal;
         private DigitoVerificadorManager dvManager;
+        private CriptoManager criptoManager;
 
         public MPPEntrenador()
         {
             dal = new DalGeneral();
             dvManager = new DigitoVerificadorManager();
+            criptoManager = new CriptoManager();
+        }
+
+        /// <summary>
+        /// Pobla los datos personales de visualización (Nombre, Apellido, Teléfono,
+        /// FechaNacimiento) leídos vía JOIN con USUARIOS, desencriptándolos. Esos campos
+        /// se guardan encriptados desde MPPUsuario, por eso no se pueden leer crudos.
+        /// </summary>
+        private void PoblarDatosPersonales(Entrenador entrenador, DataRow row)
+        {
+            entrenador.Nombre = row["nombre"] != DBNull.Value ? criptoManager.DesencriptarCampoPersonal(row["nombre"].ToString()) : null;
+            entrenador.Apellido = row["apellido"] != DBNull.Value ? criptoManager.DesencriptarCampoPersonal(row["apellido"].ToString()) : null;
+            entrenador.Telefono = row["telefono"] != DBNull.Value ? criptoManager.DesencriptarCampoPersonal(row["telefono"].ToString()) : null;
+            entrenador.FechaNacimiento = criptoManager.DesencriptarFechaPersonal(row["fechaNacimiento"]);
         }
 
         /// <summary>
@@ -72,10 +87,7 @@ namespace MPP
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
                     // Poblar datos personales desde USUARIOS (para visualización)
-                    entrenador.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
-                    entrenador.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
-                    entrenador.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
-                    entrenador.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    PoblarDatosPersonales(entrenador, row);
                     entrenadores.Add(entrenador);
                 }
 
@@ -109,6 +121,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+                MPPDigitoVerificador.SincronizarControl("ENTRENADORES");
             }
             catch (Exception ex)
             {
@@ -183,10 +196,7 @@ namespace MPP
                         row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty
                     );
                     // Poblar datos personales desde USUARIOS (para visualización)
-                    entrenador.Nombre = row["nombre"] != DBNull.Value ? row["nombre"].ToString() : null;
-                    entrenador.Apellido = row["apellido"] != DBNull.Value ? row["apellido"].ToString() : null;
-                    entrenador.Telefono = row["telefono"] != DBNull.Value ? row["telefono"].ToString() : null;
-                    entrenador.FechaNacimiento = row["fechaNacimiento"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["fechaNacimiento"]) : null;
+                    PoblarDatosPersonales(entrenador, row);
                     return entrenador;
                 }
 
@@ -222,6 +232,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+                MPPDigitoVerificador.SincronizarControl("ENTRENADORES");
             }
             catch (Exception ex)
             {
@@ -237,6 +248,8 @@ namespace MPP
                 // because DalGeneral doesn't provide transaction capability
                 string connectionString = ConfigurationManager.ConnectionStrings["GymAppConnection"].ConnectionString;
 
+                var turnosSinAuxiliar = new List<int>();
+
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
@@ -245,7 +258,7 @@ namespace MPP
                     {
                         try
                         {
-                            // Delete from Actividad_Entrenador first
+                            // Delete from Actividad_Entrenador first (tabla vieja, ya sin uso)
                             string deleteActividadEntrenador = @"
                                 DELETE FROM [GymApp].[dbo].[Actividad_Entrenador]
                                 WHERE dniEntrenador = @DNI";
@@ -254,6 +267,23 @@ namespace MPP
                             {
                                 cmd.Parameters.AddWithValue("@DNI", dni);
                                 cmd.ExecuteNonQuery();
+                            }
+
+                            // Turnos donde era auxiliar: quedan sin auxiliar (si es titular, BLL ya bloqueó la baja)
+                            string quitarAuxiliar = @"
+                                UPDATE [GymApp].[dbo].[ActividadHorario]
+                                SET dniAuxiliar = NULL
+                                OUTPUT inserted.codHorario
+                                WHERE dniAuxiliar = @DNI";
+
+                            using (SqlCommand cmd = new SqlCommand(quitarAuxiliar, connection, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@DNI", dni);
+                                using (SqlDataReader reader = cmd.ExecuteReader())
+                                {
+                                    while (reader.Read())
+                                        turnosSinAuxiliar.Add(reader.GetInt32(0));
+                                }
                             }
 
                             // Delete from Rutinas
@@ -279,6 +309,9 @@ namespace MPP
                             }
 
                             transaction.Commit();
+                            MPPDigitoVerificador.SincronizarControl("Actividad_Entrenador", "Rutinas", "ENTRENADORES");
+                            foreach (int codHorario in turnosSinAuxiliar)
+                                MPPDigitoVerificador.RecalcularDvhFilas("ActividadHorario", "codHorario = @Horario", new SqlParameter("@Horario", codHorario));
                         }
                         catch (Exception)
                         {

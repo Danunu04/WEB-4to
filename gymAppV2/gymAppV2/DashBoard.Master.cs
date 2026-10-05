@@ -107,6 +107,7 @@ namespace gymAppV2
                 litMenuAlumnos.Text      = Traducir(dict, "menu_alumnos");
                 litMenuEntrenadores.Text = Traducir(dict, "menu_entrenadores");
                 litMenuActividades.Text  = Traducir(dict, "menu_actividades");
+                litMenuAulas.Text        = Traducir(dict, "menu_aulas");
                 litMenuRutinas.Text      = Traducir(dict, "menu_rutinas");
                 litMenuPermisos.Text     = Traducir(dict, "menu_permisos");
                 litMenuBitacora.Text     = Traducir(dict, "menu_bitacora");
@@ -151,7 +152,9 @@ namespace gymAppV2
             liAlumnos.Visible = bllRol.UsuarioActualTieneAcceso("GestionAlumnos");
             liEntrenadores.Visible = bllRol.UsuarioActualTieneAcceso("GestionEntrenadores");
             liActividades.Visible = bllRol.UsuarioActualTieneAcceso("ActividadesCalendario");
+            liAulas.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.GestionAulas);
             liRutinas.Visible = bllRol.UsuarioActualTieneAcceso("GestionRutinas");
+            liPermisos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.GestionPermisos);
             liBitacora.Visible = bllRol.UsuarioActualTieneAcceso("Bitacora");
             liRespaldo.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Backup)
                              || bllRol.UsuarioActualTieneAcceso(PermisosSistema.Restore);

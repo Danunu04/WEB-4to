@@ -1,0 +1,429 @@
+/* =============================================
+   PAGOS MODULE CSS
+   ============================================= */
+
+.pagos-container *, .pagos-container *::before, .pagos-container *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.pagos-container {
+  --peach: #FFD5B5;
+  --peach-light: #FFF0E5;
+  --peach-dark: #8C6400;
+  --mint-light: #E5F9F0;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --bg: #FFF8F0;
+  --border: #E8E0D5;
+  --surface: #ffffff;
+  --text: #2D2D2D;
+  --text-muted: #6B6B6B;
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  --shadow: 0 0.125rem 0.75rem rgba(255, 213, 181, 0.15);
+  padding: 2rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pagos-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.pagos-header i {
+  width: 2.75rem; height: 2.75rem;
+  background: var(--peach-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--peach-dark);
+  font-size: 1.1rem;
+}
+
+.pagos-title-text { display: flex; flex-direction: column; }
+
+.pagos-title-text h1 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pagos-title-text p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.15rem;
+}
+
+/* ── MAIN CONTENT ────────────────────── */
+.main-content-vertical {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ── TABLE ────────────────────── */
+.table-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 0.0625rem solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.table-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 0.0625rem solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-card-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pagos-container table { width: 100%; border-collapse: collapse; }
+
+.pagos-container thead th {
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03125rem;
+  background: var(--bg);
+  border-bottom: 0.0625rem solid var(--border);
+  white-space: nowrap;
+}
+
+.pagos-container tbody tr { transition: background .15s; }
+.pagos-container tbody tr:hover { background: var(--peach-light); }
+
+.pagos-container tbody td {
+  padding: 0.6875rem 1rem;
+  font-size: 0.88rem;
+  border-bottom: 0.0625rem solid #f2ece2;
+  color: var(--text);
+}
+
+.pagos-container tbody tr:last-child td { border-bottom: none; }
+
+.pill-modalidad {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 1.25rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--mint-light);
+  color: #0F6E56;
+}
+
+.table-footer {
+  padding: 0.625rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 0.0625rem solid var(--border);
+  background: var(--bg);
+}
+
+.table-footer-text { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── TABLE ACTIONS BAR ────────────────────── */
+.table-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.5rem;
+}
+
+.btn-action {
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.btn-action:hover { border-color: var(--peach-dark); color: var(--peach-dark); background: var(--peach-light); }
+
+.btn-crear { background: var(--peach-dark); color: #fff; border: 0.09375rem solid var(--peach-dark); }
+.btn-crear:hover { background: #6e4d00; border-color: #6e4d00; }
+
+/* ── FORM PANEL ────────────────────── */
+.detail-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 0.0625rem solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.detail-header {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 0.0625rem solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-header h3 i { color: var(--peach-dark); }
+
+.detail-body { padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: 0.9rem; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+.form-field { display: flex; flex-direction: column; gap: 0.3125rem; }
+.form-field.full { grid-column: 1 / -1; }
+
+.form-field label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025rem;
+}
+
+.form-field input, .form-field select, .form-field textarea {
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color .2s, background .2s;
+}
+
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  border-color: var(--peach-dark);
+  background: #fff;
+}
+
+.form-hint { font-size: 0.72rem; color: var(--text-muted); }
+
+.monto-preview {
+  display: inline-block;
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--peach-dark);
+}
+
+.btn-guardar {
+  background: var(--peach-dark);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5625rem;
+  width: 100%;
+}
+
+.btn-guardar:hover { background: #6e4d00; }
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.btn-icon:hover { color: var(--text); }
+
+/* ── EMPTY STATES ────────────────────── */
+.pagos-empty {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.pagos-empty i {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+  color: var(--peach-dark);
+}
+
+.pagos-empty h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.15rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.pagos-empty-inline {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.pagos-empty-inline i {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  color: var(--peach-dark);
+}
+
+/* ── RESPONSIVE ────────────────────── */
+/* ── Ventana flotante del formulario (mismo diseño que Alumnos) ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--surface);
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 45rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 0.0625rem solid var(--border);
+}
+
+.modal-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Bootstrap también define .btn-close (opacidad 0.5 y tamaño fijo): se anula */
+.btn-close {
+  background: transparent;
+  border: none;
+  opacity: 1;
+  width: auto;
+  height: auto;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close:hover { color: var(--text); }
+
+.modal-footer {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 0.0625rem solid var(--border);
+  justify-content: flex-end;
+  background: var(--surface);
+}
+
+.modal-footer .btn-action {
+  width: auto;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-cancelar { background: var(--bg); color: var(--text-muted); border: 0.09375rem solid var(--bg); }
+.btn-cancelar:hover { background: #E8EDE9; border-color: var(--text-muted); }
+
+@media screen and (max-width: 48rem) {
+  .pagos-container { padding: 1rem; }
+  .form-row { grid-template-columns: 1fr; }
+
+  .pagos-container thead { display: none; }
+
+  .pagos-container tbody tr {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 0.0625rem solid var(--border);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    display: block;
+  }
+
+  .pagos-container tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border: none;
+  }
+
+  .pagos-container tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03125rem;
+    min-width: 7.5rem;
+  }
+
+  .table-footer { display: none; }
+  .table-actions { flex-direction: column; }
+  .btn-action { width: 100%; justify-content: center; }
+}

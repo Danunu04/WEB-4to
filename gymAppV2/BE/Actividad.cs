@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace BE
 {
@@ -15,8 +16,20 @@ namespace BE
         public decimal PrecioAlumno { get; set; }
         public bool Activo { get; set; }
 
+        /// <summary>
+        /// Tope opcional de alumnos por clase. El cupo de cada clase es el del aula del turno,
+        /// o este tope si es menor. Null = se usa el del aula.
+        /// </summary>
+        public int? CupoMaximo { get; set; }
+
         // Campo de verificación de integridad
         public string DVH { get; set; }
+
+        // Relaciones (se completan solo cuando se pide el detalle de la actividad)
+        public List<ActividadHorario> Horarios { get; set; } = new List<ActividadHorario>();
+
+        // Visualización: nombres de los profesores de sus turnos, separados por coma
+        public string Instructores { get; set; }
 
         public Actividad()
         {

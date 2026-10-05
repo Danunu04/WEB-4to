@@ -114,14 +114,14 @@ CREATE TABLE [dbo].[USUARIOS](
     [telefono]          VARCHAR(500)    NULL,           -- ciphertext AES-256 (Base64 + IV)
     [email]             VARCHAR(500)    NULL,           -- ciphertext AES-256 (Base64 + IV)
     [fechaNacimiento]   VARCHAR(100)    NULL,           -- fecha encriptada como yyyy-MM-dd en Base64 + IV
-    [rol]               INT             NOT NULL DEFAULT 4,  -- 1=Admin, 2=Recepcionista, 3=Entrenador, 4=Cliente
+    [rol]               INT             NOT NULL DEFAULT 4,  -- 1=Admin, 2=Recepcionista, 3=Entrenador, 4=Cliente, 5=WebMaster, 6=Familiar
     [primerLogin]       BIT             NOT NULL DEFAULT 1,  -- 1=debe cambiar contraseña en primer login
     [dvv]               VARCHAR(64)     NOT NULL,
     [dvh]               VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_USUARIOS] PRIMARY KEY CLUSTERED ([usr] ASC),
     CONSTRAINT [UK_USUARIOS_DNI] UNIQUE ([dni] ASC),
     CONSTRAINT [CK_USUARIOS_Tipo] CHECK ([tipo] IN ('Empleado', 'Entrenador', 'Cliente', 'Familiar')),
-    CONSTRAINT [CK_USUARIOS_Rol] CHECK ([rol] IN (1, 2, 3, 4))
+    CONSTRAINT [CK_USUARIOS_Rol] CHECK ([rol] IN (1, 2, 3, 4, 5, 6))
 ) ON [PRIMARY]
 GO
 
@@ -148,6 +148,26 @@ ALTER TABLE [dbo].[ALUMNOS] WITH CHECK ADD CONSTRAINT [CK_ALUMNOS_Peso]
 GO
 
 -- ============================================================================
+-- TABLA: ALUMNOS_USUARIOS (tabla intermedia: qué cuenta(s) de usuario pueden
+-- gestionar/ver a cada alumno — el propio titular y/o uno o más familiares).
+-- Reemplaza a la vieja columna única ALUMNOS.usr (1 alumno : 1 usuario).
+-- ============================================================================
+
+CREATE TABLE [dbo].[ALUMNOS_USUARIOS](
+    [dniAlumno]         INT             NOT NULL,
+    [usr]               VARCHAR(50)     NOT NULL,
+    [parentesco]        VARCHAR(50)     NULL,   -- 'Titular', 'Madre', 'Padre', 'Tutor', 'Otro'
+    [fechaAsociacion]   DATETIME        NOT NULL DEFAULT GETDATE(),
+    [dvh]               VARCHAR(64)     NOT NULL,
+    CONSTRAINT [PK_ALUMNOS_USUARIOS] PRIMARY KEY CLUSTERED ([dniAlumno] ASC, [usr] ASC),
+    CONSTRAINT [FK_ALUMNOS_USUARIOS_Alumno] FOREIGN KEY ([dniAlumno])
+        REFERENCES [dbo].[ALUMNOS] ([dni]),
+    CONSTRAINT [FK_ALUMNOS_USUARIOS_Usuario] FOREIGN KEY ([usr])
+        REFERENCES [dbo].[USUARIOS] ([usr])
+) ON [PRIMARY]
+GO
+
+-- ============================================================================
 -- TABLA: ENTRENADORES (solo datos específicos del rol)
 -- ============================================================================
 
@@ -155,11 +175,14 @@ CREATE TABLE [dbo].[ENTRENADORES](
     [dni]           INT             NOT NULL,
     [alumnosCount]  INT             NOT NULL DEFAULT 0,
     [activo]        BIT             NOT NULL DEFAULT 1,
+    [usr]           VARCHAR(50)     NULL,
     [dvv]           VARCHAR(64)     NOT NULL,
     [dvh]           VARCHAR(64)     NOT NULL,
     CONSTRAINT [PK_ENTRENADORES] PRIMARY KEY CLUSTERED ([dni] ASC),
     CONSTRAINT [FK_ENTRENADORES_USUARIOS] FOREIGN KEY ([dni])
-        REFERENCES [dbo].[USUARIOS] ([dni])
+        REFERENCES [dbo].[USUARIOS] ([dni]),
+    CONSTRAINT [FK_ENTRENADORES_Usr_USUARIOS] FOREIGN KEY ([usr])
+        REFERENCES [dbo].[USUARIOS] ([usr])
 ) ON [PRIMARY]
 GO
 

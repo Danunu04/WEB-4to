@@ -120,6 +120,8 @@ namespace gymAppV2 {
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liActividades;
 
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liAulas;
+
         /// <summary>
         /// Control liRutinas.
         /// </summary>
@@ -204,6 +206,8 @@ namespace gymAppV2 {
         protected global::System.Web.UI.WebControls.Literal litMenuAlumnos;
         protected global::System.Web.UI.WebControls.Literal litMenuEntrenadores;
         protected global::System.Web.UI.WebControls.Literal litMenuActividades;
+
+        protected global::System.Web.UI.WebControls.Literal litMenuAulas;
         protected global::System.Web.UI.WebControls.Literal litMenuRutinas;
         protected global::System.Web.UI.WebControls.Literal litMenuPermisos;
         protected global::System.Web.UI.WebControls.Literal litMenuBitacora;

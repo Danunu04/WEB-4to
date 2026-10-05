@@ -44,12 +44,17 @@
   <ItemGroup>
     <Compile Include="Class1.cs" />
     <Compile Include="MPPActividad.cs" />
+    <Compile Include="MPPAula.cs" />
+    <Compile Include="MPPInscripcion.cs" />
+    <Compile Include="MPPDashboard.cs" />
     <Compile Include="MPPAlumno.cs" />
     <Compile Include="MPPEvento.cs" />
     <Compile Include="MPPEntrenador.cs" />
+    <Compile Include="MPPPago.cs" />
     <Compile Include="MPPPrecioModalidad.cs" />
     <Compile Include="MPPPreguntaSeguridad.cs" />
     <Compile Include="MPPRol.cs" />
+    <Compile Include="MPPRutina.cs" />
     <Compile Include="MPPUsuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MPPDigitoVerificador.cs" />

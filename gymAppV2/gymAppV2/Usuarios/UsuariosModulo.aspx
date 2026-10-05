@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Usuarios - GymApp</title>
-    <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=2") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=3") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script type="text/javascript">
         function soloNumeros(e) {
@@ -78,6 +78,7 @@
                     <asp:ListItem Value="Recepcionista">Recepcionista</asp:ListItem>
                     <asp:ListItem Value="Entrenador">Entrenador</asp:ListItem>
                     <asp:ListItem Value="Cliente">Cliente</asp:ListItem>
+                    <asp:ListItem Value="Familiar">Familiar</asp:ListItem>
                 </asp:DropDownList>
             </div>
             <div class="search-wrap">
@@ -185,131 +186,124 @@
                 </div>
             </div>
 
-            <!-- Form - Now below the table -->
-            <asp:Panel ID="pnlForm" runat="server" Visible="false" style="background:var(--card-bg);border-radius:0.625rem;padding:1.25rem;border:1px solid var(--border-color);box-shadow:0 0.125rem 0.375rem rgba(0,0,0,0.1);">
-                <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:0.9375rem;border-bottom:1px solid var(--border-color);margin-bottom:1.25rem;">
-                    <h3 style="margin:0;font-size:1.125rem;font-weight:600;color:var(--text-color);display:flex;align-items:center;gap:0.5rem;">
-                        <i class="fa-solid fa-id-card" style="color:var(--pink);"></i>
+        </div><!-- /main-content-vertical -->
+
+        <!-- Formulario de alta/modificación (ventana flotante) -->
+        <asp:Panel ID="pnlForm" runat="server" Visible="false" CssClass="modal-overlay">
+            <div class="modal-content modal-form">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fa-solid fa-id-card"></i>
                         <asp:Label ID="lblFormTitle" runat="server" Text="Detalle del usuario" />
                     </h3>
-                    <button id="btnCloseForm" runat="server" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:0.5rem;border-radius:0.375rem;font-size:1rem;" onserverclick="btnCloseForm_Click">
+                    <button id="btnCloseForm" runat="server" class="btn-close" onserverclick="btnCloseForm_Click">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">DNI</label>
-                        <asp:TextBox ID="txtDNI" runat="server" placeholder="Ej: 30456789" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;" onkeypress="return soloNumeros(event)" maxlength="10"></asp:TextBox>
-                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="El dni es obligatorio" ControlToValidate="txtDNI" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
-                        <asp:RegularExpressionValidator ID="RegularExpressionValidatorDNI" runat="server" ErrorMessage="El DNI solo debe contener números" ControlToValidate="txtDNI" ForeColor="Red" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Teléfono</label>
-                        <asp:TextBox ID="txtTelefono" runat="server" placeholder="Ej: 11-4567-8901" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;" onkeypress="return soloNumeros(event)" maxlength="15"></asp:TextBox>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="El Telefono es obligatorio" ControlToValidate="txtTelefono" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
-                        <asp:RegularExpressionValidator ID="RegularExpressionValidatorTel" runat="server" ErrorMessage="El Teléfono solo debe contener números" ControlToValidate="txtTelefono" ForeColor="Red" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
-                    </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Apellido/s</label>
-                        <asp:TextBox ID="txtApellido" runat="server" placeholder="Apellido" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator3" runat="server" ErrorMessage="El apellido es obligatorio" ControlToValidate="txtApellido" ForeColor="Red"></asp:RequiredFieldValidator>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Nombre/s</label>
-                        <asp:TextBox ID="txtNombre" runat="server" placeholder="Nombre" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator4" runat="server" ErrorMessage="El nombre es obligatorio" ControlToValidate="txtNombre" ForeColor="Red"></asp:RequiredFieldValidator>
-                    </div>
-                </div>
-
-                <div style="display:flex;flex-direction:column;gap:0.375rem;margin-top:1rem;">
-                    <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Email</label>
-                    <asp:TextBox ID="txtEmail" runat="server" placeholder="usuario@email.com" TextMode="Email" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                    <asp:RegularExpressionValidator ID="RegularExpressionValidator1" runat="server" ErrorMessage="Email inválido" ControlToValidate="txtEmail" ForeColor="Red" ValidationExpression="\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*"></asp:RegularExpressionValidator>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Nombre de usuario</label>
-                        <asp:TextBox ID="txtUsuario" runat="server" placeholder="usuario123" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator6" runat="server" ErrorMessage="El ususario es obligatorio" ControlToValidate="txtUsuario" ForeColor="Red"></asp:RequiredFieldValidator>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Rol</label>
-                        <asp:DropDownList ID="ddlRolForm" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlRolForm_SelectedIndexChanged" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;background:var(--card-bg);color:var(--text-color);">
-                            <asp:ListItem Value="">Seleccionar rol</asp:ListItem>
-                            <asp:ListItem Value="5">WebMaster</asp:ListItem>
-                            <asp:ListItem Value="1">Administrador</asp:ListItem>
-                            <asp:ListItem Value="2">Recepcionista</asp:ListItem>
-                            <asp:ListItem Value="3">Entrenador</asp:ListItem>
-                            <asp:ListItem Value="4">Cliente</asp:ListItem>
-                        </asp:DropDownList>
-                         <asp:RequiredFieldValidator ID="RequiredFieldValidator7" runat="server" ErrorMessage="Selecciona un tipo de usuario" ControlToValidate="ddlRolForm" ForeColor="Red"></asp:RequiredFieldValidator>
-                    </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Fecha de Nacimiento</label>
-                        <asp:TextBox ID="txtFechaNacimiento" runat="server" TextMode="Date" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                        <asp:RequiredFieldValidator ID="RequiredFieldValidator8" runat="server" ErrorMessage="La fecha de nacimiento es obligatoria" ControlToValidate="txtFechaNacimiento" ForeColor="Red" Display="Dynamic"></asp:RequiredFieldValidator>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:0.375rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Estado</label>
-                        <asp:DropDownList ID="ddlEstadoForm" runat="server" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;background:var(--card-bg);color:var(--text-color);">
-                            <asp:ListItem Value="1">Activo</asp:ListItem>
-                            <asp:ListItem Value="0">Inactivo</asp:ListItem>
-                        </asp:DropDownList>
-                    </div>
-                </div>
-
-                    <asp:Panel ID="EntField" runat="server" Visible="false" style="margin-top:1.25rem;padding:0.9375rem;background:var(--bg-light);border-radius:0.375rem;border-left:0.25rem solid var(--pink);">
-                        <div style="margin-bottom:0.9375rem;">
-                            <label style="font-size:0.875rem;font-weight:600;color:var(--pink);display:flex;align-items:center;gap:0.5rem;">
-                                <i class="fa-solid fa-dumbbell"></i> Datos específicos del Entrenador
-                            </label>
-                            <small style="color:var(--text-muted);font-size:0.75rem;">
-                                <i class="fa-solid fa-info-circle"></i> Al guardar, se creará el registro en la tabla ENTRENADORES con el mismo DNI
-                            </small>
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>DNI</label>
+                            <asp:TextBox ID="txtDNI" runat="server" placeholder="Ej: 30456789" onkeypress="return soloNumeros(event)" maxlength="10"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="El dni es obligatorio" ControlToValidate="txtDNI" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                            <asp:RegularExpressionValidator ID="RegularExpressionValidatorDNI" runat="server" ErrorMessage="El DNI solo debe contener números" ControlToValidate="txtDNI" CssClass="field-error" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
                         </div>
+                        <div class="form-field">
+                            <label>Teléfono</label>
+                            <asp:TextBox ID="txtTelefono" runat="server" placeholder="Ej: 11-4567-8901" onkeypress="return soloNumeros(event)" maxlength="15"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="El Telefono es obligatorio" ControlToValidate="txtTelefono" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                            <asp:RegularExpressionValidator ID="RegularExpressionValidatorTel" runat="server" ErrorMessage="El Teléfono solo debe contener números" ControlToValidate="txtTelefono" CssClass="field-error" Display="Dynamic" ValidationExpression="^\d+$"></asp:RegularExpressionValidator>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Apellido/s</label>
+                            <asp:TextBox ID="txtApellido" runat="server" placeholder="Apellido"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator3" runat="server" ErrorMessage="El apellido es obligatorio" ControlToValidate="txtApellido" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                        </div>
+                        <div class="form-field">
+                            <label>Nombre/s</label>
+                            <asp:TextBox ID="txtNombre" runat="server" placeholder="Nombre"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator4" runat="server" ErrorMessage="El nombre es obligatorio" ControlToValidate="txtNombre" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field full">
+                            <label>Email</label>
+                            <asp:TextBox ID="txtEmail" runat="server" placeholder="usuario@email.com" TextMode="Email"></asp:TextBox>
+                            <asp:RegularExpressionValidator ID="RegularExpressionValidator1" runat="server" ErrorMessage="Email inválido" ControlToValidate="txtEmail" CssClass="field-error" Display="Dynamic" ValidationExpression="\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*"></asp:RegularExpressionValidator>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Nombre de usuario</label>
+                            <asp:TextBox ID="txtUsuario" runat="server" placeholder="usuario123"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator6" runat="server" ErrorMessage="El ususario es obligatorio" ControlToValidate="txtUsuario" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                        </div>
+                        <div class="form-field">
+                            <label>Rol</label>
+                            <asp:DropDownList ID="ddlRolForm" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlRolForm_SelectedIndexChanged">
+                                <asp:ListItem Value="">Seleccionar rol</asp:ListItem>
+                                <asp:ListItem Value="5">WebMaster</asp:ListItem>
+                                <asp:ListItem Value="1">Administrador</asp:ListItem>
+                                <asp:ListItem Value="2">Recepcionista</asp:ListItem>
+                                <asp:ListItem Value="3">Entrenador</asp:ListItem>
+                                <asp:ListItem Value="4">Cliente</asp:ListItem>
+                                <asp:ListItem Value="6">Familiar</asp:ListItem>
+                            </asp:DropDownList>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator7" runat="server" ErrorMessage="Selecciona un tipo de usuario" ControlToValidate="ddlRolForm" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Fecha de Nacimiento</label>
+                            <asp:TextBox ID="txtFechaNacimiento" runat="server" TextMode="Date"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator8" runat="server" ErrorMessage="La fecha de nacimiento es obligatoria" ControlToValidate="txtFechaNacimiento" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
+                        </div>
+                        <div class="form-field">
+                            <label>Estado</label>
+                            <asp:DropDownList ID="ddlEstadoForm" runat="server">
+                                <asp:ListItem Value="1">Activo</asp:ListItem>
+                                <asp:ListItem Value="0">Inactivo</asp:ListItem>
+                            </asp:DropDownList>
+                        </div>
+                    </div>
+
+                    <asp:Panel ID="EntField" runat="server" Visible="false" CssClass="rol-info">
+                        <label><i class="fa-solid fa-dumbbell"></i> Datos específicos del Entrenador</label>
+                        <small><i class="fa-solid fa-info-circle"></i> Al guardar, se creará el registro en la tabla ENTRENADORES con el mismo DNI</small>
                     </asp:Panel>
 
-                    <asp:Panel ID="clienteFields" runat="server" Visible="false" style="margin-top:1.25rem;padding:0.9375rem;background:var(--bg-light);border-radius:0.375rem;border-left:0.25rem solid var(--pink);">
-                        <div style="margin-bottom:0.9375rem;">
-                            <label style="font-size:0.875rem;font-weight:600;color:var(--pink);display:flex;align-items:center;gap:0.5rem;">
-                                <i class="fa-solid fa-user"></i> Datos específicos del Cliente
-                            </label>
-                            <small style="color:var(--text-muted);font-size:0.75rem;">
-                                <i class="fa-solid fa-info-circle"></i> Al guardar, se creará el registro en la tabla ALUMNOS con el mismo DNI
-                            </small>
-                        </div>
+                    <asp:Panel ID="clienteFields" runat="server" Visible="false" CssClass="rol-info">
+                        <label><i class="fa-solid fa-user"></i> Datos específicos del Cliente</label>
+                        <small><i class="fa-solid fa-info-circle"></i> Al guardar, se creará el registro en la tabla ALUMNOS con el mismo DNI</small>
                     </asp:Panel>
 
-                    <div id="passwordRow" runat="server" style="display:flex;flex-direction:column;gap:0.375rem;margin-top:1rem;">
-                        <label style="font-size:0.8125rem;font-weight:600;color:var(--text-color);">Contraseña (opcional - se genera automáticamente)</label>
-                        <asp:TextBox ID="txtContrasena" runat="server" placeholder="Se generará automáticamente una contraseña segura" style="padding:0.625rem;border:1px solid var(--border-color);border-radius:0.375rem;font-size:0.875rem;"></asp:TextBox>
-                        <small style="color:var(--text-muted);font-size:0.75rem;">
-                            <i class="fa-solid fa-info-circle"></i> Si se deja vacío, se generará una contraseña segura de 12 caracteres.
-                        </small>
+                    <div id="passwordRow" runat="server" class="form-row">
+                        <div class="form-field full">
+                            <label>Contraseña (opcional - se genera automáticamente)</label>
+                            <asp:TextBox ID="txtContrasena" runat="server" placeholder="Se generará automáticamente una contraseña segura"></asp:TextBox>
+                            <small class="field-hint"><i class="fa-solid fa-info-circle"></i> Si se deja vacío, se generará una contraseña segura de 12 caracteres.</small>
+                        </div>
                     </div>
 
-                    <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;">
-                        <asp:Label ID="lblMensajeForm" runat="server" Visible="false" style="display:block;padding:0.75rem;border-radius:0.375rem;font-size:0.875rem;"></asp:Label>
-                    </div>
+                    <asp:Label ID="lblMensajeForm" runat="server" Visible="false"></asp:Label>
+                </div>
 
-                    <div style="display:flex;gap:0.75rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border-color);">
-                        <button id="btnGuardar" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnGuardar_Click" type="button">
-                            <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
-                        </button>
-                        <button id="btnCancelarForm" runat="server" style="flex:1;padding:0.75rem;background-color:lightpink;color:white;border:none;border-radius:0.375rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;" onserverclick="btnCancelarForm_Click" type="button">
-                            <i class="fa-solid fa-xmark"></i> <asp:Literal ID="litBtnCancelarForm" runat="server" Text="Cancelar" />
-                        </button>
-                    </div>
-            </asp:Panel>
-
-        </div><!-- /main-content-vertical -->
-    </div>
+                <div class="modal-footer">
+                    <button id="btnCancelarForm" runat="server" class="btn-action btn-cancelar" onserverclick="btnCancelarForm_Click" type="button">
+                        <i class="fa-solid fa-xmark"></i> <asp:Literal ID="litBtnCancelarForm" runat="server" Text="Cancelar" />
+                    </button>
+                    <button id="btnGuardar" runat="server" class="btn-action btn-guardar" onserverclick="btnGuardar_Click" type="button">
+                        <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
+                    </button>
+                </div>
+            </div>
+        </asp:Panel>
+    </div><!-- /usuarios-container -->
 </asp:Content>

@@ -102,11 +102,7 @@ namespace MPP
 
                 // Mantener DigitoVerificador sincronizado: cada INSERT legítimo actualiza
                 // dvvTabla y cantidadFilas para que la verificación no lo tome como intrusión.
-                try
-                {
-                    new MPPDigitoVerificador().ActualizarControlTabla("Evento");
-                }
-                catch { /* no romper el flujo si falla la actualización del control */ }
+                MPPDigitoVerificador.SincronizarControl("Evento");
 
                 return codEvento;
             }

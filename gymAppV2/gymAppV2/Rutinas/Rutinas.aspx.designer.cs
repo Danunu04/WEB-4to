@@ -14,27 +14,94 @@ namespace gymAppV2.Rutinas
     public partial class Rutinas
     {
 
+        protected global::System.Web.UI.WebControls.Literal litTitulo;
+        protected global::System.Web.UI.WebControls.Literal litSubtitulo;
+
         /// <summary>
         /// pnlCliente control.
         /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Panel pnlCliente;
+
+        protected global::System.Web.UI.WebControls.Literal litClienteMsg;
+        protected global::System.Web.UI.WebControls.Literal litListaClienteTitulo;
+        protected global::System.Web.UI.WebControls.GridView gvRutinasCliente;
 
         /// <summary>
         /// pnlAdmin control.
         /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlAdmin;
+
+        protected global::System.Web.UI.WebControls.Literal litListaTitulo;
+        protected global::System.Web.UI.WebControls.GridView gvRutinas;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl footerText;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCrear;
+        protected global::System.Web.UI.WebControls.Literal litBtnCrear;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnModificar;
+        protected global::System.Web.UI.WebControls.Literal litBtnModificar;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnEliminar;
+        protected global::System.Web.UI.WebControls.Literal litBtnEliminar;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelar;
+        protected global::System.Web.UI.WebControls.Literal litBtnCancelar;
+
+        /// <summary>
+        /// pnlForm control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlForm;
+
+        protected global::System.Web.UI.WebControls.Label lblFormTitle;
+
+        /// <summary>
+        /// btnCloseForm control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCloseForm;
+
+        protected global::System.Web.UI.WebControls.DropDownList ddlAlumno;
+        protected global::System.Web.UI.WebControls.DropDownList ddlEntrenador;
+        protected global::System.Web.UI.WebControls.DropDownList ddlActividad;
+        protected global::System.Web.UI.WebControls.TextBox txtFecha;
+        protected global::System.Web.UI.WebControls.TextBox txtDescripcion;
+
+        /// <summary>
+        /// btnGuardar control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnGuardar;
+
+        /// <summary>
+        /// btnCancelarForm control.
+        /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlAdmin;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarForm;
+        protected global::System.Web.UI.WebControls.Literal litBtnGuardar;
 
-        protected global::System.Web.UI.WebControls.Literal litTitulo;
-        protected global::System.Web.UI.WebControls.Literal litSubtitulo;
-        protected global::System.Web.UI.WebControls.Literal litClienteMsg;
-        protected global::System.Web.UI.WebControls.Literal litAdminMsg;
+        /// <summary>
+        /// pnlConfirmarEliminar control.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlConfirmarEliminar;
+
+        protected global::System.Web.UI.WebControls.Literal litConfirmarTitulo;
+
+        /// <summary>
+        /// btnCloseConfirm control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCloseConfirm;
+
+        protected global::System.Web.UI.WebControls.Literal litConfirmarMsg;
+        protected global::System.Web.UI.WebControls.Label lblRutinaAEliminar;
+        protected global::System.Web.UI.WebControls.HiddenField hdnCodRutinaAEliminar;
+
+        /// <summary>
+        /// btnCancelarEliminar control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarEliminar;
+        protected global::System.Web.UI.WebControls.Literal litBtnCancelarEliminar;
+
+        /// <summary>
+        /// btnConfirmarEliminar control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnConfirmarEliminar;
+        protected global::System.Web.UI.WebControls.Literal litBtnConfirmarEliminar;
     }
 }

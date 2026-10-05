@@ -18,7 +18,7 @@ namespace gymAppV2.DashBoard
         protected global::System.Web.UI.WebControls.Literal litKpiMiembros;
         protected global::System.Web.UI.WebControls.Literal litKpiClases;
         protected global::System.Web.UI.WebControls.Literal litKpiIngresos;
-        protected global::System.Web.UI.WebControls.Literal litKpiRetencion;
+        protected global::System.Web.UI.WebControls.Literal litKpiAlDia;
         protected global::System.Web.UI.WebControls.Literal litSemanaTitulo;
         protected global::System.Web.UI.WebControls.Literal litColActividad;
         protected global::System.Web.UI.WebControls.Literal litColInstructor;
@@ -26,5 +26,16 @@ namespace gymAppV2.DashBoard
         protected global::System.Web.UI.WebControls.Literal litColHorario;
         protected global::System.Web.UI.WebControls.Literal litColDuracion;
         protected global::System.Web.UI.WebControls.Literal litColEstado;
+        protected global::System.Web.UI.WebControls.Panel pnlKpis;
+        protected global::System.Web.UI.WebControls.Literal litValorMiembros;
+        protected global::System.Web.UI.WebControls.Literal litValorClases;
+        protected global::System.Web.UI.WebControls.Literal litValorIngresos;
+        protected global::System.Web.UI.WebControls.Literal litValorAlDia;
+        protected global::System.Web.UI.WebControls.Panel pnlTendenciaIngresos;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl iconTendencia;
+        protected global::System.Web.UI.WebControls.Literal litTendenciaIngresos;
+        protected global::System.Web.UI.WebControls.Repeater rptSemana;
+        protected global::System.Web.UI.WebControls.PlaceHolder phSinHorarios;
+        protected global::System.Web.UI.WebControls.Literal litSinHorarios;
     }
 }

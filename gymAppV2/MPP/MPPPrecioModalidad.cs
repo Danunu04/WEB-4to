@@ -165,6 +165,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+                MPPDigitoVerificador.SincronizarControl("PrecioModalidad");
             }
             catch (Exception ex)
             {

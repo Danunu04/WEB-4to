@@ -260,6 +260,22 @@ namespace BLL
         }
 
         /// <summary>
+        /// Indica si ya existe una cuenta de USUARIOS con ese DNI, sin importar el rol.
+        /// Útil para validar en la UI antes de intentar crear un usuario (DNI es UNIQUE en la base).
+        /// </summary>
+        public bool DniExiste(int dni)
+        {
+            try
+            {
+                return mppUsuario.DniExiste(dni);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Verifica que la contraseña cumpla los requisitos mínimos de seguridad.
         /// </summary>
         public void ValidarRequisitosContrasena(string contrasena)
@@ -376,6 +392,17 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Calcula la edad en años cumplidos a partir de una fecha de nacimiento.
+        /// </summary>
+        public static int CalcularEdad(DateTime fechaNacimiento)
+        {
+            DateTime hoy = DateTime.Now;
+            int edad = hoy.Year - fechaNacimiento.Year;
+            if (fechaNacimiento.Date > hoy.AddYears(-edad)) edad--;
+            return edad;
+        }
+
         public void CrearUsuario(string usuario, string contrasena, int rol,
             string nombre = null, string apellido = null, string telefono = null,
             string email = null, DateTime? fechaNacimiento = null,
@@ -422,6 +449,11 @@ namespace BLL
                     dni = datosEntrenador.DNI;
                     fechaNac = fechaNacimiento;
 
+                    if (mppUsuario.DniExiste(dni))
+                    {
+                        throw new Exception("Ya existe un usuario registrado con ese DNI");
+                    }
+
                     // Crear usuario primero con datos personales; primerLogin = 1 fuerza cambio de contraseña.
                     Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
@@ -447,13 +479,49 @@ namespace BLL
                     dni = dniAlumno.Value;
                     fechaNac = fechaNacimiento;
 
+                    if (mppUsuario.DniExiste(dni))
+                    {
+                        throw new Exception("Ya existe un usuario registrado con ese DNI");
+                    }
+
                     // Crear usuario con datos personales; primerLogin = 1 fuerza cambio de contraseña.
                     Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ALUMNOS (solo datos específicos del rol)
-                    Alumno nuevoAlumno = new Alumno(dni, null, activo, true, "", usuario);
+                    Alumno nuevoAlumno = new Alumno(dni, null, false, activo, "");
                     bllAlumno.CrearAlumno(nuevoAlumno);
+
+                    // Vincular al propio titular como usuario del alumno
+                    bllAlumno.AsociarFamiliar(dni, usuario, "Titular");
+                }
+                else if (rol == 6) // Familiar (madre/padre/tutor de uno o más alumnos)
+                {
+                    if (dniAlumno == null || !dniAlumno.HasValue)
+                    {
+                        throw new Exception("Para crear un usuario de tipo Familiar, se debe proporcionar el DNI");
+                    }
+                    if (!fechaNacimiento.HasValue)
+                    {
+                        throw new Exception("Para crear un usuario de tipo Familiar, se debe proporcionar la fecha de nacimiento");
+                    }
+                    if (CalcularEdad(fechaNacimiento.Value) < 18)
+                    {
+                        throw new Exception("El Familiar debe ser mayor de edad");
+                    }
+
+                    tipo = "Familiar";
+                    dni = dniAlumno.Value;
+                    fechaNac = fechaNacimiento;
+
+                    if (mppUsuario.DniExiste(dni))
+                    {
+                        throw new Exception("Ya existe un usuario registrado con ese DNI");
+                    }
+
+                    // Solo se crea la identidad en USUARIOS: un Familiar no es, por sí mismo, un Alumno.
+                    Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
+                    mppUsuario.CrearUsuario(nuevoUsuario);
                 }
                 else // Empleado (Admin/Recepcionista)
                 {
@@ -463,6 +531,11 @@ namespace BLL
                     apellido = apellido ?? usuario;
                     fechaNac = fechaNacimiento ?? DateTime.Parse("1990-01-01");
                     telefono = telefono ?? "0000-0000";
+
+                    if (mppUsuario.DniExiste(dni))
+                    {
+                        throw new Exception("Ya existe un usuario registrado con ese DNI");
+                    }
 
                     // primerLogin = 1 fuerza cambio de contraseña en el primer login.
                     Usuario nuevoUsuario = new Usuario(usuario, contrasenaHash, activo, false, 0, rol, tipo, dni, nombre, apellido, telefono, email, fechaNac, "", true);
@@ -551,8 +624,11 @@ namespace BLL
                     mppUsuario.CrearUsuario(nuevoUsuario);
 
                     // Luego crear registro en ALUMNOS
-                    Alumno alumno = new Alumno(dni, null, false, true, "", dto.Usuario);
+                    Alumno alumno = new Alumno(dni, null, false, true, "");
                     bllAlumno.CrearAlumno(alumno);
+
+                    // Vincular al propio titular como usuario del alumno
+                    bllAlumno.AsociarFamiliar(dni, dto.Usuario, "Titular");
                 }
                 else // Empleado
                 {
@@ -628,15 +704,18 @@ namespace BLL
             return GenerarContrasenaSegura();
         }
 
-        public List<BE.UsuarioGestion> ListarUsuariosClientesDisponibles()
+        /// <summary>
+        /// Busca un Usuario por DNI (cualquier rol). Se usa en el flujo de alta de Alumnos.aspx.
+        /// </summary>
+        public Usuario ObtenerUsuarioPorDni(int dni)
         {
             try
             {
-                return mppUsuario.ListarUsuariosClientesSinAlumno();
+                return mppUsuario.ObtenerUsuarioPorDni(dni);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al listar usuarios clientes disponibles: " + ex.Message, ex);
+                throw new Exception("Error al obtener el usuario por DNI: " + ex.Message, ex);
             }
         }
 
@@ -747,7 +826,7 @@ namespace BLL
                 }
 
                 // Determinar tipo según rol
-                string tipo = rol == 3 ? "Entrenador" : rol == 4 ? "Cliente" : "Empleado";
+                string tipo = rol == 3 ? "Entrenador" : rol == 4 ? "Cliente" : rol == 6 ? "Familiar" : "Empleado";
 
                 // Si es entrenador o cliente y cambió el DNI, primero eliminar el registro relacionado
                 // para evitar violación de clave foránea al actualizar USUARIOS
@@ -830,26 +909,32 @@ namespace BLL
                         Alumno alumnoExistente = bllAlumno.ObtenerAlumno(nuevoDNI);
                         if (alumnoExistente == null)
                         {
-                            Alumno alumnoNuevo = new Alumno(nuevoDNI, null, activo, true, "", nuevoUsuario);
+                            Alumno alumnoNuevo = new Alumno(nuevoDNI, null, false, activo, "");
                             bllAlumno.CrearAlumno(alumnoNuevo);
                         }
                         else
                         {
-                            alumnoExistente.Usuario = nuevoUsuario;
                             alumnoExistente.Activo = activo;
                             bllAlumno.ActualizarAlumno(alumnoExistente);
                         }
                     }
-                    else
+
+                    if (bllAlumno.AlumnoExiste(nuevoDNI))
                     {
-                        // DNI no cambió, solo actualizar usuario
-                        Alumno alumno = bllAlumno.ObtenerAlumno(usuarioExistente.USUARIO_DNI);
-                        if (alumno != null)
+                        bool yaVinculado = bllAlumno.ObtenerUsuariosDeAlumno(nuevoDNI)
+                            .Any(v => v.Usuario.Equals(nuevoUsuario, StringComparison.OrdinalIgnoreCase));
+                        if (!yaVinculado)
                         {
-                            alumno.Usuario = nuevoUsuario;
-                            bllAlumno.ActualizarAlumno(alumno);
+                            bllAlumno.AsociarFamiliar(nuevoDNI, nuevoUsuario, "Titular");
                         }
                     }
+                }
+
+                // Si cambió el nombre de usuario, actualizar los vínculos ALUMNOS_USUARIOS
+                // (propios y de los alumnos a cargo, si es Familiar) para que sigan apuntando bien.
+                if (usuarioOriginal != nuevoUsuario)
+                {
+                    bllAlumno.RenombrarUsuarioEnVinculos(usuarioOriginal, nuevoUsuario);
                 }
 
                 bllEvento.RegistrarModificacionUsuario(usuarioOriginal, nuevoUsuario);

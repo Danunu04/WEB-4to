@@ -153,10 +153,7 @@ namespace BLL
                     throw new Exception("El usuario debe tener más de un alumno asociado para generar esta pregunta de seguridad");
                 }
 
-                List<Alumno> alumnos = bllAlumno.ListarAlumnos()
-                    .Where(a => !string.IsNullOrEmpty(a.Usuario) &&
-                                a.Usuario.Equals(usuario, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                List<Alumno> alumnos = bllAlumno.ObtenerAlumnosDeUsuario(usuario);
 
                 if (alumnos.Count == 0)
                 {

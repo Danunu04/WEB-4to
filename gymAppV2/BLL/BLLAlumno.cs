@@ -157,6 +157,12 @@ namespace BLL
                     throw new Exception("Ya existe un alumno con ese DNI");
                 }
 
+                // ALUMNOS.dni es FK a USUARIOS.dni: la identidad (Usuario) debe existir primero.
+                if (!new BLLUsuario().DniExiste(alumno.DNI))
+                {
+                    throw new Exception($"No existe un Usuario con DNI {alumno.DNI}. Debe crearse primero la identidad de Usuario.");
+                }
+
                 // Validar Peso (0-500 kg) - único campo específico de Alumno
                 if (alumno.Peso.HasValue)
                 {
@@ -263,57 +269,43 @@ namespace BLL
             }
         }
 
-        public void AsociarUsuario(int dni, string usuario)
+        /// <summary>
+        /// Vincula una cuenta de usuario (titular o familiar: madre/padre/tutor) a un alumno.
+        /// A diferencia del viejo esquema 1:1, un alumno puede tener varios usuarios vinculados
+        /// y un usuario puede estar vinculado a varios alumnos (ej. varios hijos).
+        /// </summary>
+        public void AsociarFamiliar(int dni, string usuario, string parentesco = null)
         {
             try
             {
-                // Validar que el alumno exista
                 if (!AlumnoExiste(dni))
                 {
                     throw new Exception($"No existe un alumno con DNI {dni}");
                 }
 
-                // Validar que el usuario exista
                 BLLUsuario bllUsuario = new BLLUsuario();
                 BE.Usuario usuarioBD = bllUsuario.ObtenerUsuario(usuario);
-
                 if (usuarioBD == null)
                 {
                     throw new Exception($"No existe el usuario '{usuario}'");
                 }
 
-                // Validar que el usuario sea Cliente (Rol 4)
-                if (usuarioBD.USUARIO_Rol != 4)
+                List<AlumnoUsuarioVinculo> vinculos = mppAlumno.ObtenerUsuariosDeAlumno(dni);
+                if (vinculos.Any(v => v.Usuario.Equals(usuario, StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new Exception($"El usuario '{usuario}' no es de tipo Cliente (Rol {usuarioBD.USUARIO_Rol})");
+                    throw new Exception($"El usuario '{usuario}' ya está vinculado a este alumno");
                 }
 
-                // Validar que el alumno no tenga ya un usuario
-                Alumno alumno = ObtenerAlumno(dni);
-                if (!string.IsNullOrEmpty(alumno.Usuario))
-                {
-                    throw new Exception($"El alumno con DNI {dni} ya tiene un usuario asociado: {alumno.Usuario}");
-                }
-
-                // Validar que el usuario no tenga ya un alumno asociado
-                List<BE.UsuarioGestion> usuarios = bllUsuario.ListarUsuarios();
-                var usuarioConAlumno = usuarios.FirstOrDefault(u => u.USUARIO_Usuario == usuario && u.DNI.HasValue);
-
-                if (usuarioConAlumno != null)
-                {
-                    throw new Exception($"El usuario '{usuario}' ya tiene un alumno asociado (DNI: {usuarioConAlumno.DNI})");
-                }
-
-                mppAlumno.AsociarUsuario(dni, usuario);
+                mppAlumno.AsociarFamiliar(dni, usuario, parentesco);
                 bllEvento.RegistrarAsociarUsuario(usuario, dni);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al asociar usuario: " + ex.Message, ex);
+                throw new Exception("Error al asociar familiar: " + ex.Message, ex);
             }
         }
 
-        public void DesasociarUsuario(int dni)
+        public void DesasociarFamiliar(int dni, string usuario)
         {
             try
             {
@@ -322,23 +314,44 @@ namespace BLL
                     throw new Exception($"No existe un alumno con DNI {dni}");
                 }
 
-                Alumno alumno = ObtenerAlumno(dni);
-                if (string.IsNullOrEmpty(alumno.Usuario))
-                {
-                    throw new Exception($"El alumno con DNI {dni} no tiene un usuario asociado");
-                }
-
-                mppAlumno.AsociarUsuario(dni, null);
-
-                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
-                if (usuario != null)
-                {
-                    bllEvento.RegistrarDesasociarUsuario(usuario.USUARIO_Usuario, dni);
-                }
+                mppAlumno.DesasociarFamiliar(dni, usuario);
+                bllEvento.RegistrarDesasociarUsuario(usuario, dni);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al desasociar usuario: " + ex.Message, ex);
+                throw new Exception("Error al desasociar familiar: " + ex.Message, ex);
+            }
+        }
+
+        public List<AlumnoUsuarioVinculo> ObtenerUsuariosDeAlumno(int dni)
+        {
+            try
+            {
+                return mppAlumno.ObtenerUsuariosDeAlumno(dni);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener los usuarios vinculados al alumno: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Alumnos vinculados a una cuenta (el propio titular y/o los alumnos a su cargo como familiar).
+        /// </summary>
+        public List<Alumno> ObtenerAlumnosDeUsuario(string usuario)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(usuario))
+                {
+                    return new List<Alumno>();
+                }
+
+                return mppAlumno.ObtenerAlumnosDeUsuario(usuario);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener los alumnos del usuario: " + ex.Message, ex);
             }
         }
 
@@ -359,15 +372,18 @@ namespace BLL
             }
         }
 
-        public List<Alumno> ListarAlumnosSinUsuario()
+        /// <summary>
+        /// Actualiza los vínculos ALUMNOS_USUARIOS cuando se renombra una cuenta de usuario.
+        /// </summary>
+        public void RenombrarUsuarioEnVinculos(string usuarioOriginal, string usuarioNuevo)
         {
             try
             {
-                return mppAlumno.ListarAlumnosSinUsuario();
+                mppAlumno.RenombrarUsuarioEnVinculos(usuarioOriginal, usuarioNuevo);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al listar alumnos sin usuario: " + ex.Message, ex);
+                throw new Exception("Error al renombrar el usuario en los vínculos de alumnos: " + ex.Message, ex);
             }
         }
     }

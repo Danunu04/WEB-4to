@@ -13,37 +13,85 @@ namespace gymAppV2.Actividades
 
     public partial class actividades
     {
-
-        /// <summary>
-        /// pnlNuevaActividad control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlNuevaActividad;
-
-        /// <summary>
-        /// hdnEsCliente control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnNuevaActividad;
         protected global::System.Web.UI.WebControls.HiddenField hdnEsCliente;
-
-        /// <summary>
-        /// hdnActividadesJson control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.HiddenField hdnActividadesJson;
-
+        protected global::System.Web.UI.WebControls.HiddenField hdnAgendaJson;
+        protected global::System.Web.UI.WebControls.HiddenField hdnOcupacionJson;
+        protected global::System.Web.UI.WebControls.HiddenField hdnPuedeGestionar;
+        protected global::System.Web.UI.WebControls.HiddenField hdnHoy;
+        protected global::System.Web.UI.WebControls.HiddenField hdnFechaCalendario;
+        protected global::System.Web.UI.WebControls.HiddenField hdnVistaCalendario;
+        protected global::System.Web.UI.WebControls.HiddenField hdnClaseHorario;
+        protected global::System.Web.UI.WebControls.HiddenField hdnClaseFecha;
+        protected global::System.Web.UI.WebControls.Button btnAbrirClase;
+        protected global::System.Web.UI.WebControls.HiddenField hdnSeleccion;
+        protected global::System.Web.UI.WebControls.Button btnAnotarSeleccion;
+        protected global::System.Web.UI.WebControls.Button btnBajaSeleccion;
         protected global::System.Web.UI.WebControls.Literal litTitulo;
         protected global::System.Web.UI.WebControls.Literal litBtnNueva;
         protected global::System.Web.UI.WebControls.Literal litClienteInfo;
+        protected global::System.Web.UI.WebControls.Panel pnlMisActividades;
+        protected global::System.Web.UI.WebControls.Literal litMisActividadesTitulo;
+        protected global::System.Web.UI.WebControls.Literal litMisActividadesAyuda;
+        protected global::System.Web.UI.WebControls.PlaceHolder phSelectorAlumno;
+        protected global::System.Web.UI.WebControls.DropDownList ddlMisAlumnos;
+        protected global::System.Web.UI.WebControls.Repeater rptMisActividades;
+        protected global::System.Web.UI.WebControls.PlaceHolder phSinMisActividades;
+        protected global::System.Web.UI.WebControls.Literal litSinMisActividades;
+        protected global::System.Web.UI.WebControls.Panel pnlGestion;
+        protected global::System.Web.UI.WebControls.Literal litGestionTitulo;
+        protected global::System.Web.UI.WebControls.Repeater rptActividades;
+        protected global::System.Web.UI.WebControls.PlaceHolder phSinActividades;
+        protected global::System.Web.UI.WebControls.Panel pnlForm;
         protected global::System.Web.UI.WebControls.Literal litModalTitulo;
+        protected global::System.Web.UI.WebControls.LinkButton btnCerrarForm;
+        protected global::System.Web.UI.WebControls.TextBox txtDescripcion;
+        protected global::System.Web.UI.WebControls.TextBox txtCostoInterno;
+        protected global::System.Web.UI.WebControls.TextBox txtPrecioAlumno;
+        protected global::System.Web.UI.WebControls.TextBox txtCupo;
+        protected global::System.Web.UI.WebControls.CheckBox chkActiva;
+        protected global::System.Web.UI.WebControls.Repeater rptHorarios;
+        protected global::System.Web.UI.WebControls.Button btnAgregarHorario;
+        protected global::System.Web.UI.WebControls.Button btnCancelarForm;
+        protected global::System.Web.UI.WebControls.Button btnGuardarActividad;
+        protected global::System.Web.UI.WebControls.Panel pnlInscripciones;
+        protected global::System.Web.UI.WebControls.Literal litInscripcionesTitulo;
+        protected global::System.Web.UI.WebControls.LinkButton btnCerrarInscripciones;
+        protected global::System.Web.UI.WebControls.Literal litInscripcionesAyuda;
+        protected global::System.Web.UI.WebControls.DropDownList ddlTurnoInscripciones;
+        protected global::System.Web.UI.WebControls.CheckBoxList cblAlumnos;
+        protected global::System.Web.UI.WebControls.Literal litSinAlumnos;
+        protected global::System.Web.UI.WebControls.Button btnCancelarInscripciones;
+        protected global::System.Web.UI.WebControls.Button btnGuardarInscripciones;
+        protected global::System.Web.UI.WebControls.Panel pnlClase;
+        protected global::System.Web.UI.WebControls.Literal litClaseTitulo;
+        protected global::System.Web.UI.WebControls.Literal litClaseDetalle;
+        protected global::System.Web.UI.WebControls.Literal litClaseCupo;
+        protected global::System.Web.UI.WebControls.LinkButton btnCerrarClaseX;
+        protected global::System.Web.UI.WebControls.PlaceHolder phClasePasada;
+        protected global::System.Web.UI.WebControls.Literal litClasePasada;
+        protected global::System.Web.UI.WebControls.PlaceHolder phClaseCompleta;
+        protected global::System.Web.UI.WebControls.PlaceHolder phClaseCliente;
+        protected global::System.Web.UI.WebControls.Literal litClaseEstado;
+        protected global::System.Web.UI.WebControls.PlaceHolder phClaseAnotar;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblAlcanceAlta;
+        protected global::System.Web.UI.WebControls.Button btnClaseAnotar;
+        protected global::System.Web.UI.WebControls.PlaceHolder phClaseDesanotar;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblAlcanceBaja;
+        protected global::System.Web.UI.WebControls.Button btnClaseDesanotar;
+        protected global::System.Web.UI.WebControls.PlaceHolder phClaseGestor;
+        protected global::System.Web.UI.WebControls.Literal litAsistentesTitulo;
+        protected global::System.Web.UI.WebControls.Repeater rptAsistentes;
+        protected global::System.Web.UI.WebControls.PlaceHolder phSinAsistentes;
+        protected global::System.Web.UI.WebControls.PlaceHolder phAgregarAsistente;
+        protected global::System.Web.UI.WebControls.DropDownList ddlAgregarAlumno;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblAlcanceAltaGestor;
+        protected global::System.Web.UI.WebControls.Button btnClaseAgregar;
+        protected global::System.Web.UI.WebControls.Button btnCerrarClase;
+        protected global::System.Web.UI.WebControls.Panel pnlConfirmarBaja;
+        protected global::System.Web.UI.WebControls.Literal litConfirmarBaja;
+        protected global::System.Web.UI.WebControls.Button btnCancelarBaja;
+        protected global::System.Web.UI.WebControls.Button btnConfirmarBaja;
     }
 }

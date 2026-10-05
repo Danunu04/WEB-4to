@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BE;
 using MPP;
 
@@ -89,6 +90,14 @@ namespace BLL
 
         public void EliminarEntrenador(int dni)
         {
+            // Un turno no puede quedar sin titular: primero hay que asignarle otro profesor
+            List<ActividadHorario> comoTitular = new MPPActividad().ListarHorariosComoTitular(dni);
+            if (comoTitular.Count > 0)
+                throw new ConflictoHorarioException(
+                    "El profesor es titular de " + comoTitular.Count + " turno(s): " +
+                    string.Join(", ", comoTitular.Take(5).Select(t => $"{t.DescripcionActividad} ({BLLInscripcion.DescribirHorario(t)})")) +
+                    ". Asigná otro titular antes de eliminarlo.");
+
             try
             {
                 mppEntrenador.EliminarEntrenador(dni);

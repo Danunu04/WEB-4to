@@ -283,7 +283,7 @@ namespace gymAppV2.Usuarios
             string rol = ddlRolForm.SelectedValue;
 
             // Mostrar/ocultar validator de fecha de nacimiento segun el rol
-            RequiredFieldValidator8.Enabled = (rol == "3" || rol == "4"); // Entrenador o Cliente
+            RequiredFieldValidator8.Enabled = (rol == "3" || rol == "4" || rol == "6"); // Entrenador, Cliente o Familiar
 
             if (rol == "3")
             {
@@ -484,9 +484,9 @@ namespace gymAppV2.Usuarios
             DateTime? fechaNacimiento = null;
             bool activo = ddlEstadoForm.SelectedValue == "1";
 
-            // Validar fecha de nacimiento para Entrenador o Cliente
+            // Validar fecha de nacimiento para Entrenador, Cliente o Familiar
             string rolSeleccionado = ddlRolForm.SelectedValue;
-            if ((rolSeleccionado == "3" || rolSeleccionado == "4") && string.IsNullOrEmpty(txtFechaNacimiento.Text))
+            if ((rolSeleccionado == "3" || rolSeleccionado == "4" || rolSeleccionado == "6") && string.IsNullOrEmpty(txtFechaNacimiento.Text))
             {
                 MostrarError(T("alumnos_msg_fecha_oblig"));
                 return;
@@ -531,6 +531,10 @@ namespace gymAppV2.Usuarios
                             break;
                         case "4":
                             bllUsuario.CrearUsuario(usuario, contrasenia, 4, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
+                            MostrarExito(T("usuarios_msg_creado"));
+                            break;
+                        case "6":
+                            bllUsuario.CrearUsuario(usuario, contrasenia, 6, nombre, apellido, telefono, email, fechaNacimiento, null, dni, null, activo);
                             MostrarExito(T("usuarios_msg_creado"));
                             break;
                         default:

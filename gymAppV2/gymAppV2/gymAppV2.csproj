@@ -109,6 +109,7 @@
     <Content Include="Admin\EncriptarDatos.css" />
     <Content Include="Actividades\actividades.aspx" />
     <Content Include="Alumnos\Alumnos.aspx" />
+    <Content Include="WebServices\AlumnosWS.asmx" />
     <Content Include="Alumnos\Alumnos.css" />
     <Content Include="Bitacora\Bitacora.aspx" />
     <Content Include="Contact.aspx" />
@@ -132,6 +133,7 @@
     <Content Include="Content\dashboard.css" />
     <Content Include="DashBoard\WebForm1.aspx" />
     <Content Include="Entrenadores\Entrenadores.aspx" />
+    <Content Include="Entrenadores\Entrenadores.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="CambiarContra\Cambiar-contra.aspx" />
@@ -172,6 +174,12 @@
     <Content Include="Usuarios\Usuarios.css" />
     <Content Include="Usuarios\UsuariosModulo.aspx" />
     <Content Include="Rutinas\Rutinas.aspx" />
+    <Content Include="Rutinas\Rutinas.css" />
+    <Content Include="Pagos\PagosCliente.aspx" />
+    <Content Include="Pagos\Pagos.css" />
+    <Content Include="Permisos\Permisos.aspx" />
+    <Content Include="Aulas\Aulas.aspx" />
+    <Content Include="Permisos\Permisos.css" />
     <Content Include="Perfil\Perfil.aspx" />
     <Content Include="VerificacioDV\VerificacioDV.aspx" />
     <Content Include="VerificacioDV\VerificacioDV.css" />
@@ -225,6 +233,13 @@
     </Compile>
     <Compile Include="Alumnos\Alumnos.aspx.designer.cs">
       <DependentUpon>Alumnos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="WebServices\AlumnosWS.asmx.cs">
+      <DependentUpon>AlumnosWS.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="WebServices\AlumnosWSCliente.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="About.aspx.cs">
@@ -388,6 +403,27 @@
     </Compile>
     <Compile Include="Rutinas\Rutinas.aspx.designer.cs">
       <DependentUpon>Rutinas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Pagos\PagosCliente.aspx.cs">
+      <DependentUpon>PagosCliente.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Pagos\PagosCliente.aspx.designer.cs">
+      <DependentUpon>PagosCliente.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Aulas\Aulas.aspx.cs">
+      <DependentUpon>Aulas.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Aulas\Aulas.aspx.designer.cs">
+      <DependentUpon>Aulas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Permisos\Permisos.aspx.cs">
+      <DependentUpon>Permisos.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Permisos\Permisos.aspx.designer.cs">
+      <DependentUpon>Permisos.aspx</DependentUpon>
     </Compile>
     <Compile Include="Perfil\Perfil.aspx.cs">
       <DependentUpon>Perfil.aspx</DependentUpon>

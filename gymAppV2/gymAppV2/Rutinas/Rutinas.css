@@ -1,0 +1,434 @@
+/* =============================================
+   RUTINAS MODULE CSS
+   ============================================= */
+
+.rutinas-container *, .rutinas-container *::before, .rutinas-container *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.rutinas-container {
+  --pink: #FFB5C5;
+  --pink-light: #FFE5EB;
+  --mint: #B5EAD7;
+  --mint-light: #E5F9F0;
+  --mint-dark: #0F6E56;
+  --lavender: #C7B5FF;
+  --lavender-light: #F0EBFF;
+  --peach: #FFD5B5;
+  --peach-light: #FFF0E5;
+  --sky: #B5D5FF;
+  --sky-light: #E5F0FF;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --bg: #FFF8F0;
+  --surface: #ffffff;
+  --surface-2: #FDF6EC;
+  --border: #E8E0D5;
+  --text: #2D2D2D;
+  --text-muted: #6B6B6B;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(181, 234, 215, 0.15);
+  padding: 2rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── PAGE HEADER ────────────────────── */
+.rutinas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.rutinas-title {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rutinas-title i {
+  width: 44px; height: 44px;
+  background: var(--mint-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mint-dark);
+  font-size: 1.1rem;
+}
+
+.rutinas-title p {
+  color: var(--text-muted);
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.rutinas-title-text { display: flex; flex-direction: column; }
+
+.rutinas-empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.rutinas-empty i {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  color: var(--mint-dark);
+}
+
+/* ── MAIN CONTENT ────────────────────── */
+.main-content-vertical {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ── TABLE ────────────────────── */
+.table-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.table-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-card-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+tbody tr { cursor: pointer; transition: background .15s; }
+tbody tr:hover { background: var(--mint-light); }
+tbody tr.selected-row { background: var(--mint-light); }
+
+tbody td {
+  padding: 11px 16px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid #f0f4f2;
+  color: var(--text);
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+.pill-actividad {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--lavender-light);
+  color: #4C1D95;
+}
+
+.table-footer {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.table-footer-text { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── TABLE ACTIONS BAR ────────────────────── */
+.table-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 8px;
+}
+
+.btn-action {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  width: 100%;
+  gap: 8px;
+}
+
+.btn-action:hover { border-color: var(--mint-dark); color: var(--mint-dark); background: var(--mint-light); }
+
+.btn-crear { background: var(--mint-dark); color: #fff; border: 1.5px solid var(--mint-dark); }
+.btn-crear:hover { background: #0c5a45; border-color: #0c5a45; }
+
+.btn-modificar { background: #F0F9FF; color: #1A5276; border: 1.5px solid #F0F9FF; }
+.btn-modificar:hover { background: #dBEEFA; border-color: #1A5276; }
+
+.btn-eliminar { background: var(--red-light); color: #A32D2D; border: 1.5px solid var(--red-light); }
+.btn-eliminar:hover { background: #f9d1d1; border-color: #A32D2D; }
+
+.btn-cancelar { background: var(--bg); color: var(--text-muted); border: 1.5px solid var(--bg); }
+.btn-cancelar:hover { background: #E8EDE9; border-color: var(--text-muted); }
+
+/* ── FORM PANEL ────────────────────── */
+.detail-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.detail-header {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-header h3 i { color: var(--mint-dark); }
+
+.detail-body { padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: 0.9rem; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-field.full { grid-column: 1 / -1; }
+
+.form-field label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.form-field input, .form-field select, .form-field textarea {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color .2s, background .2s;
+}
+
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  border-color: var(--mint-dark);
+  background: #fff;
+}
+
+.form-field textarea { resize: vertical; min-height: 70px; font-family: 'DM Sans', system-ui, sans-serif; }
+
+.btn-guardar {
+  background: var(--mint-dark);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+}
+
+.btn-guardar:hover { background: #0c5a45; }
+
+/* ============================================
+   MODALES
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content.modal-sm { max-width: 400px; }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-header-warning h3 { color: var(--red); }
+
+.btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.btn-close:hover { color: var(--text); }
+
+.modal-body { padding: 1.1rem 1.25rem; }
+.modal-body p { margin: 0.5rem 0; font-size: 0.85rem; }
+.modal-body .text-danger { color: var(--red); font-size: 0.85rem; }
+
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid var(--border);
+  justify-content: flex-end;
+}
+
+/* ── Ventana flotante del formulario (mismo comportamiento que Alumnos) ── */
+.modal-footer {
+  flex-wrap: nowrap;
+  background: var(--surface);
+}
+
+/* Botones del pie: comparten el ancho en lugar de ocupar el 100% cada uno */
+.modal-footer .btn-action {
+  width: auto;
+  flex: 1;
+  justify-content: center;
+}
+
+.modal-content.modal-form {
+  max-width: 45rem;
+}
+
+.modal-content {
+  color: var(--text);
+}
+
+/* Bootstrap (cargado en DashBoard.Master) también define .btn-close con opacidad 0.5
+   y tamaño fijo; acá se usa el ícono de Font Awesome, así que se anulan esos estilos. */
+.btn-close {
+  opacity: 1;
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
+}
+
+/* ── RESPONSIVE ────────────────────── */
+@media screen and (max-width: 768px) {
+  .rutinas-container { padding: 1rem; }
+  .form-row { grid-template-columns: 1fr; }
+
+  thead { display: none; }
+
+  tbody tr {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    display: block;
+  }
+
+  tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border: none;
+  }
+
+  tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 120px;
+  }
+
+  .table-footer { display: none; }
+  .table-actions { flex-direction: column; }
+  .btn-action { width: 100%; justify-content: center; }
+}

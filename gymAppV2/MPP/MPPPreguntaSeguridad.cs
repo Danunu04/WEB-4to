@@ -126,6 +126,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+                MPPDigitoVerificador.SincronizarControl("PreguntasSeguridad");
             }
             catch (Exception ex)
             {

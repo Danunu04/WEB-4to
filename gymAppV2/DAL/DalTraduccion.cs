@@ -18,6 +18,9 @@ namespace DAL
             "Pantalla_Actividades",
             "Pantalla_Rutinas",
             "Pantalla_CambiarContra",
+            "Pantalla_Entrenadores",
+            "Pantalla_Pagos",
+            "Pantalla_Permisos",
             "Comunes_Botones",
             "Comunes_Mensajes",
         };

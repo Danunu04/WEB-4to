@@ -107,16 +107,17 @@ namespace MPP
         }
 
         /// <summary>
-        /// Vuelve a calcular y actualizar dvv/dvh de un usuario existente.
-        /// Se usa después de UPDATEs parciales (intentos, bloqueo, contraseña, etc.).
+        /// Vuelve a calcular el dvh de un usuario existente y sincroniza el control de USUARIOS.
+        /// Se usa después de UPDATEs parciales (intentos, bloqueo, estado, contraseña, rol, etc.).
         /// </summary>
-        private void RecalcularDigitosUsuario(string usuario)
+        public void RecalcularDigitosUsuario(string usuario)
         {
             Usuario u = ObtenerUsuario(usuario);
             if (u == null) return;
 
             string dvh = CalcularDigitosUsuario(u);
             ActualizarDigitosUsuario(usuario, dvh);
+            MPPDigitoVerificador.SincronizarControl("USUARIOS");
         }
 
         /// <summary>
@@ -429,6 +430,73 @@ namespace MPP
             }
         }
 
+        /// <summary>
+        /// Busca un Usuario por DNI (cualquier rol). Se usa en el flujo de alta de Alumnos.aspx
+        /// para saber si una persona ya está registrada en el sistema antes de crear una cuenta nueva.
+        /// </summary>
+        public Usuario ObtenerUsuarioPorDni(int dni)
+        {
+            try
+            {
+                string consulta = @"
+            SELECT
+                us.usr,
+                us.contra,
+                us.activo,
+                us.bloqueado,
+                us.intentos,
+                us.rol,
+                us.tipo,
+                us.dni,
+                us.nombre,
+                us.apellido,
+                us.telefono,
+                us.email,
+                us.fechaNacimiento,
+                us.primerLogin,
+                us.dvh,
+                us.Idioma
+            FROM [GymApp].[dbo].[USUARIOS] as us
+            WHERE us.dni = @DNI";
+
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@DNI", dni)
+                };
+
+                DataTable dt = dal._686DPConsultar(consulta, parametros);
+
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+                    return new Usuario(
+                        row["usr"] != DBNull.Value ? row["usr"].ToString() : string.Empty,
+                        row["contra"] != DBNull.Value ? row["contra"].ToString() : string.Empty,
+                        Convert.ToBoolean(row["activo"]),
+                        row["bloqueado"] != DBNull.Value && Convert.ToBoolean(row["bloqueado"]),
+                        row["intentos"] != DBNull.Value ? Convert.ToInt32(row["intentos"]) : 0,
+                        row["rol"] != DBNull.Value ? Convert.ToInt32(row["rol"]) : 1,
+                        row["tipo"] != DBNull.Value ? row["tipo"].ToString() : string.Empty,
+                        row["dni"] != DBNull.Value ? Convert.ToInt32(row["dni"]) : 0,
+                        DesencriptarCampoPersonal(row["nombre"] != DBNull.Value ? row["nombre"].ToString() : string.Empty),
+                        DesencriptarCampoPersonal(row["apellido"] != DBNull.Value ? row["apellido"].ToString() : string.Empty),
+                        DesencriptarCampoPersonal(row["telefono"] != DBNull.Value ? row["telefono"].ToString() : string.Empty),
+                        DesencriptarCampoPersonal(row["email"] != DBNull.Value ? row["email"].ToString() : string.Empty),
+                        DesencriptarFechaPersonal(row["fechaNacimiento"]),
+                        row["dvh"] != DBNull.Value ? row["dvh"].ToString() : string.Empty,
+                        row["primerLogin"] != DBNull.Value && Convert.ToBoolean(row["primerLogin"]),
+                        row["Idioma"] != DBNull.Value ? row["Idioma"].ToString() : "ES"
+                    );
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener el usuario por DNI: " + ex.Message, ex);
+            }
+        }
+
         public int ObtenerIntentos(string usuario)
         {
             try
@@ -690,11 +758,7 @@ namespace MPP
 
                 dal._686DPEscribir(limpiar, parametrosLimpiar);
 
-                try
-                {
-                    new MPPDigitoVerificador().ActualizarControlTabla("USUARIO_Contras");
-                }
-                catch { }
+                MPPDigitoVerificador.SincronizarControl("USUARIO_Contras");
             }
             catch (Exception ex)
             {
@@ -805,11 +869,7 @@ namespace MPP
 
                 dal._686DPEscribir(consulta, parametros);
 
-                try
-                {
-                    new MPPDigitoVerificador().ActualizarControlTabla("USUARIOS");
-                }
-                catch { }
+                MPPDigitoVerificador.SincronizarControl("USUARIOS");
             }
             catch (Exception ex)
             {
@@ -910,65 +970,40 @@ namespace MPP
             }
         }
 
-        public List<BE.UsuarioGestion> ListarUsuariosClientesSinAlumno()
+        /// <summary>
+        /// Indica si ya existe una cuenta de USUARIOS con ese DNI, sin importar el rol/usr.
+        /// El DNI tiene UNIQUE en la base (UK_USUARIOS_DNI): una misma persona no puede tener
+        /// dos cuentas (ej. un DNI ya registrado como Entrenador no puede volver a crearse como Cliente).
+        /// </summary>
+        public bool DniExiste(int dni)
         {
             try
             {
-                // En el esquema normalizado, los clientes (tipo='Cliente') que no tienen registro en ALUMNOS
                 string consulta = @"
-                    SELECT
-                        u.usr AS USUARIO_Usuario,
-                        u.tipo AS USUARIO_Tipo,
-                        u.activo AS USUARIO_Activo,
-                        u.bloqueado AS USUARIO_Bloqueado,
-                        u.intentos AS USUARIO_Intentos,
-                        u.dvh AS USUARIO_DVH,
-                        u.nombre AS Nombre,
-                        u.apellido AS Apellido,
-                        u.dni AS DNI,
-                        u.telefono AS Telefono,
-                        u.email AS Email,
-                        u.fechaNacimiento AS FechaNacimiento
-                    FROM [GymApp].[dbo].[USUARIOS] u
-                    LEFT JOIN [GymApp].[dbo].[ALUMNOS] a ON u.dni = a.dni
-                    WHERE u.tipo = 'Cliente'
-                      AND u.activo = 1
-                      AND a.dni IS NULL
-                    ORDER BY u.usr";
+                    SELECT COUNT(*)
+                    FROM [GymApp].[dbo].[USUARIOS]
+                    WHERE dni = @DNI";
 
-                List<SqlParameter> parametros = new List<SqlParameter>();
-                DataTable dt = dal._686DPConsultar(consulta, parametros);
-                List<BE.UsuarioGestion> usuarios = new List<BE.UsuarioGestion>();
-
-                foreach (DataRow row in dt.Rows)
+                List<SqlParameter> parametros = new List<SqlParameter>
                 {
-                    usuarios.Add(new BE.UsuarioGestion(
-                        row["USUARIO_Usuario"] != DBNull.Value ? row["USUARIO_Usuario"].ToString() : string.Empty,
-                        string.Empty,
-                        row["USUARIO_Tipo"] != DBNull.Value ? row["USUARIO_Tipo"].ToString() : string.Empty,
-                        Convert.ToBoolean(row["USUARIO_Activo"]),
-                        Convert.ToBoolean(row["USUARIO_Bloqueado"]),
-                        row["USUARIO_Intentos"] != DBNull.Value ? Convert.ToInt32(row["USUARIO_Intentos"]) : 0,
-                        row["USUARIO_DVH"] != DBNull.Value ? row["USUARIO_DVH"].ToString() : string.Empty
-                    )
-                    {
-                        USUARIO_Rol = 4,
-                        Nombre = DesencriptarCampoPersonal(row["Nombre"] != DBNull.Value ? row["Nombre"].ToString() : string.Empty),
-                        Apellido = DesencriptarCampoPersonal(row["Apellido"] != DBNull.Value ? row["Apellido"].ToString() : string.Empty),
-                        DNI = row["DNI"] != DBNull.Value && int.TryParse(row["DNI"].ToString(), out int dni) ? (int?)dni : null,
-                        Telefono = DesencriptarCampoPersonal(row["Telefono"] != DBNull.Value ? row["Telefono"].ToString() : string.Empty),
-                        Email = DesencriptarCampoPersonal(row["Email"] != DBNull.Value ? row["Email"].ToString() : string.Empty),
-                        FechaNacimiento = DesencriptarFechaPersonal(row["FechaNacimiento"])
-                    });
+                    new SqlParameter("@DNI", dni)
+                };
+
+                object resultado = dal._686DPEscalar(consulta, parametros);
+
+                if (resultado != null && resultado != DBNull.Value)
+                {
+                    return Convert.ToInt32(resultado) > 0;
                 }
 
-                return usuarios;
+                return false;
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al listar usuarios clientes sin alumno: " + ex.Message, ex);
+                throw new Exception("Error al verificar si existe el DNI: " + ex.Message, ex);
             }
         }
+
 
         public void ActualizarEstado(string usuario, bool activo)
         {
@@ -1059,6 +1094,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
+                MPPDigitoVerificador.SincronizarControl("USUARIOS");
             }
             catch (Exception ex)
             {

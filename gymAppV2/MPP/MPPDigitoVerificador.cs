@@ -93,6 +93,69 @@ namespace MPP
         }
 
         /// <summary>
+        /// Sincroniza dvvTabla y cantidadFilas de las tablas indicadas después de un
+        /// INSERT/UPDATE/DELETE legítimo hecho por la aplicación. Cada MPP ya calcula el dvh
+        /// de la fila que escribe; esto actualiza el hash de la tabla para que la verificación
+        /// de integridad no tome el cambio como una alteración externa.
+        ///
+        /// No es un recálculo masivo: los dvh de las demás filas no se tocan, así que una
+        /// modificación hecha por fuera de la aplicación se sigue detectando fila por fila.
+        /// Solo actúa sobre tablas que ya están bajo control (no registra tablas nuevas) y
+        /// nunca lanza excepción, porque la escritura ya se hizo y no debe informarse como fallida.
+        /// </summary>
+        public static void SincronizarControl(params string[] tablas)
+        {
+            var mpp = new MPPDigitoVerificador();
+            foreach (string tabla in tablas)
+            {
+                try
+                {
+                    if (mpp.ObtenerControlPorTabla(tabla) != null)
+                    {
+                        mpp.ActualizarControlTabla(tabla);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"[DV] No se pudo sincronizar el control de {tabla}: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Recalcula el dvh de las filas que cumplen la condición leyendo la fila real de la base
+        /// (SELECT *), con el mismo algoritmo que la verificación y el recálculo masivo, y después
+        /// sincroniza el control de la tabla. Pensado para tablas sin campos encriptados cuyo MPP
+        /// inserta con dvh vacío (ej. claves IDENTITY que no se conocen antes del INSERT).
+        /// </summary>
+        /// <param name="condicion">Cláusula WHERE sin la palabra WHERE, con parámetros (ej. "codActividad = @Cod").</param>
+        /// <param name="parametros">Parámetros nuevos (no reutilizar los de otro comando).</param>
+        public static void RecalcularDvhFilas(string nombreTabla, string condicion, params SqlParameter[] parametros)
+        {
+            var mpp = new MPPDigitoVerificador();
+
+            DataTable dt = mpp.dal._686DPConsultar(
+                $"SELECT * FROM [GymApp].[dbo].[{nombreTabla}] WHERE {condicion}",
+                new List<SqlParameter>(parametros));
+
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                List<DataColumn> columnasDatos = dt.Columns.Cast<DataColumn>()
+                    .Where(c => !c.ColumnName.Equals("dvh", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                string[] clavesPrimarias = mpp.ObtenerClavesPrimarias(nombreTabla);
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    string dvh = mpp.dvManager.CalcularDVH(mpp.ArmarDiccionarioValores(row, columnasDatos));
+                    mpp.ActualizarDigitosFila(nombreTabla, mpp.ArmarClaveFila(row, clavesPrimarias), dvh);
+                }
+            }
+
+            SincronizarControl(nombreTabla);
+        }
+
+        /// <summary>
         /// Recalcula dvvTabla y cantidadFilas para una tabla sin tocar los dvh de cada fila.
         /// Llamar después de cualquier INSERT legítimo en tablas con control de integridad.
         /// </summary>

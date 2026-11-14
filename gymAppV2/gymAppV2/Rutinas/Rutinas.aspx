@@ -1,7 +1,7 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Rutinas.aspx.cs" Inherits="gymAppV2.Rutinas.Rutinas" MasterPageFile="~/DashBoard.Master" EnableEventValidation="false" Title="Rutinas" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <link href="<%= ResolveUrl("~/Rutinas/Rutinas.css?v=2") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Rutinas/Rutinas.css?v=3") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -25,7 +25,7 @@
                 <div class="table-card-header">
                     <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--mint-dark)"></i><asp:Literal ID="litListaClienteTitulo" runat="server" Text="Mis rutinas" /></h3>
                 </div>
-                <asp:GridView ID="gvRutinasCliente" runat="server" AutoGenerateColumns="false" CssClass="table" GridLines="None">
+                <asp:GridView ID="gvRutinasCliente" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas" GridLines="None">
                     <Columns>
                         <asp:BoundField DataField="Fecha" HeaderText="Fecha" DataFormatString="{0:dd/MM/yyyy}" />
                         <asp:TemplateField HeaderText="Actividad">
@@ -58,9 +58,9 @@
                     <div class="table-card-header">
                         <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--mint-dark)"></i><asp:Literal ID="litListaTitulo" runat="server" Text="Lista de rutinas" /></h3>
                     </div>
-                    <asp:GridView ID="gvRutinas" runat="server" AutoGenerateColumns="false" CssClass="table"
+                    <asp:GridView ID="gvRutinas" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas"
                         GridLines="None" AllowPaging="true" PageSize="10" OnPageIndexChanging="gvRutinas_PageIndexChanging"
-                        OnRowCommand="gvRutinas_RowCommand" OnRowDataBound="gvRutinas_RowDataBound"
+                        OnRowCommand="gvRutinas_RowCommand"
                         DataKeyNames="CodRutina">
                         <Columns>
                             <asp:TemplateField>

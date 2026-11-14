@@ -191,22 +191,6 @@ namespace gymAppV2.Rutinas
             }
         }
 
-        protected void gvRutinas_RowDataBound(object sender, GridViewRowEventArgs e)
-        {
-            if (e.Row.RowType == DataControlRowType.DataRow)
-            {
-                if (e.Row.Cells.Count > 1)
-                    e.Row.Cells[1].Attributes["data-label"] = "Fecha";
-                if (e.Row.Cells.Count > 2)
-                    e.Row.Cells[2].Attributes["data-label"] = "Alumno";
-                if (e.Row.Cells.Count > 3)
-                    e.Row.Cells[3].Attributes["data-label"] = "Entrenador";
-                if (e.Row.Cells.Count > 4)
-                    e.Row.Cells[4].Attributes["data-label"] = "Actividad";
-                if (e.Row.Cells.Count > 5)
-                    e.Row.Cells[5].Attributes["data-label"] = "Descripción";
-            }
-        }
 
         // ==================== EVENTOS DE ACCIONES ====================
 

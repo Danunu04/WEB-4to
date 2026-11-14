@@ -25,7 +25,7 @@ namespace gymAppV2
                 }
             }
 
-            if (SistemaEnPausa() && !UsuarioActualEsAdmin())
+            if (SistemaEnPausa() && !UsuarioActualPuedeRepararIntegridad())
             {
                 ConfigurarMenuPausa();
                 string paginaActual = Request.AppRelativeCurrentExecutionFilePath;
@@ -62,14 +62,14 @@ namespace gymAppV2
         }
 
         /// <summary>
-        /// Indica si el usuario logueado actualmente es administrador.
+        /// Indica si el usuario logueado puede entrar con el sistema pausado (permiso VerificacionDV).
         /// </summary>
-        private bool UsuarioActualEsAdmin()
+        private bool UsuarioActualPuedeRepararIntegridad()
         {
             try
             {
                 var bllRol = new BLLRol();
-                return bllRol.UsuarioActualEsAdmin();
+                return bllRol.UsuarioActualPuedeRepararIntegridad();
             }
             catch
             {

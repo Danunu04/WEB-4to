@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Migrar Encriptación - GymApp</title>
-    <link href="<%= ResolveUrl("~/Admin/EncriptarDatos.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Admin/EncriptarDatos.css?v=2") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -27,7 +27,7 @@
         <asp:Panel ID="pnlResultado" runat="server" Visible="false" CssClass="resultado-panel">
             <h2>Resultado de la migración</h2>
 
-            <asp:GridView ID="gvResultados" runat="server" AutoGenerateColumns="false" CssClass="resultado-grid"
+            <asp:GridView ID="gvResultados" runat="server" AutoGenerateColumns="false" CssClass="resultado-grid tabla-tarjetas"
                 EmptyDataText="No se encontraron tablas para migrar.">
                 <Columns>
                     <asp:BoundField DataField="Tabla" HeaderText="Tabla" />

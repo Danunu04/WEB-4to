@@ -1,14 +1,11 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="WebForm1.aspx.cs" Inherits="gymAppV2.DashBoard.WebForm1" MasterPageFile="~/DashBoard.Master" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="WebForm1.aspx.cs" Inherits="gymAppV2.DashBoard.WebForm1" MasterPageFile="~/DashBoard.Master" Title="Dashboard" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server">
-    <title>Dashboard - Sportio</title>
-    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=3") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
     <div class="animate-fade-in">
         <div class="mb-6">
             <h1 class="font-display text-2xl font-bold"><asp:Literal ID="litTitulo" runat="server" Text="Panel de Administración" /></h1>
-    <p>&nbsp;</p>
             <p class="text-muted text-sm"><asp:Literal ID="litSubtitulo" runat="server" Text="Bienvenido al panel de gestión" /></p>
         </div>
 
@@ -60,11 +57,33 @@
             </div>
         </asp:Panel>
 
+        <!-- Abono de los alumnos del cliente (alumno o familiar) -->
+        <asp:Panel ID="pnlAbonoCliente" runat="server" Visible="false" CssClass="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="card-title"><asp:Literal ID="litAbonoTitulo" runat="server" Text="Mi abono" /></h3>
+                <span class="text-muted text-sm"><asp:Literal ID="litAbonoHoy" runat="server" /></span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <asp:Repeater ID="rptAbonoCliente" runat="server">
+                    <ItemTemplate>
+                        <div class="kpi-card card-hover">
+                            <div class="kpi-card-header">
+                                <p class="kpi-card-label"><%#: Eval("Alumno") %></p>
+                                <span class="badge <%# Eval("BadgeClase") %>"><%#: Eval("Estado") %></span>
+                            </div>
+                            <p class="kpi-card-value tabular-nums"><%#: Eval("Dias") %></p>
+                            <p class="text-muted text-sm"><%#: Eval("Detalle") %></p>
+                        </div>
+                    </ItemTemplate>
+                </asp:Repeater>
+            </div>
+        </asp:Panel>
+
         <!-- Horarios semanales de las actividades -->
         <div class="card">
             <h3 class="card-title"><asp:Literal ID="litSemanaTitulo" runat="server" Text="Actividades de la Semana" /></h3>
             <div class="table-container">
-                <table class="table">
+                <table class="table tabla-tarjetas">
                     <thead>
                         <tr>
                             <th><asp:Literal ID="litColActividad" runat="server" Text="Actividad" /></th>

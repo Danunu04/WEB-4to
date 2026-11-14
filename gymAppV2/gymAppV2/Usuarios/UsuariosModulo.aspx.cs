@@ -543,9 +543,10 @@ namespace gymAppV2.Usuarios
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MostrarError(T("msg_error_generico"));
+                // Las reglas de perfiles (ej. quién puede crear un WebMaster) se informan tal cual
+                MostrarError(MensajeDePermisos(ex) ?? T("msg_error_generico"));
                 return;
             }
 
@@ -641,9 +642,9 @@ namespace gymAppV2.Usuarios
                     MostrarExito(T("usuarios_msg_desactivado"));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MostrarError(T("msg_error_generico"));
+                MostrarError(MensajeDePermisos(ex) ?? T("msg_error_generico"));
             }
 
             CargarUsuarios();

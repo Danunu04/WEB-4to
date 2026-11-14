@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web.UI.WebControls;
 using BLL;
 using BE;
@@ -8,23 +10,47 @@ using Servicios.Singleton;
 
 namespace gymAppV2.Pagos
 {
+    /// <summary>
+    /// Abono mensual. El cliente (alumno o familiar) ve el estado del abono de sus alumnos y lo
+    /// paga desde acá (pago simulado). Administración busca alumnos, ve su estado y cobra.
+    /// </summary>
     public partial class PagosCliente : BasePage
     {
         private BLLPago bllPago;
         private BLLAlumno bllAlumno;
         private BLLPrecioModalidad bllPrecioModalidad;
 
-        /// <summary>
-        /// Indica si el usuario logueado es un Cliente (rol 4).
-        /// </summary>
         protected bool EsCliente
         {
-            get { return Singleton.Instancia.Usuario?.USUARIO_Rol == 4 || Singleton.Instancia.Usuario?.USUARIO_Rol == 6; }
+            get
+            {
+                int? rol = Singleton.Instancia.Usuario?.USUARIO_Rol;
+                return rol == PerfilesSistema.RolCliente || rol == PerfilesSistema.RolFamiliar;
+            }
+        }
+
+        private string UsuarioActual
+        {
+            get { return Singleton.Instancia.Usuario?.USUARIO_Usuario; }
+        }
+
+        /// <summary>Texto buscado en la vista de administración (se conserva al paginar).</summary>
+        private string Busqueda
+        {
+            get { return ViewState["Busqueda"] as string; }
+            set { ViewState["Busqueda"] = value; }
+        }
+
+        /// <summary>Alumno cuyo abono está pagando el cliente en la ventana de pago.</summary>
+        private int? DniPagoCliente
+        {
+            get { return ViewState["PagoDni"] as int?; }
+            set { ViewState["PagoDni"] = value; }
         }
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            VerificarAcceso(BE.PermisosSistema.Pagos);
+            VerificarAcceso(PermisosSistema.Pagos);
 
             bllPago = new BLLPago();
             bllAlumno = new BLLAlumno();
@@ -32,26 +58,19 @@ namespace gymAppV2.Pagos
 
             if (!IsPostBack)
             {
-                AplicarIdioma();
-
                 pnlCliente.Visible = EsCliente;
                 pnlAdmin.Visible = !EsCliente;
 
-                if (EsCliente)
-                {
-                    CargarPagosCliente();
-                }
-                else
-                {
-                    CargarPagos();
-                }
+                AplicarIdioma();
+                CargarDatos();
             }
         }
 
-        public override void OnIdiomaChanged(BE.IdiomaApp idioma)
+        public override void OnIdiomaChanged(IdiomaApp idioma)
         {
             base.OnIdiomaChanged(idioma);
             AplicarIdioma();
+            CargarDatos();
         }
 
         private void AplicarIdioma()
@@ -59,40 +78,269 @@ namespace gymAppV2.Pagos
             litTitulo.Text = T("pagos_titulo");
             litSubtitulo.Text = T("pagos_subtitulo");
 
-            litClienteMsg.Text = T("pagos_cliente_msg");
+            // Cliente
+            litClienteMsg.Text = Texto("pagos_cliente_estado_msg", "Estado del abono de tus alumnos.");
+            litSinAlumnos.Text = Texto("pagos_cliente_sin_alumnos", "No tenés alumnos asociados a tu cuenta.");
             litListaClienteTitulo.Text = T("pagos_lista_cliente_titulo");
+            litPagoClienteTitulo.Text = Texto("pagos_btn_pagar", "Pagar abono");
+            litClienteCampoAlumno.Text = T("pagos_campo_alumno");
+            litClienteCampoModalidad.Text = T("pagos_campo_modalidad");
+            litClienteCampoMonto.Text = T("pagos_campo_monto");
+            litClienteCampoMetodo.Text = T("pagos_campo_metodo");
+            litTarjetaNumero.Text = Texto("pagos_tarjeta_numero", "Número de tarjeta");
+            litTarjetaTitular.Text = Texto("pagos_tarjeta_titular", "Titular");
+            litTarjetaVence.Text = Texto("pagos_tarjeta_vence", "Vencimiento (MM/AA)");
+            litTarjetaCvv.Text = Texto("pagos_tarjeta_cvv", "Código de seguridad");
+            litTransferenciaDatos.Text = Texto("pagos_transferencia_datos",
+                "Transferí el monto al alias SPORTIO.GYM.PAGOS y confirmá el pago.");
+            litAvisoDemo.Text = Texto("pagos_aviso_demo",
+                "Pago de demostración: no se hace ningún cobro real y los datos de la tarjeta no se guardan.");
+            litBtnConfirmarPago.Text = Texto("pagos_btn_confirmar", "Confirmar pago");
+            rblClienteMetodo.Items.FindByValue("Tarjeta").Text = Texto("pagos_medio_tarjeta", "Tarjeta");
+            rblClienteMetodo.Items.FindByValue("Transferencia").Text = Texto("pagos_medio_transferencia", "Transferencia");
 
+            // Administración
+            litEstadosTitulo.Text = Texto("pagos_estados_titulo", "Estado de abonos");
+            txtBuscar.Attributes["placeholder"] = Texto("pagos_buscar_placeholder", "Buscar por nombre, apellido o DNI");
+            btnBuscar.Text = Texto("pagos_btn_buscar", "Buscar");
             litListaTitulo.Text = T("pagos_lista_titulo");
             litBtnRegistrar.Text = T("pagos_btn_registrar");
             litFormTitulo.Text = T("pagos_form_titulo");
             litCampoAlumno.Text = T("pagos_campo_alumno");
             litCampoModalidad.Text = T("pagos_campo_modalidad");
-            litCampoPeriodo.Text = T("pagos_campo_periodo");
-            litCampoPeriodoHint.Text = T("pagos_campo_periodo_hint");
             litCampoMetodo.Text = T("pagos_campo_metodo");
             litCampoMonto.Text = T("pagos_campo_monto");
             litBtnGuardar.Text = T("btn_guardar");
+
+            TitularColumnas(gvEstados, "pagos_col_alumno", "pagos_col_dni", "pagos_col_vence", "pagos_col_dias", "pagos_col_estado", null);
+
+            string[] columnasHistorial = { "pagos_col_alumno", "pagos_col_desde", "pagos_col_hasta", "pagos_col_modalidad",
+                                           "pagos_col_monto", "pagos_col_fecha_pago", "pagos_col_metodo" };
+            TitularColumnas(gvPagos, columnasHistorial);
+            TitularColumnas(gvPagosCliente, columnasHistorial);
+        }
+
+        /// <summary>Encabezados traducidos de una grilla, en el orden de sus columnas (null deja el actual).</summary>
+        private void TitularColumnas(GridView grilla, params string[] claves)
+        {
+            for (int i = 0; i < claves.Length && i < grilla.Columns.Count; i++)
+            {
+                if (claves[i] != null)
+                {
+                    string texto = T(claves[i]);
+                    if (texto != claves[i])
+                    {
+                        grilla.Columns[i].HeaderText = texto;
+                    }
+                }
+            }
+        }
+
+        private void CargarDatos()
+        {
+            if (EsCliente)
+            {
+                CargarVistaCliente();
+            }
+            else
+            {
+                CargarEstados();
+                CargarPagos();
+            }
         }
 
         // ==================== VISTA CLIENTE ====================
 
-        private void CargarPagosCliente()
+        private void CargarVistaCliente()
         {
             try
             {
-                string usuarioActual = Singleton.Instancia.Usuario?.USUARIO_Usuario;
-                var pagos = bllPago.ListarPagosPorCliente(usuarioActual) ?? new List<Pago>();
+                List<EstadoAbono> estados = bllPago.ListarEstadosAbonoCliente(UsuarioActual, DateTime.Now);
+                rptAbonosCliente.DataSource = estados;
+                rptAbonosCliente.DataBind();
+                pnlSinAlumnos.Visible = estados.Count == 0;
 
-                gvPagosCliente.DataSource = pagos;
+                gvPagosCliente.DataSource = bllPago.ListarPagosPorCliente(UsuarioActual) ?? new List<Pago>();
                 gvPagosCliente.DataBind();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MostrarError("Ocurrió un error inesperado. Intente nuevamente.");
+                MostrarError(MensajeError(ex));
             }
         }
 
+        protected void rptAbonosCliente_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName != "Pagar" || !int.TryParse(Convert.ToString(e.CommandArgument), out int dni))
+                return;
+
+            try
+            {
+                EstadoAbono estado = bllPago.ListarEstadosAbonoCliente(UsuarioActual, DateTime.Now)
+                    .FirstOrDefault(a => a.Dni == dni);
+                if (estado == null)
+                {
+                    MostrarError(Texto("pagos_err_no_asociado", "Ese alumno no está asociado a tu cuenta."));
+                    return;
+                }
+
+                DniPagoCliente = dni;
+                lblClienteAlumno.Text = Server.HtmlEncode(estado.NombreCompleto);
+                CargarModalidades(ddlClienteModalidad, estado.ModalidadId);
+                rblClienteMetodo.SelectedValue = "Tarjeta";
+                LimpiarTarjeta();
+                MostrarMedioCliente();
+                ActualizarPreviewCliente();
+                pnlPagoCliente.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+        }
+
+        protected void ddlClienteModalidad_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarPreviewCliente();
+        }
+
+        protected void rblClienteMetodo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            MostrarMedioCliente();
+        }
+
+        protected void btnCerrarPagoCliente_Click(object sender, EventArgs e)
+        {
+            CerrarPagoCliente();
+        }
+
+        protected void btnConfirmarPagoCliente_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!DniPagoCliente.HasValue)
+                {
+                    CerrarPagoCliente();
+                    return;
+                }
+
+                if (!int.TryParse(ddlClienteModalidad.SelectedValue, out int modalidadId))
+                {
+                    MostrarError(Texto("pagos_err_modalidad", "Debe seleccionar una modalidad válida."));
+                    return;
+                }
+
+                string metodo = rblClienteMetodo.SelectedValue;
+                if (metodo == "Tarjeta")
+                {
+                    string errorTarjeta = ValidarTarjeta();
+                    if (errorTarjeta != null)
+                    {
+                        MostrarError(errorTarjeta);
+                        return;
+                    }
+                }
+
+                Pago pago = bllPago.RegistrarPagoCliente(UsuarioActual, DniPagoCliente.Value, modalidadId, metodo);
+
+                CerrarPagoCliente();
+                MostrarExito(Texto("pagos_ok", "Pago registrado. El abono cubre del {0} al {1}.",
+                    pago.FechaInicio.ToString("dd/MM/yyyy"), pago.FechaVencimiento.ToString("dd/MM/yyyy")));
+                CargarVistaCliente();
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+        }
+
+        private void CerrarPagoCliente()
+        {
+            LimpiarTarjeta();
+            DniPagoCliente = null;
+            pnlPagoCliente.Visible = false;
+        }
+
+        private void MostrarMedioCliente()
+        {
+            bool tarjeta = rblClienteMetodo.SelectedValue == "Tarjeta";
+            pnlTarjeta.Visible = tarjeta;
+            pnlTransferencia.Visible = !tarjeta;
+        }
+
+        private void ActualizarPreviewCliente()
+        {
+            int? modalidadId = int.TryParse(ddlClienteModalidad.SelectedValue, out int id) ? id : (int?)null;
+            ActualizarPreview(DniPagoCliente, modalidadId, lblClienteMonto, lblClienteCobertura);
+        }
+
+        private void LimpiarTarjeta()
+        {
+            txtTarjetaNumero.Text = string.Empty;
+            txtTarjetaTitular.Text = string.Empty;
+            txtTarjetaVence.Text = string.Empty;
+            txtTarjetaCvv.Text = string.Empty;
+        }
+
+        /// <summary>
+        /// Validación de formato de la tarjeta (el pago es simulado: los datos no se guardan ni se
+        /// envían a ningún lado). Devuelve el mensaje de error o null si está bien.
+        /// </summary>
+        private string ValidarTarjeta()
+        {
+            string numero = Regex.Replace(txtTarjetaNumero.Text ?? string.Empty, @"[\s-]", string.Empty);
+            if (!Regex.IsMatch(numero, @"^\d{13,19}$") || !PasaLuhn(numero))
+                return Texto("pagos_err_tarjeta_numero", "El número de tarjeta no es válido.");
+
+            if (string.IsNullOrWhiteSpace(txtTarjetaTitular.Text))
+                return Texto("pagos_err_tarjeta_titular", "Ingresá el nombre del titular.");
+
+            Match vence = Regex.Match((txtTarjetaVence.Text ?? string.Empty).Trim(), @"^(0[1-9]|1[0-2])/(\d{2})$");
+            if (!vence.Success)
+                return Texto("pagos_err_tarjeta_vence", "El vencimiento de la tarjeta no es válido o ya pasó.");
+
+            var finDeMes = new DateTime(2000 + int.Parse(vence.Groups[2].Value), int.Parse(vence.Groups[1].Value), 1).AddMonths(1);
+            if (finDeMes <= DateTime.Today)
+                return Texto("pagos_err_tarjeta_vence", "El vencimiento de la tarjeta no es válido o ya pasó.");
+
+            if (!Regex.IsMatch((txtTarjetaCvv.Text ?? string.Empty).Trim(), @"^\d{3,4}$"))
+                return Texto("pagos_err_tarjeta_cvv", "El código de seguridad no es válido.");
+
+            return null;
+        }
+
+        private static bool PasaLuhn(string numero)
+        {
+            int suma = 0;
+            bool duplicar = false;
+            for (int i = numero.Length - 1; i >= 0; i--)
+            {
+                int digito = numero[i] - '0';
+                if (duplicar)
+                {
+                    digito *= 2;
+                    if (digito > 9) digito -= 9;
+                }
+                suma += digito;
+                duplicar = !duplicar;
+            }
+            return suma % 10 == 0;
+        }
+
         // ==================== VISTA ADMIN ====================
+
+        private void CargarEstados()
+        {
+            try
+            {
+                gvEstados.DataSource = bllPago.ListarEstadosAbono(DateTime.Now, Busqueda);
+                gvEstados.DataBind();
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+        }
 
         private void CargarPagos()
         {
@@ -105,58 +353,41 @@ namespace gymAppV2.Pagos
 
                 footerText.InnerText = $"Mostrando {pagos.Count} de {pagos.Count}";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MostrarError("Ocurrió un error inesperado. Intente nuevamente.");
+                MostrarError(MensajeError(ex));
                 footerText.InnerText = "Mostrando 0 de 0";
             }
         }
 
-        private void CargarDropdowns()
+        protected void btnBuscar_Click(object sender, EventArgs e)
         {
-            try
-            {
-                ddlAlumno.Items.Clear();
-                foreach (var alumno in bllAlumno.ListarAlumnos() ?? new List<Alumno>())
-                {
-                    ddlAlumno.Items.Add(new ListItem($"{alumno.Apellido}, {alumno.Nombre} (DNI: {alumno.DNI})", alumno.DNI.ToString()));
-                }
-
-                ddlModalidad.Items.Clear();
-                foreach (var modalidad in bllPrecioModalidad.ListarModalidades() ?? new List<PrecioModalidad>())
-                {
-                    if (!modalidad.Activo) continue;
-                    ddlModalidad.Items.Add(new ListItem($"{modalidad.ObtenerDescripcion()} — {modalidad.Precio:C}", modalidad.Id.ToString()));
-                }
-            }
-            catch (Exception)
-            {
-                // Silencioso - los dropdowns quedan vacíos
-            }
-
-            ActualizarMontoPreview();
+            Busqueda = txtBuscar.Text.Trim();
+            gvEstados.PageIndex = 0;
+            CargarEstados();
         }
 
-        private void ActualizarMontoPreview()
+        protected void btnLimpiarBusqueda_Click(object sender, EventArgs e)
         {
-            try
-            {
-                if (ddlModalidad.SelectedIndex < 0 || !int.TryParse(ddlModalidad.SelectedValue, out int modalidadId))
-                {
-                    lblMontoPreview.Text = "—";
-                    return;
-                }
-
-                var modalidad = bllPrecioModalidad.ObtenerModalidad(modalidadId);
-                lblMontoPreview.Text = modalidad != null ? modalidad.Precio.ToString("C") : "—";
-            }
-            catch (Exception)
-            {
-                lblMontoPreview.Text = "—";
-            }
+            txtBuscar.Text = string.Empty;
+            Busqueda = null;
+            gvEstados.PageIndex = 0;
+            CargarEstados();
         }
 
-        // ==================== EVENTOS ====================
+        protected void gvEstados_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            gvEstados.PageIndex = e.NewPageIndex;
+            CargarEstados();
+        }
+
+        protected void gvEstados_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Cobrar" && int.TryParse(Convert.ToString(e.CommandArgument), out int dni))
+            {
+                AbrirFormulario(dni);
+            }
+        }
 
         protected void gvPagos_PageIndexChanging(object sender, GridViewPageEventArgs e)
         {
@@ -164,34 +395,38 @@ namespace gymAppV2.Pagos
             CargarPagos();
         }
 
-        protected void gvPagos_RowDataBound(object sender, GridViewRowEventArgs e)
+        protected void btnRegistrar_Click(object sender, EventArgs e)
         {
-            if (e.Row.RowType == DataControlRowType.DataRow)
-            {
-                if (e.Row.Cells.Count > 1)
-                    e.Row.Cells[1].Attributes["data-label"] = "Período";
-                if (e.Row.Cells.Count > 2)
-                    e.Row.Cells[2].Attributes["data-label"] = "Modalidad";
-                if (e.Row.Cells.Count > 3)
-                    e.Row.Cells[3].Attributes["data-label"] = "Monto";
-                if (e.Row.Cells.Count > 4)
-                    e.Row.Cells[4].Attributes["data-label"] = "Fecha de pago";
-                if (e.Row.Cells.Count > 5)
-                    e.Row.Cells[5].Attributes["data-label"] = "Método";
-            }
+            AbrirFormulario(null);
         }
 
-        protected void btnRegistrar_Click(object sender, EventArgs e)
+        /// <summary>Abre el formulario de cobro, con el alumno ya elegido si viene de "Cobrar".</summary>
+        private void AbrirFormulario(int? dni)
         {
             try
             {
-                LimpiarFormulario();
-                CargarDropdowns();
+                ddlAlumno.Items.Clear();
+                ddlAlumno.Items.Add(new ListItem("—", string.Empty));
+                foreach (var alumno in (bllAlumno.ListarAlumnos() ?? new List<Alumno>()).Where(a => a.Activo))
+                {
+                    ddlAlumno.Items.Add(new ListItem($"{alumno.Apellido}, {alumno.Nombre} (DNI: {alumno.DNI})", alumno.DNI.ToString()));
+                }
+
+                int? modalidadPropuesta = null;
+                if (dni.HasValue && ddlAlumno.Items.FindByValue(dni.Value.ToString()) != null)
+                {
+                    ddlAlumno.SelectedValue = dni.Value.ToString();
+                    modalidadPropuesta = bllPago.ObtenerEstadoAbono(dni.Value, DateTime.Now)?.ModalidadId;
+                }
+
+                CargarModalidades(ddlModalidad, modalidadPropuesta);
+                ddlMetodoPago.SelectedIndex = 0;
+                ActualizarPreviewAdmin();
                 pnlForm.Visible = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MostrarError("Ocurrió un error inesperado. Intente nuevamente.");
+                MostrarError(MensajeError(ex));
             }
         }
 
@@ -200,65 +435,173 @@ namespace gymAppV2.Pagos
             pnlForm.Visible = false;
         }
 
+        protected void ddlAlumno_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarPreviewAdmin();
+        }
+
         protected void ddlModalidad_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ActualizarMontoPreview();
+            ActualizarPreviewAdmin();
+        }
+
+        private void ActualizarPreviewAdmin()
+        {
+            int? dni = int.TryParse(ddlAlumno.SelectedValue, out int d) ? d : (int?)null;
+            int? modalidadId = int.TryParse(ddlModalidad.SelectedValue, out int m) ? m : (int?)null;
+            ActualizarPreview(dni, modalidadId, lblMontoPreview, lblCobertura);
         }
 
         protected void btnGuardar_Click(object sender, EventArgs e)
         {
             try
             {
-                if (ddlAlumno.SelectedIndex < 0 || !int.TryParse(ddlAlumno.SelectedValue, out int dni))
+                if (!int.TryParse(ddlAlumno.SelectedValue, out int dni))
                 {
-                    MostrarError("Debe seleccionar un alumno.");
+                    MostrarError(Texto("pagos_err_alumno", "Debe seleccionar un alumno válido."));
                     return;
                 }
 
-                if (ddlModalidad.SelectedIndex < 0 || !int.TryParse(ddlModalidad.SelectedValue, out int modalidadId))
+                if (!int.TryParse(ddlModalidad.SelectedValue, out int modalidadId))
                 {
-                    MostrarError("Debe seleccionar una modalidad.");
+                    MostrarError(Texto("pagos_err_modalidad", "Debe seleccionar una modalidad válida."));
                     return;
                 }
 
-                if (string.IsNullOrEmpty(txtPeriodo.Text) || !DateTime.TryParse(txtPeriodo.Text, out DateTime periodo))
-                {
-                    MostrarError("El período es obligatorio y debe ser una fecha válida.");
-                    return;
-                }
-
-                if (ddlMetodoPago.SelectedIndex < 0)
-                {
-                    MostrarError("Debe seleccionar un método de pago.");
-                    return;
-                }
-
-                if (bllPago.ExistePagoEnPeriodo(dni, periodo))
-                {
-                    MostrarError("Ya existe un pago registrado para este alumno en este período.");
-                    return;
-                }
-
-                string usuarioActual = Singleton.Instancia.Usuario?.USUARIO_Usuario;
-                bllPago.RegistrarPago(dni, modalidadId, periodo, ddlMetodoPago.SelectedValue, usuarioActual);
-
-                MostrarExito("Pago registrado correctamente.");
+                Pago pago = bllPago.RegistrarPago(dni, modalidadId, ddlMetodoPago.SelectedValue, UsuarioActual);
 
                 pnlForm.Visible = false;
+                MostrarExito(Texto("pagos_ok", "Pago registrado. El abono cubre del {0} al {1}.",
+                    pago.FechaInicio.ToString("dd/MM/yyyy"), pago.FechaVencimiento.ToString("dd/MM/yyyy")));
+                CargarEstados();
                 CargarPagos();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MostrarError("Ocurrió un error inesperado. Intente nuevamente.");
+                MostrarError(MensajeError(ex));
             }
         }
 
-        // ==================== MÉTODOS AUXILIARES ====================
+        // ==================== COMPARTIDO ====================
 
-        private void LimpiarFormulario()
+        private void CargarModalidades(DropDownList lista, int? seleccionada)
         {
-            txtPeriodo.Text = "";
-            lblMontoPreview.Text = "—";
+            lista.Items.Clear();
+            foreach (var modalidad in (bllPrecioModalidad.ListarModalidades() ?? new List<PrecioModalidad>()).Where(m => m.Activo))
+            {
+                lista.Items.Add(new ListItem($"{modalidad.ObtenerDescripcion()} — {modalidad.Precio:C}", modalidad.Id.ToString()));
+            }
+
+            if (seleccionada.HasValue && lista.Items.FindByValue(seleccionada.Value.ToString()) != null)
+            {
+                lista.SelectedValue = seleccionada.Value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Muestra el monto y las fechas que cubriría el abono. Si no se puede pagar
+        /// (ej. ya tiene uno adelantado), muestra el motivo en lugar de las fechas.
+        /// </summary>
+        private void ActualizarPreview(int? dni, int? modalidadId, Label lblMonto, Label lblCoberturaPreview)
+        {
+            lblMonto.Text = "—";
+            lblCoberturaPreview.Text = string.Empty;
+            lblCoberturaPreview.CssClass = "abono-cobertura";
+
+            if (!dni.HasValue || !modalidadId.HasValue)
+                return;
+
+            try
+            {
+                Pago abono = bllPago.PrevisualizarAbono(dni.Value, modalidadId.Value, DateTime.Now);
+                lblMonto.Text = abono.Monto.ToString("C");
+                lblCoberturaPreview.Text = Texto("pagos_cobertura", "El abono cubre del {0} al {1}.",
+                    abono.FechaInicio.ToString("dd/MM/yyyy"), abono.FechaVencimiento.ToString("dd/MM/yyyy"));
+            }
+            catch (Exception ex)
+            {
+                lblCoberturaPreview.Text = Server.HtmlEncode(MensajeError(ex));
+                lblCoberturaPreview.CssClass = "abono-cobertura abono-cobertura-error";
+            }
+        }
+
+        private string MensajeError(Exception ex)
+        {
+            return MensajeDePermisos(ex)
+                ?? Texto("msg_error_generico", "Ocurrió un error inesperado. Intente nuevamente.");
+        }
+
+        // ==================== AYUDAS PARA EL MARKUP ====================
+
+        protected string BadgeEstado(object item)
+        {
+            var estado = (EstadoAbono)item;
+
+            string clase, texto;
+            if (!estado.AlumnoActivo)
+            {
+                clase = "estado-inactivo";
+                texto = Texto("pagos_estado_inactivo", "Dado de baja");
+            }
+            else
+            {
+                switch (estado.Situacion)
+                {
+                    case SituacionAbono.Vigente:
+                        clase = "estado-vigente";
+                        texto = Texto("pagos_estado_vigente", "Al día");
+                        break;
+                    case SituacionAbono.PorVencer:
+                        clase = "estado-por-vencer";
+                        texto = Texto("pagos_estado_por_vencer", "Por vencer");
+                        break;
+                    case SituacionAbono.Vencido:
+                        clase = "estado-vencido";
+                        texto = Texto("pagos_estado_vencido", "Vencido");
+                        break;
+                    default:
+                        clase = "estado-sin-abono";
+                        texto = Texto("pagos_estado_sin_abono", "Sin abono");
+                        break;
+                }
+            }
+
+            return $"<span class=\"estado-badge {clase}\">{Server.HtmlEncode(texto)}</span>";
+        }
+
+        protected string FormatearFecha(object fecha)
+        {
+            return fecha is DateTime d ? d.ToString("dd/MM/yyyy") : "—";
+        }
+
+        protected string FormatearMonto(object monto)
+        {
+            return monto is decimal m ? m.ToString("C") : "—";
+        }
+
+        protected bool PuedePagar(object item)
+        {
+            var estado = (EstadoAbono)item;
+            return estado.AlumnoActivo && !estado.TieneAbonoAdelantado;
+        }
+
+        protected bool MostrarMontoAPagar(object item)
+        {
+            var estado = (EstadoAbono)item;
+            return estado.MontoARenovar.HasValue && PuedePagar(item) && estado.Situacion != SituacionAbono.Vigente;
+        }
+
+        protected string AvisoNoPuedePagar(object item)
+        {
+            var estado = (EstadoAbono)item;
+            string aviso = null;
+
+            if (!estado.AlumnoActivo)
+                aviso = Texto("pagos_aviso_inactivo", "El alumno está dado de baja. Consultá en recepción.");
+            else if (estado.TieneAbonoAdelantado)
+                aviso = Texto("pagos_aviso_adelantado", "El próximo abono ya está pago.");
+
+            return aviso == null ? string.Empty : $"<p class=\"abono-card-aviso\">{Server.HtmlEncode(aviso)}</p>";
         }
     }
 }

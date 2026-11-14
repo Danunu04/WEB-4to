@@ -51,6 +51,7 @@
     <Compile Include="Entrenador.cs" />
     <Compile Include="Evento.cs" />
     <Compile Include="Pago.cs" />
+    <Compile Include="EstadoAbono.cs" />
     <Compile Include="PrecioModalidad.cs" />
     <Compile Include="PreguntaSeguridad.cs" />
     <Compile Include="Rutina.cs" />

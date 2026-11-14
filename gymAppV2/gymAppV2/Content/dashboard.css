@@ -123,6 +123,7 @@ body {
 .sidebar {
     width: 16rem;
     height: 100vh;
+    height: 100dvh; /* en el celular 100vh incluye la barra del navegador y corta el "Cerrar sesión" */
     background: rgba(255, 255, 255, 0.45);
     backdrop-filter: blur(1.25rem);
     -webkit-backdrop-filter: blur(1.25rem);
@@ -165,10 +166,6 @@ body {
     /* Suavizar bordes y escalamiento */
     image-rendering: -webkit-auto;
     image-rendering: auto;
-}
-
-.sidebar.collapsed .sidebar-mascot {
-    display: none;
 }
 
 .sidebar.collapsed .sidebar-mascot {
@@ -334,6 +331,7 @@ body {
 .main-content {
     margin-left: 16rem;
     flex: 1;
+    min-width: 0; /* sin esto una tabla ancha estira toda la página y aparece scroll horizontal */
     padding: 1.5rem;
     transition: margin-left 0.3s ease;
     min-height: 100vh;
@@ -352,7 +350,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: 998;
 }
 
 /* ===== Mobile Toggle (visible only on small screens) ===== */
@@ -361,7 +359,7 @@ body {
     position: fixed;
     top: 0.625rem;
     left: 0.625rem;
-    z-index: 1001; /* Mayor que el overlay (999) para poder hacer clic cuando está activo */
+    z-index: 999; /* Arriba del overlay (998) pero debajo del menú abierto y de los modales de cada pantalla (1000) */
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(0.5rem);
     -webkit-backdrop-filter: blur(0.5rem);
@@ -375,7 +373,7 @@ body {
 }
 
 /* ===== Responsive ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 48rem) {
     .sidebar {
         width: 16rem;
         transform: translateX(-100%);
@@ -395,12 +393,20 @@ body {
         transform: translateX(0);
     }
 
-    .main-content {
+    .main-content,
+    .sidebar.collapsed ~ .main-content {
         margin-left: 0;
+        /* Arriba deja lugar para el botón del menú (fijo en la esquina) */
+        padding: 4rem 0.75rem 1.5rem;
     }
 
     .mobile-toggle {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0;
     }
 
     .sidebar-toggle {
@@ -426,6 +432,109 @@ body {
     .sidebar.mobile-open .sidebar-menu a i,
     .sidebar.mobile-open .sidebar-menu .asp-LinkButton i {
         margin-right: 0.75rem;
+    }
+}
+
+/* ===== Tablas como tarjetas en el celular =====
+   Se activa con la clase "tabla-tarjetas" en la tabla (o en el CssClass del GridView).
+   Las etiquetas de cada dato (data-label) las pone el script de DashBoard.Master a partir de
+   los encabezados, así salen traducidas. Si la primera columna no tiene encabezado se toma
+   como la columna "Seleccionar": su botón pasa a cubrir toda la tarjeta. */
+@media screen and (max-width: 48rem) {
+    table.tabla-tarjetas,
+    table.tabla-tarjetas > tbody {
+        display: block;
+        width: 100%;
+        background: transparent;
+    }
+
+    table.tabla-tarjetas > thead,
+    table.tabla-tarjetas > tbody > tr:has(> th) {
+        display: none;
+    }
+
+    table.tabla-tarjetas > tbody > tr:not(.pagination) {
+        position: relative;
+        display: block;
+        margin: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--color-surface);
+        border: 0.0625rem solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.04);
+    }
+
+    table.tabla-tarjetas > tbody > tr.selected {
+        border-color: var(--color-accent-pink);
+        box-shadow: 0 0 0 0.125rem var(--color-accent-pink-light);
+    }
+
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.375rem 0;
+        border: none;
+        text-align: right;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td[data-label]::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        max-width: 45%;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.03125rem;
+        text-transform: uppercase;
+        color: var(--color-muted);
+    }
+
+    /* Primer dato de la fila: encabezado de la tarjeta, sin etiqueta */
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td.celda-titulo {
+        justify-content: flex-start;
+        text-align: left;
+        padding-bottom: 0.625rem;
+        margin-bottom: 0.375rem;
+        border-bottom: 0.0625rem solid var(--color-border);
+    }
+
+    /* Columna "Seleccionar": el botón cubre toda la tarjeta */
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td.celda-seleccion {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td.celda-seleccion > * {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Fila de "sin resultados" (una sola celda que ocupa todo el ancho) */
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td.celda-completa,
+    table.tabla-tarjetas > tbody > tr:not(.pagination) > td:only-child {
+        display: block;
+        text-align: center;
+    }
+
+    /* Paginador del GridView */
+    table.tabla-tarjetas > tbody > tr.pagination {
+        display: flex;
+        justify-content: center;
+        padding: 0.5rem 0.75rem 0.75rem;
+    }
+
+    table.tabla-tarjetas > tbody > tr.pagination > td {
+        display: block;
+        border: none;
     }
 }
 
@@ -585,7 +694,8 @@ body {
     -webkit-backdrop-filter: blur(0.75rem);
     border-radius: var(--radius-xl);
     border: 0.125rem solid rgba(255, 255, 255, 0.5);
-    overflow: hidden;
+    overflow-x: auto; /* en pantallas chicas la tabla se desplaza en lugar de cortarse */
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.05);
 }
 
@@ -695,7 +805,7 @@ body {
 .badge {
     display: inline-block;
     padding: 0.25rem 0.625rem;
-    border-radius: 9999px;
+    border-radius: 62.5rem;
     font-size: 0.75rem;
     font-weight: 500;
 }
@@ -773,13 +883,13 @@ body {
     grid-template-columns: repeat(4, 1fr);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
     .md\:grid-cols-2 {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 64rem) {
     .lg\:grid-cols-2 {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -919,7 +1029,7 @@ body {
 }
 
 .rounded-full {
-    border-radius: 9999px;
+    border-radius: 62.5rem;
 }
 
 .border {
@@ -946,7 +1056,7 @@ body {
     display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
     .md\:block {
         display: block;
     }
@@ -1029,7 +1139,7 @@ body {
     color: #FFFFFF;
     border: none;
     padding: 0.625rem 2rem;
-    border-radius: 9999px;
+    border-radius: 62.5rem;
     font-weight: 600;
     font-size: 0.875rem;
     cursor: pointer;

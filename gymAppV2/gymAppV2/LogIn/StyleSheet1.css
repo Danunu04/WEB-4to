@@ -12,7 +12,7 @@
     padding: 1.25rem;
     border: 0.125rem solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 0.75rem 3rem rgba(255, 115, 107, 0.25), 0 0 0.5rem rgba(255, 255, 255, 0.2) inset;
-    height: 35rem;
+    min-height: 35rem;
     width: 50%;
     margin: 4rem auto;
     position: relative;
@@ -180,4 +180,24 @@
     border-radius: 0.375rem;
     padding: 0.25rem 0.5rem;
     border: 0.0625rem solid rgba(255, 115, 107, 0.3);
+}
+
+/* ── Celular y tablet ─────────────────────── */
+@media (max-width: 48rem) {
+    .BloqueRosa {
+        width: auto;
+        min-height: 0;
+        margin: 4.5rem 1rem 1.5rem; /* arriba deja lugar para el botón "Ir a inicio" */
+        padding: 1.25rem 0.5rem 1.5rem;
+    }
+
+    .BtnInicio {
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+
+    .formulario {
+        margin-top: 1.5rem;
+        padding: 0 0.75rem;
+    }
 }

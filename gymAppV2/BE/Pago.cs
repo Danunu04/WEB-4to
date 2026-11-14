@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 
 namespace BE
 {
     /// <summary>
     /// Pago de la cuota mensual de un alumno, según su modalidad (PrecioModalidad).
+    /// Cada pago es un abono de 30 días: de FechaInicio a FechaVencimiento, ambas incluidas.
+    /// Periodo es el mes abonado (primer día del mes de FechaInicio).
     /// </summary>
     public class Pago
     {
@@ -11,6 +13,8 @@ namespace BE
         public int Dni { get; set; }
         public int ModalidadId { get; set; }
         public DateTime Periodo { get; set; }
+        public DateTime FechaInicio { get; set; }
+        public DateTime FechaVencimiento { get; set; }
         public decimal Monto { get; set; }
         public DateTime FechaPago { get; set; }
         public string MetodoPago { get; set; }

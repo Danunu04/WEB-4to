@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Acceso denegado - GymApp</title>
-    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=5") %>" rel="stylesheet" type="text/css" />
     <style>
         .access-denied {
             min-height: 100vh;

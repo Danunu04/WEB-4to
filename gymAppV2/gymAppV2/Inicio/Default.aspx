@@ -5,9 +5,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GymApp</title>
-    <link href="~/Inicio/inicio.css" rel="stylesheet" runat="server">
+    <link href="~/Inicio/inicio.css?v=2" rel="stylesheet" runat="server">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/toast.css?v=2") %>" rel="stylesheet" type="text/css" />
 </head>
 <body style="background-color:#FAECE7">
     <form id="form1" runat="server">

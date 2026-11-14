@@ -53,6 +53,9 @@
     <Compile Include="BLLPrecioModalidad.cs" />
     <Compile Include="BLLPreguntaSeguridad.cs" />
     <Compile Include="BLLRol.cs" />
+    <Compile Include="BLLPermiso.cs" />
+    <Compile Include="PermisoException.cs" />
+    <Compile Include="ReglaNegocioException.cs" />
     <Compile Include="BLLRutina.cs" />
     <Compile Include="BLLUsuario.cs" />
     <Compile Include="BLLCriptoMigracion.cs" />

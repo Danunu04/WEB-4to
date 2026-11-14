@@ -310,6 +310,164 @@
   color: var(--peach-dark);
 }
 
+/* ── ABONO MENSUAL ────────────────────── */
+.pagos-intro { font-size: 0.875rem; color: var(--text-muted); }
+
+.table-card-header h3 i { margin-right: 0.4375rem; color: var(--peach-dark); }
+
+/* Estado del abono */
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 1.25rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.estado-vigente    { background: var(--mint-light); color: #0F6E56; }
+.estado-por-vencer { background: #FFF4D6; color: #8A5A00; }
+.estado-vencido    { background: var(--red-light); color: #A32D2C; }
+.estado-sin-abono,
+.estado-inactivo   { background: #EFEDEA; color: var(--text-muted); }
+
+/* Buscador de la vista de administración */
+.pagos-buscador {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 0.0625rem solid var(--border);
+  background: var(--bg);
+}
+.pagos-buscador > i { color: var(--text-muted); }
+.pagos-buscador input {
+  flex: 1;
+  min-width: 0;
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.85rem;
+  background: var(--surface);
+  outline: none;
+}
+.pagos-buscador input:focus { border-color: var(--peach-dark); }
+.pagos-buscador .btn-action { width: auto; padding: 0.5rem 0.875rem; }
+
+.btn-cobrar { width: auto; padding: 0.375rem 0.75rem; font-size: 0.8rem; }
+
+/* Tarjetas de abono del cliente */
+.abono-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+.abono-grid:empty { display: none; }
+
+.abono-card {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.abono-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.abono-card-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.abono-card-dni { font-size: 0.78rem; color: var(--text-muted); }
+
+.abono-card-datos { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; }
+.abono-card-datos > div { display: flex; justify-content: space-between; gap: 0.75rem; }
+.abono-card-datos dt { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+.abono-card-datos dd { margin: 0; font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.abono-card-monto { color: var(--peach-dark); }
+
+.abono-card-aviso { font-size: 0.8rem; color: var(--text-muted); }
+.abono-card-btn { margin-top: auto; }
+
+/* Ventanas de pago */
+.campo-fijo { font-size: 0.9rem; font-weight: 600; color: var(--text); padding: 0.5rem 0; }
+
+.abono-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--peach-light);
+}
+.abono-resumen > div { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+.abono-resumen-label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025rem;
+}
+
+.abono-cobertura { display: block; font-size: 0.82rem; color: var(--text); }
+.abono-cobertura:empty { display: none; }
+.abono-cobertura-error { color: #A32D2C; font-weight: 600; }
+
+.medios-pago { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.form-field .medios-pago input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.medios-pago label {
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  cursor: pointer;
+  background: var(--bg);
+}
+.medios-pago input[type="radio"]:checked + label {
+  border-color: var(--peach-dark);
+  background: var(--peach-light);
+  color: var(--peach-dark);
+}
+.medios-pago input[type="radio"]:focus-visible + label { outline: 0.125rem solid var(--peach-dark); outline-offset: 0.125rem; }
+
+.abono-transferencia {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  border: 0.0625rem dashed var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+.abono-transferencia i { color: var(--peach-dark); margin-top: 0.125rem; }
+
+.abono-aviso-demo { display: flex; gap: 0.375rem; align-items: flex-start; }
+
+@media screen and (max-width: 48rem) {
+  .pagos-buscador { flex-wrap: wrap; }
+  .pagos-buscador input { flex-basis: 100%; }
+  .pagos-buscador .btn-action { flex: 1; }
+  .abono-grid { grid-template-columns: 1fr; }
+}
+
 /* ── RESPONSIVE ────────────────────── */
 /* ── Ventana flotante del formulario (mismo diseño que Alumnos) ── */
 .modal-overlay {
@@ -390,40 +548,10 @@
 .btn-cancelar:hover { background: #E8EDE9; border-color: var(--text-muted); }
 
 @media screen and (max-width: 48rem) {
-  .pagos-container { padding: 1rem; }
+  .pagos-container { padding: 0; }
   .form-row { grid-template-columns: 1fr; }
 
-  .pagos-container thead { display: none; }
-
-  .pagos-container tbody tr {
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    border: 0.0625rem solid var(--border);
-    margin-bottom: 1rem;
-    padding: 1rem;
-    box-shadow: var(--shadow);
-    display: block;
-  }
-
-  .pagos-container tbody td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border: none;
-  }
-
-  .pagos-container tbody td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03125rem;
-    min-width: 7.5rem;
-  }
-
-  .table-footer { display: none; }
+  .table-footer { flex-wrap: wrap; gap: 0.5rem; }
   .table-actions { flex-direction: column; }
   .btn-action { width: 100%; justify-content: center; }
 }

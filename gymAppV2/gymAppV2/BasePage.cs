@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.UI;
 using BLL;
 using Servicios.Singleton;
 using System.Web;
 using BE;
+using SERVICIOS.Composite;
 using SERVICIOS.Observer;
+using PerfilAcceso = SERVICIOS.Composite.Perfil;
 
 namespace gymAppV2
 {
@@ -42,6 +45,112 @@ namespace gymAppV2
         protected string T(string tag)
         {
             return Traducciones.TryGetValue(tag, out var texto) ? texto : tag;
+        }
+
+        /// <summary>
+        /// Traducción con texto de respaldo (si la clave todavía no está en la base) y
+        /// argumentos opcionales para string.Format.
+        /// </summary>
+        protected string Texto(string clave, string respaldo, params object[] args)
+        {
+            string plantilla = T(clave);
+            if (string.IsNullOrEmpty(plantilla) || plantilla == clave)
+                plantilla = respaldo;
+
+            if (args == null || args.Length == 0)
+                return plantilla;
+
+            try
+            {
+                return string.Format(plantilla, args);
+            }
+            catch (FormatException)
+            {
+                return string.Format(respaldo, args);
+            }
+        }
+
+        /// <summary>
+        /// Nombre a mostrar de un permiso, una familia o un perfil: los del sistema se traducen
+        /// (por su clave o su código) y los creados desde la pantalla muestran su nombre.
+        /// Una lista se muestra separada por comas.
+        /// </summary>
+        protected string NombreVisible(object elemento)
+        {
+            switch (elemento)
+            {
+                case null:
+                    return string.Empty;
+                case string texto:
+                    return texto;
+                case PermisoSimple permiso:
+                    return TraducirOValor("permisos_nombre_" + permiso.Nombre.ToLowerInvariant(), permiso.Nombre);
+                case Familia familia:
+                    return familia.Codigo != null
+                        ? TraducirOValor("permisos_familia_" + familia.Codigo.ToLowerInvariant(), familia.Nombre)
+                        : NombreOEditado(familia.Nombre);
+                case PerfilAcceso perfil:
+                    return perfil.Codigo != null
+                        ? TraducirOValor("permisos_perfil_" + perfil.Codigo.ToLowerInvariant(), perfil.Nombre)
+                        : NombreOEditado(perfil.Nombre);
+                case IEnumerable<object> lista:
+                    return string.Join(", ", lista.Select(NombreVisible));
+                default:
+                    return Convert.ToString(elemento);
+            }
+        }
+
+        /// <summary>
+        /// Si el error (o alguno de sus InnerException) es una regla de permisos o de negocio
+        /// (ReglaNegocioException) que no se cumple, devuelve el mensaje traducido; si no, null.
+        /// </summary>
+        protected string MensajeDePermisos(Exception ex)
+        {
+            for (Exception e = ex; e != null; e = e.InnerException)
+            {
+                switch (e)
+                {
+                    case PermisoException regla:
+                        return FormatearMensaje(regla.Clave, regla.Args, regla.Message);
+                    case ReglaNegocioException reglaNegocio:
+                        return FormatearMensaje(reglaNegocio.Clave, reglaNegocio.Args, reglaNegocio.Message);
+                    case PermisoDuplicadoException duplicado:
+                        return FormatearMensaje("permisos_err_duplicado", new[] { duplicado.Permiso, duplicado.Contenedor }, duplicado.Message);
+                    case ComponenteRepetidoException repetido:
+                        return FormatearMensaje("permisos_err_repetido", new[] { repetido.Componente, repetido.Contenedor }, repetido.Message);
+                    case CicloFamiliaException ciclo:
+                        return FormatearMensaje("permisos_err_ciclo", new[] { ciclo.Contenida, ciclo.Contenedor }, ciclo.Message);
+                }
+            }
+            return null;
+        }
+
+        private string FormatearMensaje(string clave, object[] args, string mensajeOriginal)
+        {
+            string plantilla = T(clave);
+            if (plantilla == clave || string.IsNullOrEmpty(plantilla))
+                return mensajeOriginal;
+
+            try
+            {
+                return string.Format(plantilla, args.Select(NombreVisible).ToArray<object>());
+            }
+            catch (FormatException)
+            {
+                return mensajeOriginal;
+            }
+        }
+
+        // Una familia o un perfil nuevo todavía sin nombre (mensajes del editor)
+        private string NombreOEditado(string nombre)
+        {
+            return string.IsNullOrWhiteSpace(nombre) ? TraducirOValor("permisos_editado", "lo que estás editando") : nombre;
+        }
+
+        private string TraducirOValor(string tag, string valorPorDefecto)
+        {
+            string texto = T(tag);
+            return texto == tag || string.IsNullOrEmpty(texto) ? valorPorDefecto : texto;
         }
 
         /// <summary>

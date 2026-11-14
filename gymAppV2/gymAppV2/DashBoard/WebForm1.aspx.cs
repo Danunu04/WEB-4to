@@ -90,6 +90,12 @@ namespace gymAppV2.DashBoard
                 CargarIndicadores(bllDashboard.ObtenerResumen(ahora));
             }
 
+            pnlAbonoCliente.Visible = EsCliente;
+            if (EsCliente)
+            {
+                CargarAbonoCliente(ahora);
+            }
+
             try
             {
                 string usuarioCliente = EsCliente ? Singleton.Instancia.Usuario?.USUARIO_Usuario : null;
@@ -119,6 +125,65 @@ namespace gymAppV2.DashBoard
                 pnlTendenciaIngresos.CssClass = "kpi-card-trend " + (sube ? "up" : "down");
                 iconTendencia.Attributes["class"] = sube ? "bi bi-arrow-up-short" : "bi bi-arrow-down-short";
                 litTendenciaIngresos.Text = Math.Abs(variacion.Value).ToString("0.#", cultura) + "%";
+            }
+        }
+
+        /// <summary>
+        /// Una tarjeta por alumno del cliente: días restantes, vencimiento y estado del abono.
+        /// </summary>
+        private void CargarAbonoCliente(DateTime ahora)
+        {
+            litAbonoTitulo.Text = Texto("dash_abono_titulo", "Mi abono");
+            litAbonoHoy.Text = Texto("dash_abono_hoy", "Hoy: {0}", ahora.ToString("dd/MM/yyyy"));
+
+            try
+            {
+                var estados = new BLLPago().ListarEstadosAbonoCliente(Singleton.Instancia.Usuario?.USUARIO_Usuario, ahora);
+
+                rptAbonoCliente.DataSource = estados.Select(a =>
+                {
+                    string estado, badge;
+                    switch (a.Situacion)
+                    {
+                        case SituacionAbono.Vigente:
+                            estado = Texto("pagos_estado_vigente", "Al día");
+                            badge = "badge-mint";
+                            break;
+                        case SituacionAbono.PorVencer:
+                            estado = Texto("pagos_estado_por_vencer", "Por vencer");
+                            badge = "badge-peach";
+                            break;
+                        case SituacionAbono.Vencido:
+                            estado = Texto("pagos_estado_vencido", "Vencido");
+                            badge = "badge-pink";
+                            break;
+                        default:
+                            estado = Texto("pagos_estado_sin_abono", "Sin abono");
+                            badge = "badge-lavender";
+                            break;
+                    }
+
+                    string detalle = a.FechaVencimiento.HasValue
+                        ? Texto(a.Situacion == SituacionAbono.Vencido ? "dash_abono_vencio" : "dash_abono_vence",
+                                a.Situacion == SituacionAbono.Vencido ? "Venció el {0}" : "Vence el {0}",
+                                a.FechaVencimiento.Value.ToString("dd/MM/yyyy"))
+                        : Texto("dash_abono_sin_pagos", "Todavía no hay pagos registrados");
+
+                    return new
+                    {
+                        Alumno = a.NombreCompleto,
+                        Estado = estado,
+                        BadgeClase = badge,
+                        Dias = Texto("dash_abono_dias", "{0} días restantes", a.DiasRestantes),
+                        Detalle = detalle
+                    };
+                }).ToList();
+                rptAbonoCliente.DataBind();
+            }
+            catch (Exception)
+            {
+                pnlAbonoCliente.Visible = false;
+                MostrarError(T("msg_error_generico"));
             }
         }
 

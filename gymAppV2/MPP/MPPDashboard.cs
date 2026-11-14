@@ -29,7 +29,7 @@ namespace MPP
         }
 
         /// <summary>
-        /// Suma de los pagos del período indicado (primer día del mes).
+        /// Suma de lo cobrado en el mes indicado (pagos cuya fecha de pago cae en ese mes).
         /// </summary>
         public decimal? SumarIngresosPeriodo(DateTime periodo)
         {
@@ -39,16 +39,20 @@ namespace MPP
             object resultado = dal._686DPEscalar(@"
                 SELECT ISNULL(SUM(monto), 0)
                 FROM [GymApp].[dbo].[Pagos]
-                WHERE periodo = @Periodo",
-                new List<SqlParameter> { new SqlParameter("@Periodo", periodo.Date) });
+                WHERE fechaPago >= @Desde AND fechaPago < @Hasta",
+                new List<SqlParameter>
+                {
+                    new SqlParameter("@Desde", periodo.Date),
+                    new SqlParameter("@Hasta", periodo.Date.AddMonths(1))
+                });
 
             return resultado != null && resultado != DBNull.Value ? Convert.ToDecimal(resultado) : 0m;
         }
 
         /// <summary>
-        /// Alumnos activos que tienen pagada la cuota del período indicado.
+        /// Alumnos activos con un abono que cubre el día indicado.
         /// </summary>
-        public int? ContarAlumnosAlDia(DateTime periodo)
+        public int? ContarAlumnosAlDia(DateTime dia)
         {
             if (!TablaExiste("Pagos"))
                 return null;
@@ -57,8 +61,8 @@ namespace MPP
                 SELECT COUNT(DISTINCT p.dni)
                 FROM [GymApp].[dbo].[Pagos] p
                 INNER JOIN [GymApp].[dbo].[ALUMNOS] al ON al.dni = p.dni
-                WHERE p.periodo = @Periodo AND al.activo = 1",
-                new SqlParameter("@Periodo", periodo.Date));
+                WHERE p.fechaInicio <= @Dia AND p.fechaVencimiento >= @Dia AND al.activo = 1",
+                new SqlParameter("@Dia", dia.Date));
         }
 
         public bool TablaExiste(string nombreTabla)

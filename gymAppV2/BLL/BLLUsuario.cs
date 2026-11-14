@@ -18,6 +18,7 @@ namespace BLL
         private BLLAlumno bllAlumno;
         private BLLEvento bllEvento;
         private BLLPreguntaSeguridad bllPreguntaSeguridad;
+        private BLLPermiso bllPermiso;
 
         public BLLUsuario()
         {
@@ -27,6 +28,7 @@ namespace BLL
             bllAlumno = new BLLAlumno();
             bllEvento = new BLLEvento();
             bllPreguntaSeguridad = new BLLPreguntaSeguridad();
+            bllPermiso = new BLLPermiso();
         }
 
         private void RegistrarEvento(string tipo, string accion, int criticidad = 1)
@@ -428,6 +430,9 @@ namespace BLL
                     throw new Exception("Las contraseñas no coinciden");
                 }
 
+                // La cuenta nueva recibe el perfil por defecto de su tipo: validar antes de crearla
+                bllPermiso.ValidarPerfilPorDefecto(rol);
+
                 string contrasenaHash = criptoManager.GenerarHashSHA256(contrasena);
 
                 // Determinar tipo y datos personales según el rol
@@ -553,6 +558,8 @@ namespace BLL
                 }
 
                 bllEvento.RegistrarAltaUsuario(usuario, rol);
+
+                bllPermiso.AsignarPerfilPorDefecto(usuario, rol);
             }
             catch (Exception ex)
             {
@@ -580,6 +587,9 @@ namespace BLL
                 {
                     throw new Exception("El nombre de usuario ya existe. Por favor, elija otro.");
                 }
+
+                // La cuenta nueva recibe el perfil por defecto de su tipo: validar antes de crearla
+                bllPermiso.ValidarPerfilPorDefecto(dto.Rol);
 
                 ValidarRequisitosContrasena(dto.Contrasena);
                 string contrasenaHash = criptoManager.GenerarHashSHA256(dto.Contrasena);
@@ -654,6 +664,8 @@ namespace BLL
                 }
 
                 bllEvento.RegistrarAltaUsuario(dto.Usuario, dto.Rol);
+
+                bllPermiso.AsignarPerfilPorDefecto(dto.Usuario, dto.Rol);
 
                 // Crear pregunta de seguridad por defecto basada en fecha de nacimiento.
                 // Si falla, se propaga el error para que el operador lo corrija; el usuario ya fue creado.
@@ -736,6 +748,9 @@ namespace BLL
         {
             try
             {
+                // Tiene que quedar otro usuario activo con acceso a Permisos
+                bllPermiso.ValidarDesactivacion(usuario);
+
                 mppUsuario.ActualizarEstado(usuario, false);
                 bllEvento.RegistrarDesactivarUsuario(usuario);
             }
@@ -824,6 +839,11 @@ namespace BLL
                 {
                     throw new Exception("El nombre de usuario ya existe. Por favor, elija otro.");
                 }
+
+                // Si cambia el tipo de cuenta pasa al perfil por defecto del tipo nuevo; si se desactiva,
+                // tiene que quedar otro usuario activo con acceso a Permisos
+                bllPermiso.ValidarCambioDeCuenta(usuarioOriginal, usuarioExistente.USUARIO_Rol, rol,
+                    usuarioExistente.USUARIO_Activo, activo);
 
                 // Determinar tipo según rol
                 string tipo = rol == 3 ? "Entrenador" : rol == 4 ? "Cliente" : rol == 6 ? "Familiar" : "Empleado";
@@ -936,6 +956,8 @@ namespace BLL
                 {
                     bllAlumno.RenombrarUsuarioEnVinculos(usuarioOriginal, nuevoUsuario);
                 }
+
+                bllPermiso.AplicarCambioDeCuenta(usuarioOriginal, nuevoUsuario, usuarioExistente.USUARIO_Rol, rol);
 
                 bllEvento.RegistrarModificacionUsuario(usuarioOriginal, nuevoUsuario);
             }

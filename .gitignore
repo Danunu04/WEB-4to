@@ -69,3 +69,6 @@ backups/
 # Superpowers
 .superpowers/
 docs/superpowers/
+# Metadatos de macOS (discos externos)
+._*
+.DS_Store

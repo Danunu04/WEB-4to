@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Respaldo - GymApp</title>
-    <link href="<%= ResolveUrl("~/Admin/BackupRestore.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Admin/BackupRestore.css?v=2") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">

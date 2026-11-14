@@ -11,12 +11,14 @@ namespace gymAppV2
     {
         private BLLAlumno bllAlumno;
         private BLLEvento bllEvento;
+        private BLLPago bllPago;
         private const string USUARIO_SISTEMA = "sistema";
 
         protected void Page_Load(object sender, EventArgs e)
         {
             bllAlumno = new BLLAlumno();
             bllEvento = new BLLEvento();
+            bllPago = new BLLPago();
 
             // Si un usuario logueado no administrador llega a la home durante una pausa
             // de integridad, se redirige a la pantalla de bloqueo.
@@ -40,7 +42,7 @@ namespace gymAppV2
                     return;
 
                 var bllRol = new BLLRol();
-                if (bllRol.UsuarioActualEsAdmin())
+                if (bllRol.UsuarioActualPuedeRepararIntegridad())
                     return;
 
                 Redirigir("~/VerificacioDV/VerificacioDV.aspx");
@@ -100,16 +102,35 @@ namespace gymAppV2
 
                 if (!alumno.Activo)
                 {
-                    // Alumno inactivo se trata como membresía vencida hasta tener campo de vencimiento.
                     bllEvento.RegistrarEvento(BLLEvento.EVENTO_CHECKIN, USUARIO_SISTEMA,
-                        $"Intento de check-in rechazado - Alumno DNI: {dni} (membresía vencida/inactivo)", 2, "Alumnos");
-                    MostrarAdvertencia("Tu membresía se encuentra vencida o inactiva");
+                        $"Intento de check-in rechazado - Alumno DNI: {dni} (alumno dado de baja)", 2, "Alumnos");
+                    MostrarAdvertencia("El alumno está dado de baja. Consultá en recepción.");
+                    return;
+                }
+
+                EstadoAbono abono = bllPago.ObtenerEstadoAbono(dni, DateTime.Now);
+                if (abono == null || !abono.EstaAlDia)
+                {
+                    string vencimiento = abono?.FechaVencimiento?.ToString("dd/MM/yyyy");
+                    bllEvento.RegistrarEvento(BLLEvento.EVENTO_CHECKIN, USUARIO_SISTEMA,
+                        $"Intento de check-in rechazado - Alumno DNI: {dni}, {alumno.Apellido}, {alumno.Nombre} " +
+                        (vencimiento != null ? $"(abono vencido el {vencimiento})" : "(sin abono pago)"), 2, "Alumnos");
+
+                    MostrarAdvertencia(vencimiento != null
+                        ? $"Tu abono venció el {vencimiento}. Podés renovarlo en recepción o desde la app."
+                        : "No tenés un abono pago. Podés pagarlo en recepción o desde la app.");
                     return;
                 }
 
                 // Check-in exitoso.
                 bllEvento.RegistrarCheckin(USUARIO_SISTEMA, dni);
-                MostrarExito($"¡Bienvenido/a, {alumno.Nombre} {alumno.Apellido}!");
+
+                string bienvenida = $"¡Bienvenido/a, {alumno.Nombre} {alumno.Apellido}!";
+                if (abono.Situacion == SituacionAbono.PorVencer)
+                {
+                    bienvenida += $" Tu abono vence el {abono.FechaVencimiento:dd/MM/yyyy}.";
+                }
+                MostrarExito(bienvenida);
             }
             catch (Exception ex)
             {

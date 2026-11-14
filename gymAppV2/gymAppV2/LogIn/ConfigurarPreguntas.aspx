@@ -9,8 +9,8 @@
     <title>Configurar Preguntas de Seguridad</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="~/LogIn/StyleSheet1.css" rel="stylesheet" runat="server">
-    <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet">
+    <link href="~/LogIn/StyleSheet1.css?v=2" rel="stylesheet" runat="server">
+    <link href="<%= ResolveUrl("~/Content/toast.css?v=2") %>" rel="stylesheet">
     <style>
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
@@ -42,7 +42,7 @@
         <asp:ScriptManager runat="server" />
         <div>
             <asp:Button CssClass="BtnInicio" ID="btnIrInicio" runat="server" Text="Ir a inicio" OnClick="btnIrInicio_Click" />
-            <div id="toastContainer" style="position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.75rem;max-width:400px;"></div>
+            <div id="toastContainer" style="position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.75rem;max-width:min(25rem, calc(100vw - 3rem));"></div>
             <div class="BloqueRosa">
                 <div class="formulario">
                     <h1 class="titulo">Configurar pregunta de seguridad</h1>

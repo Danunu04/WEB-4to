@@ -137,14 +137,12 @@ Cuando un administrador modifica algún precio, el sistema notifica a **todos lo
 
 ### 5.4 Lógica de Vencimiento de Membresía
 
-Una membresía se considera **vencida** cuando ocurre cualquiera de las dos condiciones siguientes (la que ocurra primero):
+Cada pago es un **abono de 30 días** (fecha de inicio y fecha de vencimiento, ambas incluidas). La modalidad (1, 2 o 3 días por semana, o Diario) define el **precio**; el vencimiento se controla **solo por fecha**, sin contar las clases usadas.
 
-1. **Se agotaron los días pagados:**
-   - 1 día/semana → 4 clases por mes
-   - 2 días/semana → 8 clases por mes
-   - 3 días/semana → 12 clases por mes
-   - Diario → clases ilimitadas durante 30 días
-2. **Transcurrieron 30 días** desde la fecha de inicio de la membresía.
+- **Primer pago o abono vencido:** el abono empieza el día del pago.
+- **Renovación con el abono vigente:** el nuevo abono empieza el día siguiente al vencimiento del actual (se encadenan, no se pierden días).
+- Se permite **un solo abono pagado por adelantado**.
+- **Estado del abono:** *Al día*, *Por vencer* (quedan 5 días o menos), *Vencido* o *Sin abono*.
 
 ---
 
@@ -156,7 +154,7 @@ El módulo de **Inicio** permite registrar el ingreso de alumnos al gimnasio. Op
 
 1. Se ingresa el DNI del alumno.
 2. El sistema valida si la membresía está activa:
-   - **✅ Membresía vigente:** Descuenta 1 día de los días restantes. Muestra mensaje de éxito y la pantalla vuelve a su estado inicial.
+   - **✅ Membresía vigente:** registra el ingreso, muestra mensaje de éxito (y la fecha de vencimiento si el abono está por vencer) y la pantalla vuelve a su estado inicial.
    - **❌ Membresía vencida:** El sistema muestra un **error** y genera una **alerta automática al recepcionista** con los datos completos del alumno (nombre, apellido, DNI, estado del abono), indicando que el alumno intentó ingresar sin membresía al día.
 
 ---

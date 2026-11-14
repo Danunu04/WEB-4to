@@ -1,8 +1,9 @@
 /* =============================================
-   PERMISOS MODULE CSS
+   PERMISOS (Composite: perfiles, familias y perfil de cada usuario)
+   Clases con prefijo perm- para no chocar con Bootstrap (.modal-*, .card, .nav...).
    ============================================= */
 
-.permisos-container *, .permisos-container *::before, .permisos-container *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.permisos-container *, .permisos-container *::before, .permisos-container *::after { box-sizing: border-box; }
 
 .permisos-container {
   --sky: #B5D5FF;
@@ -10,25 +11,25 @@
   --sky-dark: #0369A1;
   --border: #E8E0D5;
   --surface: #ffffff;
+  --surface-2: #FDF6EC;
   --text: #2D2D2D;
   --text-muted: #6B6B6B;
-  --radius: 14px;
-  --radius-sm: 8px;
-  --shadow: 0 2px 12px rgba(181, 213, 255, 0.15);
+  --danger: #C0392B;
+  --mint-light: #E5F9F0;
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  --shadow: 0 0.125rem 0.75rem rgba(181, 213, 255, 0.15);
   padding: 2rem;
   width: 100%;
   margin: 0 auto;
+  color: var(--text);
 }
 
-.permisos-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 1.5rem;
-}
+/* ---------- Encabezado ---------- */
+.permisos-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
 
-.permisos-header i {
-  width: 44px; height: 44px;
+.permisos-header > i {
+  width: 2.75rem; height: 2.75rem; flex-shrink: 0;
   background: var(--sky-light);
   border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
@@ -36,127 +37,284 @@
   font-size: 1.1rem;
 }
 
-.permisos-title-text { display: flex; flex-direction: column; }
+.permisos-title-text h1 { font-family: 'Fraunces', system-ui, serif; font-size: 1.6rem; font-weight: 700; margin: 0; }
+.permisos-title-text p { color: var(--text-muted); font-size: 0.875rem; margin: 0.15rem 0 0 0; }
 
-.permisos-title-text h1 {
-  font-family: 'Fraunces', system-ui, serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.permisos-title-text p {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  margin-top: 0.15rem;
-}
-
-.permisos-empty {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 3rem 2rem;
-  text-align: center;
-  color: var(--text-muted);
-}
-
-.permisos-empty i {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  display: block;
-  color: var(--sky-dark);
-}
-
-.permisos-empty h3 {
-  font-family: 'Fraunces', system-ui, serif;
-  font-size: 1.15rem;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-
-/* ── Matriz de permisos por rol ── */
-.permisos-card {
+/* ---------- Sin tablas ---------- */
+.perm-vacio-grande {
   background: var(--surface);
   border: 0.0625rem solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 1.25rem;
-}
-
-.permisos-ayuda {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  margin-bottom: 1rem !important;
-}
-
-.permisos-tabla-wrap { overflow-x: auto; }
-
-.permisos-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-.permisos-tabla th {
+  padding: 3rem 2rem;
   text-align: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.025rem;
-  color: var(--text-muted);
-  padding: 0.625rem 0.5rem;
-  border-bottom: 0.0625rem solid var(--border);
-  white-space: nowrap;
 }
+.perm-vacio-grande i { font-size: 2rem; color: var(--sky-dark); margin-bottom: 0.75rem; }
+.perm-vacio-grande h3 { font-size: 1.1rem; margin: 0 0 0.5rem 0; }
+.perm-vacio-grande p { color: var(--text-muted); margin: 0; }
 
-.permisos-tabla td {
-  text-align: center;
-  padding: 0.625rem 0.5rem;
-  border-bottom: 0.0625rem solid var(--border);
-}
+.perm-vacio { color: var(--text-muted); font-size: 0.875rem; margin: 0.5rem 0; }
 
-.permisos-tabla tbody tr:hover { background: var(--sky-light); }
-
-.permisos-tabla .col-permiso { text-align: left; min-width: 13rem; }
-
-.permiso-nombre { display: block; font-weight: 600; color: var(--text); }
-.permiso-clave { display: block; font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
-
-.permisos-tabla input[type="checkbox"] {
-  width: 1.05rem;
-  height: 1.05rem;
-  accent-color: var(--sky-dark);
-  cursor: pointer;
-}
-
-.permisos-tabla input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.6; }
-
-.permisos-acciones {
+/* ---------- Pestañas ---------- */
+.perm-tabs {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
+  gap: 0.25rem;
+  border-bottom: 0.0625rem solid var(--border);
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
 }
 
-.btn-permisos {
+.perm-tab {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  border-bottom: 0.125rem solid transparent;
+  margin-bottom: -0.0625rem;
+}
+.perm-tab:hover { color: var(--sky-dark); text-decoration: none; }
+.perm-tab.activo { color: var(--sky-dark); border-bottom-color: var(--sky-dark); }
+
+/* ---------- Barra de cada pestaña ---------- */
+.perm-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.perm-ayuda { color: var(--text-muted); font-size: 0.875rem; margin: 0; max-width: 40rem; }
+
+.perm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.5rem 1rem;
   background: var(--sky-dark);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  padding: 0.625rem 1.25rem;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
+  text-decoration: none;
 }
+.perm-btn:hover { color: #fff; text-decoration: none; filter: brightness(1.08); }
+.perm-btn.secundario { background: var(--surface); color: var(--text-muted); border: 0.0625rem solid var(--border); }
+.perm-btn.secundario:hover { color: var(--text); }
 
-.btn-permisos:hover { opacity: 0.9; }
-
-.btn-permisos.secundario {
-  background: var(--sky-light);
+.perm-link {
+  background: none; border: none; padding: 0;
+  font-size: 0.875rem; font-weight: 500;
   color: var(--sky-dark);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.perm-link.peligro { color: var(--danger); }
+
+/* ---------- Tarjetas de perfiles y familias ---------- */
+.perm-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
 }
 
-@media screen and (max-width: 768px) {
+.perm-tarjeta {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+
+.perm-tarjeta-cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
+.perm-tarjeta-cabecera h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.375rem 0; }
+
+.perm-etiquetas { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.perm-etiqueta {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 62.5rem;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.perm-etiqueta.sistema { background: var(--sky-light); color: var(--sky-dark); font-weight: 600; }
+
+/* "N usuario(s)" de cada perfil: la lista se despliega con hover, clic o foco */
+.perm-usuarios { position: relative; display: inline-block; outline: none; }
+.perm-etiqueta-usuarios { cursor: pointer; }
+.perm-etiqueta-usuarios i { font-size: 0.625rem; margin-left: 0.125rem; transition: transform 0.15s ease; }
+.perm-usuarios:hover .perm-etiqueta-usuarios,
+.perm-usuarios:focus-within .perm-etiqueta-usuarios { background: var(--sky-light); color: var(--sky-dark); }
+.perm-usuarios:hover .perm-etiqueta-usuarios i,
+.perm-usuarios:focus-within .perm-etiqueta-usuarios i { transform: rotate(180deg); }
+.perm-usuarios:focus-visible .perm-etiqueta-usuarios { box-shadow: 0 0 0 0.125rem var(--sky-dark); }
+
+.perm-usuarios-lista {
+  display: none;
+  position: absolute; top: 100%; left: 0; z-index: 20;
+  margin-top: 0.25rem;
+  min-width: 14rem; max-width: 20rem; max-height: 15rem; overflow-y: auto;
+  padding: 0.375rem;
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+}
+/* Puente invisible para que el hover no se corte al bajar el mouse a la lista */
+.perm-usuarios-lista::before { content: ""; position: absolute; left: 0; right: 0; top: -0.375rem; height: 0.375rem; }
+.perm-usuarios:hover .perm-usuarios-lista,
+.perm-usuarios:focus-within .perm-usuarios-lista { display: block; }
+
+.perm-usuarios-item {
+  display: flex; flex-direction: column;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+}
+.perm-usuarios-item + .perm-usuarios-item { border-top: 0.0625rem solid var(--border); }
+.perm-usuarios-usuario { font-weight: 600; color: var(--text); }
+.perm-usuarios-nombre { color: var(--text-muted); font-size: 0.75rem; }
+
+.perm-acciones { display: flex; gap: 0.75rem; flex-shrink: 0; }
+
+.perm-tarjeta-cuerpo { border-top: 0.0625rem solid var(--border); padding-top: 0.75rem; }
+
+.perm-todos { margin: 0; color: var(--sky-dark); font-size: 0.875rem; font-weight: 500; }
+
+/* ---------- Árbol del Composite ---------- */
+.perm-arbol { list-style: none; margin: 0; padding: 0; font-size: 0.875rem; }
+.perm-arbol .perm-arbol { padding-left: 1.25rem; border-left: 0.0625rem dashed var(--border); margin: 0.25rem 0 0.25rem 0.375rem; }
+.perm-arbol li { padding: 0.125rem 0; }
+.perm-arbol li.familia > i { color: #B7791F; }
+.perm-arbol li.permiso > i { color: var(--sky-dark); font-size: 0.75rem; }
+.perm-arbol li.familia { font-weight: 600; }
+.perm-arbol li.permiso { font-weight: 400; }
+
+/* ---------- Pestaña de usuarios ---------- */
+.perm-buscador { display: flex; gap: 0.5rem; }
+.perm-buscador input {
+  width: 16rem; max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.perm-tabla-wrap {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+.perm-tabla { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.perm-tabla th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 0.0625rem solid var(--border);
+  white-space: nowrap;
+}
+.perm-tabla td { padding: 0.625rem 1rem; border-bottom: 0.0625rem solid var(--border); vertical-align: middle; }
+.perm-tabla tr:last-child td { border-bottom: none; }
+.perm-mono { font-family: 'JetBrains Mono', monospace; }
+
+.perm-estado { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 62.5rem; font-size: 0.75rem; font-weight: 600; }
+.perm-estado.activo { background: var(--mint-light); color: #0F6E56; }
+.perm-estado.inactivo { background: #F1EFE8; color: #5F5E5A; }
+
+.perm-asignar { display: flex; align-items: center; gap: 0.75rem; }
+.perm-asignar select {
+  padding: 0.375rem 0.5rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius-sm);
+  min-width: 10rem;
+}
+
+/* ---------- Editor (ventana flotante) ---------- */
+.perm-modal-fondo {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.perm-modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 60rem;
+  max-height: calc(100vh - 2rem);
+  display: flex; flex-direction: column;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+.perm-modal-titulo { font-family: 'Fraunces', system-ui, serif; font-size: 1.25rem; font-weight: 700; margin: 0 0 1rem 0; }
+
+.perm-campo { margin-bottom: 1rem; }
+.perm-campo label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; }
+.perm-campo input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.perm-campo input:disabled { background: var(--surface-2); color: var(--text-muted); }
+.perm-campo small { display: block; color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; }
+
+.perm-editor-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.perm-editor-panel {
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  overflow-y: auto;
+  min-height: 12rem;
+}
+.perm-editor-panel.contenido { background: var(--surface-2); }
+.perm-editor-panel h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.5rem 0; }
+.perm-editor-panel h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin: 0.75rem 0 0.25rem 0; }
+
+.perm-lista { list-style: none; margin: 0; padding: 0; }
+.perm-lista > li {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem;
+  padding: 0.375rem 0;
+  border-bottom: 0.0625rem solid var(--border);
+  font-size: 0.875rem;
+}
+.perm-lista > li:last-child { border-bottom: none; }
+.perm-lista > li.incluido { color: var(--text-muted); }
+.perm-lista > li i.fa-key { color: var(--sky-dark); font-size: 0.75rem; }
+.perm-lista > li i.fa-folder { color: #B7791F; }
+.perm-lista details { flex: 1; }
+.perm-lista summary { cursor: pointer; }
+.perm-lista details .perm-arbol { margin-top: 0.375rem; }
+.perm-incluido { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+
+.perm-contenido-item { display: flex; justify-content: space-between; gap: 0.75rem; width: 100%; font-weight: 600; }
+.perm-editor-panel.contenido .perm-lista > li { flex-direction: column; align-items: stretch; }
+.perm-editor-panel.contenido .perm-lista > li > .perm-arbol { padding-left: 1.25rem; }
+
+.perm-modal-acciones {
+  display: flex; justify-content: flex-end; gap: 0.5rem;
+  padding-top: 1rem; margin-top: 1rem;
+  border-top: 0.0625rem solid var(--border);
+}
+
+/* ---------- Pantallas chicas ---------- */
+@media (max-width: 48rem) {
   .permisos-container { padding: 1rem; }
+  .perm-editor-columnas { grid-template-columns: 1fr; overflow-y: auto; }
+  .perm-editor-panel { min-height: auto; overflow: visible; }
+  .perm-modal { overflow-y: auto; }
+  .perm-buscador, .perm-buscador input { width: 100%; }
 }

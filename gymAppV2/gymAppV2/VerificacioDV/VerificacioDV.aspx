@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Verificación de Integridad - GymApp</title>
-    <link href="<%= ResolveUrl("~/VerificacioDV/VerificacioDV.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/VerificacioDV/VerificacioDV.css?v=2") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </asp:Content>
 

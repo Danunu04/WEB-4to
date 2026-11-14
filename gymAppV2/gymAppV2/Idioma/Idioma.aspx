@@ -1,7 +1,7 @@
 <%@ Page Title="Idioma" Language="C#" MasterPageFile="~/DashBoard.Master" AutoEventWireup="true" CodeBehind="Idioma.aspx.cs" Inherits="gymAppV2.Idioma.IdiomaPage" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <link href="<%= ResolveUrl("~/Idioma/Idioma.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Idioma/Idioma.css?v=2") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">

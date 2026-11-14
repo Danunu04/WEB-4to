@@ -301,22 +301,6 @@ namespace gymAppV2.Alumnos
             }
         }
 
-        protected void gvAlumnos_RowDataBound(object sender, GridViewRowEventArgs e)
-        {
-            if (e.Row.RowType == DataControlRowType.DataRow)
-            {
-                if (e.Row.Cells.Count > 1)
-                    e.Row.Cells[1].Attributes["data-label"] = "Teléfono";
-                if (e.Row.Cells.Count > 2)
-                    e.Row.Cells[2].Attributes["data-label"] = "Fecha Nacimiento";
-                if (e.Row.Cells.Count > 3)
-                    e.Row.Cells[3].Attributes["data-label"] = "Peso";
-                if (e.Row.Cells.Count > 4)
-                    e.Row.Cells[4].Attributes["data-label"] = "Usuario";
-                if (e.Row.Cells.Count > 5)
-                    e.Row.Cells[5].Attributes["data-label"] = "Estado";
-            }
-        }
 
         // ==================== EVENTOS DE ACCIONES ====================
 

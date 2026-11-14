@@ -8,6 +8,11 @@
             padding: 1.5rem;
         }
 
+        @media (max-width: 48rem) {
+            .perfil-container { padding: 0; }
+            .perfil-card { padding: 1rem; }
+        }
+
         .perfil-header {
             display: flex;
             align-items: center;
@@ -33,7 +38,7 @@
 
         .perfil-card {
             background: var(--color-surface, #FFFFFF);
-            border: 1px solid var(--color-border, #E8E0D5);
+            border: 0.0625rem solid var(--color-border, #E8E0D5);
             border-radius: 0.75rem;
             padding: 1.5rem;
             max-width: 40rem;
@@ -61,7 +66,7 @@
             width: 100%;
             padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
-            border: 1px solid var(--color-border, #E8E0D5);
+            border: 0.0625rem solid var(--color-border, #E8E0D5);
             font-family: 'DM Sans', sans-serif;
             font-size: 0.875rem;
         }
@@ -69,7 +74,7 @@
         .perfil-form input:focus,
         .perfil-form select:focus {
             outline: none;
-            box-shadow: 0 0 0 2px var(--color-accent-lavender, #C7B5FF);
+            box-shadow: 0 0 0 0.125rem var(--color-accent-lavender, #C7B5FF);
         }
 
         .perfil-actions {
@@ -77,7 +82,7 @@
             gap: 0.5rem;
             margin-top: 1.25rem;
             padding-top: 1rem;
-            border-top: 1px solid var(--color-border, #E8E0D5);
+            border-top: 0.0625rem solid var(--color-border, #E8E0D5);
         }
 
         .perfil-actions .btn-primary {
@@ -100,7 +105,7 @@
             gap: 0.5rem;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
-            border: 1px solid var(--color-border, #E8E0D5);
+            border: 0.0625rem solid var(--color-border, #E8E0D5);
             background: var(--color-surface, #FFFFFF);
             color: var(--color-muted, #6B6B6B);
             cursor: pointer;

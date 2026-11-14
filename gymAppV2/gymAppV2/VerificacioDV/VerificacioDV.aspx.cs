@@ -32,7 +32,7 @@ namespace gymAppV2.VerificacioDV
         /// </summary>
         private void ConfigurarVistaSegunRol()
         {
-            bool esAdmin = bllDV.UsuarioActualEsAdmin();
+            bool esAdmin = bllDV.UsuarioActualPuedeRepararIntegridad();
 
             pnlAdmin.Visible = esAdmin;
             pnlNoAdmin.Visible = !esAdmin;

@@ -1,16 +1,12 @@
-using System.Collections.Generic;
-
 namespace BE
 {
     /// <summary>
-    /// Catálogo hardcodeado de perfiles de usuario.
-    /// Cada perfil se asocia a un rol numérico (campo USUARIOS.rol).
+    /// Tipos de cuenta (USUARIOS.rol) y perfiles que crea el sistema.
     ///
-    /// Roles numéricos:
-    ///   1 = Web master / Administrador / ABM / bitacora / alumnos / profesores / backup / restore / dv
-    ///   2 = Recepcionista / ABM limitado
-    ///   3 = Profesor / Entrenador
-    ///   4 = Cliente / Docente / Alumno / Familiar
+    /// El rol numérico ya NO define permisos: dice qué tipo de cuenta es y, con eso, qué datos
+    /// ve el usuario (un Cliente ve sus clases, un Familiar las de sus hijos, el personal las de
+    /// todos) y qué registro se crea en el alta (ALUMNOS, ENTRENADORES).
+    /// Qué pantallas puede usar lo decide su perfil (patrón Composite, pantalla Permisos).
     /// </summary>
     public static class PerfilesSistema
     {
@@ -21,90 +17,29 @@ namespace BE
         public const int RolWebMaster = 5;
         public const int RolFamiliar = 6;
 
-        public const string WebMaster = "Web master";
-        public const string Administrador = "Administrador";
-        public const string ABM = "ABM";
-        public const string Bitacora = "Bitacora";
-        public const string Usuario = "usuario";
-        public const string Alumnos = "alumnos";
-        public const string Profesores = "profesores";
-        public const string Backup = "back up";
-        public const string Restore = "restore";
-        public const string DV = "dv";
-        public const string ClienteDocente = "Cliente/docente";
-        public const string Familiar = "Familiar";
+        // --- Códigos de los perfiles que crea scripts/crear-permisos-composite.sql ---
+        public const string CodigoWebMaster = "WEBMASTER";
+        public const string CodigoAdministrador = "ADMIN";
+        public const string CodigoRecepcionista = "RECEPCION";
+        public const string CodigoEntrenador = "ENTRENADOR";
+        public const string CodigoCliente = "CLIENTE";
+        public const string CodigoFamiliar = "FAMILIAR";
 
         /// <summary>
-        /// Devuelve el nombre del perfil principal asociado a un rol numérico.
+        /// Código del perfil que recibe una cuenta nueva según su tipo. Después se puede
+        /// cambiar desde la pantalla Permisos.
         /// </summary>
-        public static string ObtenerNombrePerfilPrincipal(int rol)
+        public static string CodigoPerfilPorDefecto(int rol)
         {
             switch (rol)
             {
-                case RolWebMaster:
-                    return WebMaster;
-                case RolAdministrador:
-                    return Administrador;
-                case RolRecepcionista:
-                    return ABM;
-                case RolEntrenador:
-                    return Profesores;
-                case RolCliente:
-                    return ClienteDocente;
-                case RolFamiliar:
-                    return Familiar;
-                default:
-                    return Usuario;
-            }
-        }
-
-        /// <summary>
-        /// Devuelve todos los perfiles asociados a un rol numérico.
-        /// </summary>
-        public static IReadOnlyList<string> ObtenerPerfiles(int rol)
-        {
-            switch (rol)
-            {
-                case RolWebMaster:
-                    return new List<string>
-                    {
-                        WebMaster, Administrador, ABM, Bitacora,
-                        Alumnos, Profesores, Backup, Restore, DV
-                    }.AsReadOnly();
-
-                case RolAdministrador:
-                    return new List<string>
-                    {
-                        WebMaster, Administrador, ABM, Bitacora,
-                        Alumnos, Profesores, Backup, Restore, DV
-                    }.AsReadOnly();
-
-                case RolRecepcionista:
-                    return new List<string>
-                    {
-                        ABM, Bitacora, Alumnos, Profesores
-                    }.AsReadOnly();
-
-                case RolEntrenador:
-                    return new List<string>
-                    {
-                        Profesores
-                    }.AsReadOnly();
-
-                case RolCliente:
-                    return new List<string>
-                    {
-                        ClienteDocente
-                    }.AsReadOnly();
-
-                case RolFamiliar:
-                    return new List<string>
-                    {
-                        Familiar
-                    }.AsReadOnly();
-
-                default:
-                    return new List<string> { Usuario }.AsReadOnly();
+                case RolWebMaster: return CodigoWebMaster;
+                case RolAdministrador: return CodigoAdministrador;
+                case RolRecepcionista: return CodigoRecepcionista;
+                case RolEntrenador: return CodigoEntrenador;
+                case RolCliente: return CodigoCliente;
+                case RolFamiliar: return CodigoFamiliar;
+                default: return null;
             }
         }
     }

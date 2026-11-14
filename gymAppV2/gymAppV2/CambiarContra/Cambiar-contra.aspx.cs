@@ -58,7 +58,7 @@ namespace gymAppV2.CambiarContra
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (SistemaEnPausa() && !UsuarioActualEsAdmin())
+            if (SistemaEnPausa() && !UsuarioActualPuedeRepararIntegridad())
             {
                 Redirigir("~/VerificacioDV/VerificacioDV.aspx");
                 return;
@@ -378,13 +378,13 @@ namespace gymAppV2.CambiarContra
             catch { return true; }
         }
 
-        private bool UsuarioActualEsAdmin()
+        private bool UsuarioActualPuedeRepararIntegridad()
         {
             try
             {
                 var sesion = Singleton.Instancia;
                 if (sesion == null || sesion.Usuario == null) return false;
-                return new BLLRol().UsuarioActualEsAdmin();
+                return new BLLRol().UsuarioActualPuedeRepararIntegridad();
             }
             catch { return false; }
         }

@@ -101,8 +101,8 @@ namespace gymAppV2.LogIn
                             GestorIdioma.CambiarIdioma(idiomaUsuarioDV);
                         }
 
-                        bool esAdmin = userBD.USUARIO_Rol == PerfilesSistema.RolAdministrador
-                                    || userBD.USUARIO_Rol == PerfilesSistema.RolWebMaster;
+                        // Entra al panel de reparación quien tiene el permiso de verificación de dígitos
+                        bool esAdmin = new BLLRol().UsuarioTieneAcceso(userBD.USUARIO_Usuario, PermisosSistema.VerificacionDV);
 
                         try
                         {

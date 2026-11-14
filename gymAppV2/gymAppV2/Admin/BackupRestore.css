@@ -150,3 +150,20 @@
     background-color: #DC2626;
     transform: translateY(-0.0625rem);
 }
+
+/* ── Celular ─────────────────────────────── */
+@media (max-width: 48rem) {
+    .backuprestore-container {
+        padding: 0;
+    }
+
+    .input-row {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        width: 100%;
+    }
+}

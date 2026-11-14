@@ -1,7 +1,7 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Entrenadores.aspx.cs" Inherits="gymAppV2.Entrenadores.Entrenadores" MasterPageFile="~/DashBoard.Master" EnableEventValidation="false" Title="Entrenadores" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <link href="<%= ResolveUrl("~/Entrenadores/Entrenadores.css?v=2") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Entrenadores/Entrenadores.css?v=3") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -44,9 +44,9 @@
                 <div class="table-card-header">
                     <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--lavender)"></i><asp:Literal ID="litListaTitulo" runat="server" Text="Lista de entrenadores" /></h3>
                 </div>
-                <asp:GridView ID="gvEntrenadores" runat="server" AutoGenerateColumns="false" CssClass="table"
+                <asp:GridView ID="gvEntrenadores" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas"
                     GridLines="None" AllowPaging="true" PageSize="10" OnPageIndexChanging="gvEntrenadores_PageIndexChanging"
-                    OnRowCommand="gvEntrenadores_RowCommand" OnRowDataBound="gvEntrenadores_RowDataBound"
+                    OnRowCommand="gvEntrenadores_RowCommand"
                     DataKeyNames="DNI">
                     <Columns>
                         <asp:TemplateField>

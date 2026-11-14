@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Alumnos - GymApp</title>
-    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=2") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=3") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -76,9 +76,9 @@
                 <div class="table-card-header">
                     <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--pink)"></i><asp:Literal ID="litListaTitulo" runat="server" Text="Lista de alumnos" /></h3>
                 </div>
-                <asp:GridView ID="gvAlumnos" runat="server" AutoGenerateColumns="false" CssClass="table"
+                <asp:GridView ID="gvAlumnos" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas"
                     GridLines="None" AllowPaging="true" PageSize="10" OnPageIndexChanging="gvAlumnos_PageIndexChanging"
-                    OnRowCommand="gvAlumnos_RowCommand" OnRowDataBound="gvAlumnos_RowDataBound"
+                    OnRowCommand="gvAlumnos_RowCommand"
                     DataKeyNames="DNI">
                     <Columns>
                         <asp:TemplateField>

@@ -53,7 +53,7 @@
     <Compile Include="MPPPago.cs" />
     <Compile Include="MPPPrecioModalidad.cs" />
     <Compile Include="MPPPreguntaSeguridad.cs" />
-    <Compile Include="MPPRol.cs" />
+    <Compile Include="MPPPermiso.cs" />
     <Compile Include="MPPRutina.cs" />
     <Compile Include="MPPUsuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

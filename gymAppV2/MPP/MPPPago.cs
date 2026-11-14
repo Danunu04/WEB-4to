@@ -11,13 +11,11 @@ namespace MPP
     public class MPPPago
     {
         private DalGeneral dal;
-        private DigitoVerificadorManager dvManager;
         private CriptoManager criptoManager;
 
         public MPPPago()
         {
             dal = new DalGeneral();
-            dvManager = new DigitoVerificadorManager();
             criptoManager = new CriptoManager();
         }
 
@@ -27,6 +25,8 @@ namespace MPP
                 p.dni,
                 p.modalidadId,
                 p.periodo,
+                p.fechaInicio,
+                p.fechaVencimiento,
                 p.monto,
                 p.fechaPago,
                 p.metodoPago,
@@ -41,29 +41,6 @@ namespace MPP
             LEFT JOIN [GymApp].[dbo].[USUARIOS] u ON al.dni = u.dni
             INNER JOIN [GymApp].[dbo].[PrecioModalidad] pm ON p.modalidadId = pm.Id";
 
-        /// <summary>
-        /// Arma el diccionario de valores usado para calcular el DVH. No incluye codPago
-        /// porque es autogenerado por la base de datos y no se conoce en el momento del INSERT.
-        /// </summary>
-        private Dictionary<string, object> ArmarValoresDV(Pago pago)
-        {
-            return new Dictionary<string, object>
-            {
-                { "dni", pago.Dni },
-                { "modalidadId", pago.ModalidadId },
-                { "periodo", pago.Periodo.Date },
-                { "monto", pago.Monto },
-                { "fechaPago", pago.FechaPago },
-                { "metodoPago", pago.MetodoPago },
-                { "usuarioRegistro", pago.UsuarioRegistro }
-            };
-        }
-
-        private string CalcularDigitosPago(Pago pago)
-        {
-            return dvManager.CalcularDVH(ArmarValoresDV(pago));
-        }
-
         private Pago MapearFila(DataRow row)
         {
             bool esDiario = row["modalidadEsDiario"] != DBNull.Value && Convert.ToBoolean(row["modalidadEsDiario"]);
@@ -75,6 +52,8 @@ namespace MPP
                 Dni = Convert.ToInt32(row["dni"]),
                 ModalidadId = Convert.ToInt32(row["modalidadId"]),
                 Periodo = Convert.ToDateTime(row["periodo"]),
+                FechaInicio = Convert.ToDateTime(row["fechaInicio"]),
+                FechaVencimiento = Convert.ToDateTime(row["fechaVencimiento"]),
                 Monto = Convert.ToDecimal(row["monto"]),
                 FechaPago = Convert.ToDateTime(row["fechaPago"]),
                 MetodoPago = row["metodoPago"] != DBNull.Value ? row["metodoPago"].ToString() : string.Empty,
@@ -139,43 +118,63 @@ namespace MPP
         }
 
         /// <summary>
-        /// Indica si ya existe un pago registrado para el alumno en el período (mes) indicado.
+        /// Último abono de cada alumno (el de fechaInicio más reciente). Como los abonos se
+        /// encadenan, su vencimiento es hasta cuándo está cubierto el alumno.
+        /// Con dni, solo el de ese alumno. Solo llena dni, modalidadId, fechaInicio y fechaVencimiento.
         /// </summary>
-        public bool ExistePagoEnPeriodo(int dni, DateTime periodo)
+        public List<Pago> ListarUltimosAbonos(int? dni = null)
         {
             try
             {
                 string consulta = @"
-                    SELECT COUNT(1)
-                    FROM [GymApp].[dbo].[Pagos]
-                    WHERE dni = @Dni AND periodo = @Periodo";
+                    SELECT p.dni, p.modalidadId, p.fechaInicio, p.fechaVencimiento
+                    FROM [GymApp].[dbo].[Pagos] p
+                    WHERE p.fechaInicio = (SELECT MAX(p2.fechaInicio)
+                                           FROM [GymApp].[dbo].[Pagos] p2
+                                           WHERE p2.dni = p.dni)";
 
-                List<SqlParameter> parametros = new List<SqlParameter>
+                List<SqlParameter> parametros = new List<SqlParameter>();
+                if (dni.HasValue)
                 {
-                    new SqlParameter("@Dni", dni),
-                    new SqlParameter("@Periodo", periodo.Date)
-                };
+                    consulta += " AND p.dni = @Dni";
+                    parametros.Add(new SqlParameter("@Dni", dni.Value));
+                }
 
-                object resultado = dal._686DPEscalar(consulta, parametros);
-                return resultado != null && resultado != DBNull.Value && Convert.ToInt32(resultado) > 0;
+                DataTable dt = dal._686DPConsultar(consulta, parametros);
+                List<Pago> abonos = new List<Pago>();
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    abonos.Add(new Pago
+                    {
+                        Dni = Convert.ToInt32(row["dni"]),
+                        ModalidadId = Convert.ToInt32(row["modalidadId"]),
+                        FechaInicio = Convert.ToDateTime(row["fechaInicio"]),
+                        FechaVencimiento = Convert.ToDateTime(row["fechaVencimiento"])
+                    });
+                }
+
+                return abonos;
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al verificar pago existente: " + ex.Message, ex);
+                throw new Exception("Error al listar los últimos abonos: " + ex.Message, ex);
             }
         }
 
+        /// <summary>
+        /// Inserta el pago con dvh vacío y después calcula el dvh leyendo la fila real
+        /// (incluye codPago, que es IDENTITY y no se conoce antes del INSERT).
+        /// </summary>
         public int CrearPago(Pago pago)
         {
             try
             {
-                string dvh = CalcularDigitosPago(pago);
-
                 string consulta = @"
                     INSERT INTO [GymApp].[dbo].[Pagos]
-                    (dni, modalidadId, periodo, monto, fechaPago, metodoPago, usuarioRegistro, dvh)
+                    (dni, modalidadId, periodo, fechaInicio, fechaVencimiento, monto, fechaPago, metodoPago, usuarioRegistro, dvh)
                     VALUES
-                    (@Dni, @ModalidadId, @Periodo, @Monto, @FechaPago, @MetodoPago, @UsuarioRegistro, @DVH);
+                    (@Dni, @ModalidadId, @Periodo, @FechaInicio, @FechaVencimiento, @Monto, @FechaPago, @MetodoPago, @UsuarioRegistro, '');
 
                     SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
@@ -184,16 +183,19 @@ namespace MPP
                     new SqlParameter("@Dni", pago.Dni),
                     new SqlParameter("@ModalidadId", pago.ModalidadId),
                     new SqlParameter("@Periodo", pago.Periodo.Date),
+                    new SqlParameter("@FechaInicio", pago.FechaInicio.Date),
+                    new SqlParameter("@FechaVencimiento", pago.FechaVencimiento.Date),
                     new SqlParameter("@Monto", pago.Monto),
                     new SqlParameter("@FechaPago", pago.FechaPago),
                     new SqlParameter("@MetodoPago", pago.MetodoPago),
-                    new SqlParameter("@UsuarioRegistro", pago.UsuarioRegistro),
-                    new SqlParameter("@DVH", dvh)
+                    new SqlParameter("@UsuarioRegistro", pago.UsuarioRegistro)
                 };
 
                 object resultado = dal._686DPEscalar(consulta, parametros);
-                MPPDigitoVerificador.SincronizarControl("Pagos");
-                return (resultado != null && resultado != DBNull.Value) ? Convert.ToInt32(resultado) : 0;
+                int codPago = (resultado != null && resultado != DBNull.Value) ? Convert.ToInt32(resultado) : 0;
+
+                MPPDigitoVerificador.RecalcularDvhFilas("Pagos", "codPago = @Cod", new SqlParameter("@Cod", codPago));
+                return codPago;
             }
             catch (Exception ex)
             {

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 namespace BE
 {
     /// <summary>
-    /// Catálogo de permisos funcionales del sistema. Qué rol tiene cada permiso se guarda
-    /// en la tabla RolPermiso (pantalla Permisos); los valores por defecto están en BLLRol.
+    /// Catálogo de permisos del sistema: uno por pantalla o función. Son las hojas del
+    /// Composite de permisos (tabla Permiso). Cómo se agrupan en familias y qué perfil tiene
+    /// cada usuario se configura en la pantalla Permisos.
+    /// Para agregar un permiso nuevo: constante acá, en Todos, y una fila en la tabla Permiso.
     /// </summary>
     public static class PermisosSistema
     {
@@ -35,6 +37,7 @@ namespace BE
         public const string RecalcularDV = "RecalcularDV";
         public const string EncriptarDatos = "EncriptarDatos";
         public const string GestionPermisos = "GestionPermisos";
+        public const string GestionIdiomas = "GestionIdiomas";
 
         /// <summary>
         /// Lista de todos los permisos conocidos. Útil para auditoría y tests.
@@ -45,7 +48,7 @@ namespace BE
             GestionUsuarios, GestionAlumnos, GestionEntrenadores, Bitacora,
             ActividadesCalendario, GestionActividades, GestionAulas, GestionRutinas,
             Pagos, PreciosCuota,
-            VerificacionDV, Backup, Restore, RecalcularDV, EncriptarDatos, GestionPermisos
+            VerificacionDV, Backup, Restore, RecalcularDV, EncriptarDatos, GestionPermisos, GestionIdiomas
         }.AsReadOnly();
     }
 }

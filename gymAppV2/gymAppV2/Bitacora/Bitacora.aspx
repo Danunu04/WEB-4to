@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Bitácora - GymApp</title>
-    <link href="<%= ResolveUrl("~/Bitacora/Bitacora.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Bitacora/Bitacora.css?v=2") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">

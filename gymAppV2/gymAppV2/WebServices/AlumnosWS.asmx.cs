@@ -71,7 +71,7 @@ namespace gymAppV2.WebServices
                 throw new SoapException("Usuario no habilitado.", SoapException.ClientFaultCode);
             }
 
-            if (!new BLLRol().TieneAccesoAModulo(usuario.USUARIO_Rol, PermisosSistema.GestionAlumnos))
+            if (!new BLLRol().UsuarioTieneAcceso(usuario.USUARIO_Usuario, PermisosSistema.GestionAlumnos))
             {
                 throw new SoapException("No tiene permiso para acceder a los alumnos.", SoapException.ClientFaultCode);
             }

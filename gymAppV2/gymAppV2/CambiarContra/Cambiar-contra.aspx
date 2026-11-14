@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/LogIn/StyleSheet1.css") %>" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet" />
+    <link href="<%= ResolveUrl("~/LogIn/StyleSheet1.css?v=2") %>" rel="stylesheet" />
+    <link href="<%= ResolveUrl("~/Content/toast.css?v=2") %>" rel="stylesheet" />
     <style>
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
@@ -132,7 +132,7 @@
     <form id="form1" runat="server">
         <asp:ScriptManager runat="server" />
         <asp:Button CssClass="BtnInicio" ID="btnIrInicio" runat="server" Text="Ir a inicio" OnClick="btnIrInicio_Click" />
-        <div id="toastContainer" style="position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.75rem;max-width:400px;"></div>
+        <div id="toastContainer" style="position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.75rem;max-width:min(25rem, calc(100vw - 3rem));"></div>
 
         <div class="BloqueRosa alto-auto">
             <div class="cambio-card">

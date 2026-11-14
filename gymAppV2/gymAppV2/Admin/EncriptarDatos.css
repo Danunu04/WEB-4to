@@ -104,3 +104,20 @@
     border-radius: var(--radius-md);
     font-size: 0.875rem;
 }
+
+/* ── Celular ─────────────────────────────── */
+@media (max-width: 48rem) {
+    .encriptar-container {
+        padding: 0;
+    }
+
+    .input-row {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        width: 100%;
+    }
+}

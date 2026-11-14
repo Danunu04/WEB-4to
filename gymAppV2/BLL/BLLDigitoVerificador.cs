@@ -326,15 +326,12 @@ namespace BLL
         }
 
         /// <summary>
-        /// Verifica si el usuario logueado es administrador o WebMaster.
+        /// Indica si el usuario logueado puede usar el panel de reparación de integridad
+        /// (tiene el permiso de verificación de dígitos en su perfil).
         /// </summary>
-        public bool UsuarioActualEsAdmin()
+        public bool UsuarioActualPuedeRepararIntegridad()
         {
-            var usuario = Singleton.Instancia.Usuario;
-            return usuario != null && (
-                usuario.USUARIO_Rol == PerfilesSistema.RolAdministrador ||
-                usuario.USUARIO_Rol == PerfilesSistema.RolWebMaster
-            );
+            return new BLLRol().UsuarioActualPuedeRepararIntegridad();
         }
     }
 }

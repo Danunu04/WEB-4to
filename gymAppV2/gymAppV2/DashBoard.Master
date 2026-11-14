@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Fraunces:opsz,wght@9..144,400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=4") %>" rel="stylesheet" type="text/css" />
-    <link href="<%= ResolveUrl("~/Content/toast.css") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=5") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/toast.css?v=2") %>" rel="stylesheet" type="text/css" />
 
     <!-- Toast helper global: se define en el head para estar disponible antes de los startup scripts del form -->
     <script>
@@ -261,20 +261,56 @@
                 }
             });
 
+            // Tablas como tarjetas en el celular (.tabla-tarjetas, estilos en dashboard.css):
+            // cada celda recibe como etiqueta el encabezado de su columna, ya traducido.
+            document.querySelectorAll('table.tabla-tarjetas').forEach(function (tabla) {
+                var filas = Array.prototype.slice.call(tabla.rows);
+                var encabezado = filas.filter(function (f) { return f.querySelector('th'); })[0];
+                if (!encabezado) return;
+
+                var titulos = Array.prototype.map.call(encabezado.cells, function (c) { return c.textContent.trim(); });
+                var conSeleccion = titulos.length > 1 && titulos[0] === '';
+
+                filas.forEach(function (fila) {
+                    if (fila === encabezado || fila.classList.contains('pagination') || fila.parentElement.closest('tr')) return;
+
+                    if (fila.cells.length === 1 && fila.cells[0].colSpan > 1) {
+                        fila.cells[0].classList.add('celda-completa');
+                        return;
+                    }
+
+                    Array.prototype.forEach.call(fila.cells, function (celda, i) {
+                        if (conSeleccion && i === 0) {
+                            celda.classList.add('celda-seleccion');
+                        } else if (i === (conSeleccion ? 1 : 0)) {
+                            celda.classList.add('celda-titulo');
+                        } else if (titulos[i]) {
+                            celda.setAttribute('data-label', titulos[i]);
+                        }
+                    });
+                });
+            });
+
             var sidebarMenu = sidebar.querySelector('.sidebar-menu:not(.sidebar-logout)');
+
+            // Compara rutas sin mayúsculas ni ".aspx": con FriendlyUrls la página se abre como
+            // /Actividades/actividades pero el menú enlaza /Actividades/actividades.aspx
+            function normalizarRuta(ruta) {
+                return (ruta || '').replace('~/', '/').split(/[?#]/)[0].toLowerCase().replace(/\.aspx$/, '').replace(/\/+$/, '');
+            }
+
+            function esPaginaActual(href) {
+                return !!href && normalizarRuta(href) === normalizarRuta(window.location.pathname);
+            }
 
             // Highlight active menu item based on current page
             if (sidebarMenu) {
-                var currentPath = window.location.pathname;
                 var menuItems = sidebarMenu.querySelectorAll('li');
                 menuItems.forEach(function (li) {
                     li.classList.remove('active');
                     var link = li.querySelector('a');
-                    if (link && link.getAttribute('href')) {
-                        var href = link.getAttribute('href').replace('~/', '');
-                        if (currentPath.includes(href)) {
-                            li.classList.add('active');
-                        }
+                    if (link && esPaginaActual(link.getAttribute('href'))) {
+                        li.classList.add('active');
                     }
                 });
             }
@@ -284,7 +320,6 @@
                     link.addEventListener('click', function (e) {
                         var li = link.closest('li');
                         var href = link.getAttribute('href') || '';
-                        var currentPath = window.location.pathname;
 
                         // Ítems marcados como no implementados muestran el modal 404
                         if (li && li.classList.contains('not-implemented')) {
@@ -302,7 +337,7 @@
                         }
 
                         // Si estamos en la misma página, recargar
-                        if (href && currentPath.includes(href.replace('~/', ''))) {
+                        if (esPaginaActual(href)) {
                             e.preventDefault();
                             window.location.reload();
                         }

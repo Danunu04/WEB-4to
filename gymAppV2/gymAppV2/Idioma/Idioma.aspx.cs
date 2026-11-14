@@ -112,7 +112,7 @@ namespace gymAppV2.Idioma
 
         private void InicializarGestion()
         {
-            if (!BllRol.UsuarioActualEsAdmin())
+            if (!BllRol.UsuarioActualTieneAcceso(PermisosSistema.GestionIdiomas))
             {
                 pnlGestion.Visible = false;
                 return;

@@ -34,7 +34,7 @@ namespace BLL
                 MiembrosActivos = Intentar(() => mppDashboard.ContarAlumnosActivos()),
                 IngresosMes = Intentar(() => mppDashboard.SumarIngresosPeriodo(periodoActual)),
                 IngresosMesAnterior = Intentar(() => mppDashboard.SumarIngresosPeriodo(periodoAnterior)),
-                AlumnosAlDia = Intentar(() => mppDashboard.ContarAlumnosAlDia(periodoActual))
+                AlumnosAlDia = Intentar(() => mppDashboard.ContarAlumnosAlDia(hoy))
             };
 
             resumen.ClasesMes = Intentar<int?>(() =>

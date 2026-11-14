@@ -15,6 +15,10 @@ namespace gymAppV2.DashBoard
     {
         protected global::System.Web.UI.WebControls.Literal litTitulo;
         protected global::System.Web.UI.WebControls.Literal litSubtitulo;
+        protected global::System.Web.UI.WebControls.Panel pnlAbonoCliente;
+        protected global::System.Web.UI.WebControls.Literal litAbonoTitulo;
+        protected global::System.Web.UI.WebControls.Literal litAbonoHoy;
+        protected global::System.Web.UI.WebControls.Repeater rptAbonoCliente;
         protected global::System.Web.UI.WebControls.Literal litKpiMiembros;
         protected global::System.Web.UI.WebControls.Literal litKpiClases;
         protected global::System.Web.UI.WebControls.Literal litKpiIngresos;

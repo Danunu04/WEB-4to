@@ -14,70 +14,77 @@ namespace gymAppV2.Pagos
     public partial class PagosCliente
     {
 
+        // Encabezado
         protected global::System.Web.UI.WebControls.Literal litTitulo;
         protected global::System.Web.UI.WebControls.Literal litSubtitulo;
 
-        /// <summary>
-        /// pnlCliente control.
-        /// </summary>
+        // Vista cliente
         protected global::System.Web.UI.WebControls.Panel pnlCliente;
-
         protected global::System.Web.UI.WebControls.Literal litClienteMsg;
+        protected global::System.Web.UI.WebControls.Repeater rptAbonosCliente;
+        protected global::System.Web.UI.WebControls.Panel pnlSinAlumnos;
+        protected global::System.Web.UI.WebControls.Literal litSinAlumnos;
         protected global::System.Web.UI.WebControls.Literal litListaClienteTitulo;
         protected global::System.Web.UI.WebControls.GridView gvPagosCliente;
 
-        /// <summary>
-        /// pnlAdmin control.
-        /// </summary>
-        protected global::System.Web.UI.WebControls.Panel pnlAdmin;
+        // Ventana de pago del cliente
+        protected global::System.Web.UI.WebControls.Panel pnlPagoCliente;
+        protected global::System.Web.UI.WebControls.Literal litPagoClienteTitulo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarPagoCliente;
+        protected global::System.Web.UI.WebControls.Literal litClienteCampoAlumno;
+        protected global::System.Web.UI.WebControls.Label lblClienteAlumno;
+        protected global::System.Web.UI.WebControls.Literal litClienteCampoModalidad;
+        protected global::System.Web.UI.WebControls.DropDownList ddlClienteModalidad;
+        protected global::System.Web.UI.WebControls.Literal litClienteCampoMonto;
+        protected global::System.Web.UI.WebControls.Label lblClienteMonto;
+        protected global::System.Web.UI.WebControls.Label lblClienteCobertura;
+        protected global::System.Web.UI.WebControls.Literal litClienteCampoMetodo;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblClienteMetodo;
+        protected global::System.Web.UI.WebControls.Panel pnlTarjeta;
+        protected global::System.Web.UI.WebControls.Literal litTarjetaNumero;
+        protected global::System.Web.UI.WebControls.TextBox txtTarjetaNumero;
+        protected global::System.Web.UI.WebControls.Literal litTarjetaTitular;
+        protected global::System.Web.UI.WebControls.TextBox txtTarjetaTitular;
+        protected global::System.Web.UI.WebControls.Literal litTarjetaVence;
+        protected global::System.Web.UI.WebControls.TextBox txtTarjetaVence;
+        protected global::System.Web.UI.WebControls.Literal litTarjetaCvv;
+        protected global::System.Web.UI.WebControls.TextBox txtTarjetaCvv;
+        protected global::System.Web.UI.WebControls.Panel pnlTransferencia;
+        protected global::System.Web.UI.WebControls.Literal litTransferenciaDatos;
+        protected global::System.Web.UI.WebControls.Literal litAvisoDemo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarPagoCliente;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnConfirmarPagoCliente;
+        protected global::System.Web.UI.WebControls.Literal litBtnConfirmarPago;
 
+        // Vista administración
+        protected global::System.Web.UI.WebControls.Panel pnlAdmin;
+        protected global::System.Web.UI.WebControls.Literal litEstadosTitulo;
+        protected global::System.Web.UI.WebControls.Panel pnlBuscador;
+        protected global::System.Web.UI.WebControls.TextBox txtBuscar;
+        protected global::System.Web.UI.WebControls.LinkButton btnBuscar;
+        protected global::System.Web.UI.WebControls.LinkButton btnLimpiarBusqueda;
+        protected global::System.Web.UI.WebControls.GridView gvEstados;
         protected global::System.Web.UI.WebControls.Literal litListaTitulo;
         protected global::System.Web.UI.WebControls.GridView gvPagos;
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl footerText;
-
-        /// <summary>
-        /// btnRegistrar control.
-        /// </summary>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnRegistrar;
         protected global::System.Web.UI.WebControls.Literal litBtnRegistrar;
 
-        /// <summary>
-        /// pnlForm control.
-        /// </summary>
+        // Formulario de cobro
         protected global::System.Web.UI.WebControls.Panel pnlForm;
-
         protected global::System.Web.UI.WebControls.Literal litFormTitulo;
-
-        /// <summary>
-        /// btnCloseForm control.
-        /// </summary>
         protected global::System.Web.UI.HtmlControls.HtmlButton btnCloseForm;
-
         protected global::System.Web.UI.WebControls.Literal litCampoAlumno;
         protected global::System.Web.UI.WebControls.DropDownList ddlAlumno;
         protected global::System.Web.UI.WebControls.Literal litCampoModalidad;
         protected global::System.Web.UI.WebControls.DropDownList ddlModalidad;
-        protected global::System.Web.UI.WebControls.Literal litCampoPeriodo;
-        protected global::System.Web.UI.WebControls.TextBox txtPeriodo;
-        protected global::System.Web.UI.WebControls.Literal litCampoPeriodoHint;
         protected global::System.Web.UI.WebControls.Literal litCampoMetodo;
         protected global::System.Web.UI.WebControls.DropDownList ddlMetodoPago;
         protected global::System.Web.UI.WebControls.Literal litCampoMonto;
         protected global::System.Web.UI.WebControls.Label lblMontoPreview;
-
-        /// <summary>
-        /// btnGuardar control.
-        /// </summary>
-        protected global::System.Web.UI.HtmlControls.HtmlButton btnGuardar;
-
-        /// <summary>
-        /// btnCancelarForm control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCobertura;
         protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarForm;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnGuardar;
         protected global::System.Web.UI.WebControls.Literal litBtnGuardar;
     }
 }

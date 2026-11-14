@@ -35,7 +35,7 @@
         .texto-vacio { color: var(--color-muted); font-size: 0.875rem; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-        .aulas-container .modal-content { background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 28rem; }
+        .aulas-container .modal-content { background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 28rem; max-height: calc(100dvh - 1rem); overflow-y: auto; }
         .aulas-container .modal-title { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 700; color: var(--color-text); margin: 0 0 1rem 0; }
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--color-text); margin-bottom: 0.25rem; }
@@ -46,8 +46,13 @@
         .btn-secondary { border: 0.0625rem solid var(--color-border); background: var(--color-surface); color: var(--color-muted); }
         .btn-submit { border: none; background: var(--color-accent); color: white; }
 
-        .sidebar-menu li a[href*="Aulas"] { background: var(--color-accent, #C7B5FF); color: white; }
-        .sidebar-menu li a[href*="Aulas"] i, .sidebar-menu li a[href*="Aulas"] .menu-text { color: white; }
+        @media (max-width: 48rem) {
+            .aulas-container { padding: 0; }
+            .aulas-header h2 { font-size: 1.25rem; }
+            .aulas-card { background: transparent; border: none; }
+            .modal-overlay { padding: 0.5rem; }
+            .aulas-container .modal-content { padding: 1rem; }
+        }
     </style>
 </asp:Content>
 
@@ -64,7 +69,7 @@
         </div>
 
         <div class="aulas-card">
-            <table class="aulas-tabla">
+            <table class="aulas-tabla tabla-tarjetas">
                 <thead>
                     <tr>
                         <th><%= T("aulas_col_nombre") %></th>

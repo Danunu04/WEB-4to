@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Usuarios - GymApp</title>
-    <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=4") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script type="text/javascript">
         function soloNumeros(e) {
@@ -110,7 +110,7 @@
                     </div>
                 </div>
                 <div style="margin-bottom: 2px;">
-                <asp:GridView ID="gvUsuarios" runat="server" AutoGenerateColumns="false" CssClass="table"
+                <asp:GridView ID="gvUsuarios" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas"
                     GridLines="None" AllowPaging="true" PageSize="10" OnPageIndexChanging="gvUsuarios_PageIndexChanging"
                     OnRowCommand="gvUsuarios_RowCommand" OnRowDataBound="gvUsuarios_RowDataBound"
                     DataKeyNames="USUARIO_Usuario" SelectedRowStyle-CssClass="selected">
@@ -161,7 +161,7 @@
                 <div class="table-footer">
                     <span class="table-footer-text" id="footerText" runat="server"></span>
                 </div>
-                <div class="table-actions" style="display:flex;justify-content:flex-end;gap:0.5rem;padding-top:1rem;border-top:1px solid var(--border-color);margin:4px;">
+                <div class="table-actions" style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:0.5rem;padding-top:1rem;border-top:1px solid var(--border-color);margin:4px;">
                     <button id="btnCrear" runat="server" class="btn-action btn-crear" onserverclick="btnCrear_Click">
                         <i class="fa-solid fa-plus"></i> <asp:Literal ID="litBtnCrear" runat="server" Text="Crear" />
                     </button>

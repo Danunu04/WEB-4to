@@ -46,6 +46,13 @@
     <Compile Include="CriptoManager.cs" />
     <Compile Include="CriptoMigracion.cs" />
     <Compile Include="DigitoVerificadorManager.cs" />
+    <Compile Include="Composite\IComponente.cs" />
+    <Compile Include="Composite\PermisoSimple.cs" />
+    <Compile Include="Composite\Familia.cs" />
+    <Compile Include="Composite\Perfil.cs" />
+    <Compile Include="Composite\Componentes.cs" />
+    <Compile Include="Composite\ComposicionInvalidaException.cs" />
+    <Compile Include="Composite\EstructuraPermisos.cs" />
     <Compile Include="Excepciones\AccesoDenegadoException.cs" />
     <Compile Include="Singleton\Singleton.cs" />
     <Compile Include="Singleton\SesionUsuario.cs" />

@@ -487,3 +487,28 @@
 .dv-fila-ok td {
     background: #f0fdf4;
 }
+
+/* ── Celular ─────────────────────────────── */
+/* Las grillas de detalle se desplazan de costado en lugar de cortarse */
+.dv-tabla-grupo,
+.dv-estado-control-collapsible {
+    overflow-x: auto;
+}
+
+@media (max-width: 48rem) {
+    .dv-bloqueo {
+        margin: 1rem auto;
+        padding: 1.5rem 1rem;
+    }
+
+    .dv-resultados {
+        padding: 0.75rem;
+    }
+
+    .dv-grid th,
+    .dv-grid td,
+    .dv-grid-detalle th,
+    .dv-grid-detalle td {
+        white-space: nowrap;
+    }
+}

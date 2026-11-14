@@ -53,6 +53,7 @@ La navegación y el contenido de cada pantalla se adaptan dinámicamente según 
 | **G. Entrenadores**        | ✅ ABM completo        | ❌                           | ❌          |
 | **Actividades / Calendario** | ✅ Todas las clases  | ✅ Solo sus clases            | ❌          |
 | **G. Rutinas**             | ✅ ABM completo        | ✅ Solo lectura               | ✅ ABM completo |
+| **Cálculo de RM**          | ✅ Todos los alumnos   | ✅ Solo sus alumnos           | ✅ Todos los alumnos |
 | **G. Clases**              | ✅ CRUD completo       | ✅ Solo visualización         | ✅ Solo visualización |
 | **Crear Familia / Perfil** | ✅                     | ❌                           | ❌          |
 | **Bitácora**               | ✅                     | ❌                           | ❌          |
@@ -168,6 +169,23 @@ El módulo de **Inicio** permite registrar el ingreso de alumnos al gimnasio. Op
 | **Cliente**            | Solo puede **visualizar** las rutinas que le fueron asignadas. |
 
 Las rutinas reemplazan el sistema actual de comunicación informal (WhatsApp, Instagram, papel impreso), centralizando toda la información en la plataforma.
+
+### 7.1 Cálculo de RM (repetición máxima)
+
+La **1RM** es el peso más alto que un alumno puede levantar una sola vez en un ejercicio. Como medirla directamente es riesgoso, se **estima** a partir de una serie:
+
+- **Fórmula de Epley:** 1RM = peso × (1 + repeticiones / 30). Con 1 repetición, la 1RM es el mismo peso.
+- **Rangos válidos:** peso mayor que 0 y hasta 500 kg; entre 1 y 12 repeticiones (más allá de 12 la estimación pierde precisión).
+- Con la 1RM se muestra una **tabla de cargas** del 50% al 100%, con el peso redondeado a 0,5 kg y las repeticiones aproximadas (misma fórmula despejada).
+- Se puede **calcular sin guardar**. Al **guardar**, queda en el historial del alumno con la fecha, el ejercicio, la serie y quién la registró, y se compara con el último registro de ese ejercicio.
+- Solo se registra para alumnos **activos**.
+
+| Actor | Capacidad |
+|-------|-----------|
+| **Admin / Recepcionista / Entrenador** | Calcular y registrar la 1RM de cualquier alumno activo y ver su historial. |
+| **Cliente (Alumno / Familiar)** | Calcular y registrar la 1RM de los alumnos asociados a su cuenta y ver su historial. |
+
+Cada registro queda en la bitácora (módulo "Cálculo de RM").
 
 ---
 

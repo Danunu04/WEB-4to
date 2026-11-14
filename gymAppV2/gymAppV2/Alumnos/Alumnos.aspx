@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Alumnos - GymApp</title>
-    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=4") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -16,6 +16,15 @@
                 <span class="badge-count" id="badgeCount" runat="server">0</span>
             </div>
         </div>
+
+        <!-- Después de un alta: cobrar el primer mes completa la asociación (RFN1) -->
+        <asp:Panel ID="pnlPrimerMes" runat="server" Visible="false" CssClass="aviso-primer-mes" role="status">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><asp:Literal ID="litPrimerMes" runat="server" /></span>
+            <asp:HyperLink ID="lnkCobrarPrimerMes" runat="server" CssClass="btn-primer-mes">
+                <i class="fa-solid fa-cash-register"></i> <asp:Literal ID="litCobrarPrimerMes" runat="server" Text="Cobrar primer mes" />
+            </asp:HyperLink>
+        </asp:Panel>
 
         <!-- Stats -->
         <div class="stats-row">

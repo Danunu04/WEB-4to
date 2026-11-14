@@ -57,6 +57,12 @@
     <Compile Include="PermisoException.cs" />
     <Compile Include="ReglaNegocioException.cs" />
     <Compile Include="BLLRutina.cs" />
+    <Compile Include="BLLCalculoRM.cs" />
+    <Compile Include="BLLPesoCorporal.cs" />
+    <Compile Include="BLLAvisoPrecio.cs" />
+    <Compile Include="BLLAlertaCheckin.cs" />
+    <Compile Include="BLLRegistro.cs" />
+    <Compile Include="ValidadorTarjeta.cs" />
     <Compile Include="BLLUsuario.cs" />
     <Compile Include="BLLCriptoMigracion.cs" />
     <Compile Include="Class1.cs" />

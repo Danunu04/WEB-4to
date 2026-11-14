@@ -41,6 +41,46 @@ namespace gymAppV2.WebServices
             return (List<Alumno>)resultado[0];
         }
 
+        [SoapDocumentMethod(AlumnosWS.NAMESPACE + "/RegistrarAlumno",
+            RequestNamespace = AlumnosWS.NAMESPACE, ResponseNamespace = AlumnosWS.NAMESPACE)]
+        public RespuestaAlumnoWS RegistrarAlumno(SolicitudAlumno solicitud)
+        {
+            object[] resultado = Invoke("RegistrarAlumno", new object[] { solicitud });
+            return (RespuestaAlumnoWS)resultado[0];
+        }
+
+        [SoapDocumentMethod(AlumnosWS.NAMESPACE + "/ModificarAlumno",
+            RequestNamespace = AlumnosWS.NAMESPACE, ResponseNamespace = AlumnosWS.NAMESPACE)]
+        public RespuestaAlumnoWS ModificarAlumno(SolicitudAlumno solicitud)
+        {
+            object[] resultado = Invoke("ModificarAlumno", new object[] { solicitud });
+            return (RespuestaAlumnoWS)resultado[0];
+        }
+
+        [SoapDocumentMethod(AlumnosWS.NAMESPACE + "/DarDeBajaAlumno",
+            RequestNamespace = AlumnosWS.NAMESPACE, ResponseNamespace = AlumnosWS.NAMESPACE)]
+        public RespuestaAlumnoWS DarDeBajaAlumno(int dni)
+        {
+            object[] resultado = Invoke("DarDeBajaAlumno", new object[] { dni });
+            return (RespuestaAlumnoWS)resultado[0];
+        }
+
+        [SoapDocumentMethod(AlumnosWS.NAMESPACE + "/AsociarAlumnoAUsuario",
+            RequestNamespace = AlumnosWS.NAMESPACE, ResponseNamespace = AlumnosWS.NAMESPACE)]
+        public RespuestaAlumnoWS AsociarAlumnoAUsuario(int dni, string usuario, string parentesco)
+        {
+            object[] resultado = Invoke("AsociarAlumnoAUsuario", new object[] { dni, usuario, parentesco });
+            return (RespuestaAlumnoWS)resultado[0];
+        }
+
+        [SoapDocumentMethod(AlumnosWS.NAMESPACE + "/DesasociarAlumnoDeUsuario",
+            RequestNamespace = AlumnosWS.NAMESPACE, ResponseNamespace = AlumnosWS.NAMESPACE)]
+        public RespuestaAlumnoWS DesasociarAlumnoDeUsuario(int dni, string usuario)
+        {
+            object[] resultado = Invoke("DesasociarAlumnoDeUsuario", new object[] { dni, usuario });
+            return (RespuestaAlumnoWS)resultado[0];
+        }
+
         /// <summary>
         /// Crea el proxy apuntando a la URL de appSettings["AlumnosWS_Url"] o, si no está
         /// configurada, al AlumnosWS.asmx de este mismo sitio. Reenvía la cookie de login

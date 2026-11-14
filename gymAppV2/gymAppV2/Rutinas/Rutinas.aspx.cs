@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -25,6 +26,13 @@ namespace gymAppV2.Rutinas
         {
             get { return ViewState["CodRutinaSeleccionado"] as int?; }
             set { ViewState["CodRutinaSeleccionado"] = value; }
+        }
+
+        /// <summary>Rutina cuyos ejercicios se están mostrando en la ventana de ejercicios.</summary>
+        private int? CodRutinaEjercicios
+        {
+            get { return ViewState["CodRutinaEjercicios"] as int?; }
+            set { ViewState["CodRutinaEjercicios"] = value; }
         }
 
         private bool EsModificacion
@@ -91,6 +99,19 @@ namespace gymAppV2.Rutinas
             litConfirmarMsg.Text           = T("rutinas_confirmar_elim_msg");
             litBtnCancelarEliminar.Text     = T("btn_cancelar");
             litBtnConfirmarEliminar.Text    = T("rutinas_btn_eliminar");
+
+            litBtnEjercicios.Text       = Texto("rutinas_ej_btn", "Ejercicios");
+            litEjerciciosTitulo.Text    = Texto("rutinas_ej_titulo", "Ejercicios de la rutina");
+            litSinEjercicios.Text       = Texto("rutinas_ej_vacio", "Esta rutina todavía no tiene ejercicios.");
+            litAgregarTitulo.Text       = Texto("rutinas_ej_agregar_titulo", "Agregar ejercicio");
+            litCampoEjercicio.Text      = Texto("rutinas_ej_col_ejercicio", "Ejercicio");
+            litCampoSeries.Text         = Texto("rutinas_ej_campo_series", "Series");
+            litCampoReps.Text           = Texto("rutinas_ej_campo_reps", "Repeticiones");
+            litCampoPeso.Text           = Texto("rutinas_ej_campo_peso", "Peso (kg)");
+            litCampoDescanso.Text       = Texto("rutinas_ej_campo_descanso", "Descanso (seg)");
+            litCampoObservaciones.Text  = Texto("rutinas_ej_col_observaciones", "Observaciones");
+            litBtnAgregarEjercicio.Text = Texto("rutinas_ej_btn_agregar", "Agregar");
+            litBtnCerrarEjercicios.Text = Texto("rutinas_ej_btn_cerrar", "Cerrar");
         }
 
         // ==================== VISTA CLIENTE ====================
@@ -390,6 +411,205 @@ namespace gymAppV2.Rutinas
             {
                 MostrarError("Ocurrió un error inesperado. Intente nuevamente.");
             }
+        }
+
+        // ==================== EJERCICIOS DE LA RUTINA (CUN008) ====================
+
+        protected void btnEjercicios_Click(object sender, EventArgs e)
+        {
+            if (!CodRutinaSeleccionado.HasValue)
+            {
+                MostrarError(Texto("rutinas_ej_sel", "Seleccioná una rutina de la lista."));
+                return;
+            }
+
+            AbrirEjercicios(CodRutinaSeleccionado.Value);
+        }
+
+        protected void gvRutinasCliente_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Detalle" && int.TryParse(Convert.ToString(e.CommandArgument), out int codRutina))
+            {
+                AbrirEjercicios(codRutina);
+            }
+        }
+
+        private void AbrirEjercicios(int codRutina)
+        {
+            try
+            {
+                Rutina rutina = bllRutina.ObtenerRutina(codRutina);
+                if (rutina == null)
+                {
+                    MostrarError("La rutina seleccionada ya no existe.");
+                    return;
+                }
+
+                CodRutinaEjercicios = codRutina;
+                litEjerciciosRutina.Text =
+                    Server.HtmlEncode($"{rutina.ActividadDescripcion} · {rutina.AlumnoApellido}, {rutina.AlumnoNombre} · {rutina.Fecha:dd/MM/yyyy}") +
+                    "<br />" + Server.HtmlEncode(rutina.Descripcion);
+
+                pnlAgregarEjercicio.Visible = !EsCliente;
+                if (!EsCliente)
+                {
+                    CargarCatalogoEjercicios();
+                    LimpiarFormularioEjercicio();
+                }
+
+                if (CargarEjercicios())
+                {
+                    pnlEjercicios.Visible = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+        }
+
+        /// <summary>Carga la lista de ejercicios de la rutina abierta. Devuelve false si no se pudo.</summary>
+        private bool CargarEjercicios()
+        {
+            try
+            {
+                List<RutinaEjercicio> ejercicios = bllRutina.ListarEjercicios(CodRutinaEjercicios.Value, Singleton.Instancia.Usuario);
+                rptEjercicios.DataSource = ejercicios;
+                rptEjercicios.DataBind();
+                rptEjercicios.Visible = ejercicios.Count > 0;
+                pnlSinEjercicios.Visible = ejercicios.Count == 0;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+                return false;
+            }
+        }
+
+        private void CargarCatalogoEjercicios()
+        {
+            ddlEjercicio.Items.Clear();
+            ddlEjercicio.Items.Add(new ListItem(Texto("rm_elegir", "— Elegí —"), string.Empty));
+            foreach (Ejercicio ejercicio in new BLLCalculoRM().ListarEjercicios())
+            {
+                string texto = string.IsNullOrEmpty(ejercicio.GrupoMuscular)
+                    ? ejercicio.Nombre
+                    : $"{ejercicio.Nombre} ({ejercicio.GrupoMuscular})";
+                ddlEjercicio.Items.Add(new ListItem(texto, ejercicio.CodEjercicio.ToString()));
+            }
+        }
+
+        protected void btnAgregarEjercicio_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!CodRutinaEjercicios.HasValue)
+                    return;
+
+                int.TryParse(ddlEjercicio.SelectedValue, out int codEjercicio);
+                int.TryParse((txtSeries.Text ?? string.Empty).Trim(), out int series);
+                int.TryParse((txtRepeticiones.Text ?? string.Empty).Trim(), out int repeticiones);
+
+                decimal? peso = null;
+                string textoPeso = (txtPesoEjercicio.Text ?? string.Empty).Trim().Replace(',', '.');
+                if (textoPeso.Length > 0)
+                {
+                    if (!decimal.TryParse(textoPeso, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal valor))
+                    {
+                        MostrarError(Texto("rutinas_ej_err_peso", "El peso debe ser mayor que 0 y hasta {0} kg.", BLLRutina.PESO_MAXIMO.ToString("0")));
+                        return;
+                    }
+                    peso = valor;
+                }
+
+                int? descanso = null;
+                string textoDescanso = (txtDescanso.Text ?? string.Empty).Trim();
+                if (textoDescanso.Length > 0)
+                {
+                    if (!int.TryParse(textoDescanso, out int segundos))
+                    {
+                        MostrarError(Texto("rutinas_ej_err_descanso", "El descanso debe estar entre 0 y {0} segundos.", BLLRutina.DESCANSO_MAXIMO_SEGUNDOS));
+                        return;
+                    }
+                    descanso = segundos;
+                }
+
+                bllRutina.AgregarEjercicio(new RutinaEjercicio
+                {
+                    CodRutina = CodRutinaEjercicios.Value,
+                    CodEjercicio = codEjercicio,
+                    Series = series,
+                    Repeticiones = repeticiones,
+                    PesoLevantado = peso,
+                    DescansoSegundos = descanso,
+                    Observaciones = txtObservaciones.Text
+                }, Singleton.Instancia.Usuario);
+
+                LimpiarFormularioEjercicio();
+                CargarEjercicios();
+                MostrarExito(Texto("rutinas_ej_msg_agregado", "Ejercicio agregado."));
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+        }
+
+        protected void rptEjercicios_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName != "Quitar")
+                return;
+
+            try
+            {
+                bllRutina.QuitarEjercicio(Convert.ToInt32(e.CommandArgument), Singleton.Instancia.Usuario);
+                CargarEjercicios();
+                MostrarExito(Texto("rutinas_ej_msg_quitado", "Ejercicio quitado."));
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+        }
+
+        protected void btnCerrarEjercicios_Click(object sender, EventArgs e)
+        {
+            pnlEjercicios.Visible = false;
+            CodRutinaEjercicios = null;
+        }
+
+        private void LimpiarFormularioEjercicio()
+        {
+            if (ddlEjercicio.Items.Count > 0) ddlEjercicio.SelectedIndex = 0;
+            txtSeries.Text = string.Empty;
+            txtRepeticiones.Text = string.Empty;
+            txtPesoEjercicio.Text = string.Empty;
+            txtDescanso.Text = string.Empty;
+            txtObservaciones.Text = string.Empty;
+        }
+
+        /// <summary>Peso del ejercicio y, si se puede calcular, qué porcentaje de la 1RM es.</summary>
+        protected string FormatoPeso(object item)
+        {
+            var ejercicio = item as RutinaEjercicio;
+            if (ejercicio?.PesoLevantado == null)
+                return "—";
+
+            string peso = ejercicio.PesoLevantado.Value.ToString("0.#") + " kg";
+            return ejercicio.PorcentajeRM.HasValue
+                ? peso + " · " + Texto("rutinas_ej_porcentaje_rm", "{0}% de la 1RM", ejercicio.PorcentajeRM.Value.ToString("0"))
+                : peso;
+        }
+
+        protected string FormatoDescanso(object segundos)
+        {
+            return segundos == null || segundos == DBNull.Value ? "—" : Convert.ToInt32(segundos) + " s";
+        }
+
+        private string MensajeError(Exception ex)
+        {
+            return MensajeDePermisos(ex) ?? "Ocurrió un error inesperado. Intente nuevamente.";
         }
 
         // ==================== MÉTODOS AUXILIARES ====================

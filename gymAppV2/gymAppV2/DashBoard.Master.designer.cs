@@ -131,6 +131,8 @@ namespace gymAppV2 {
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liRutinas;
 
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liCalculoRM;
+
         /// <summary>
         /// Control liPermisos.
         /// </summary>
@@ -166,6 +168,8 @@ namespace gymAppV2 {
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liPagos;
+
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liPrecios;
 
         /// <summary>
         /// Control liRespaldo.
@@ -209,10 +213,17 @@ namespace gymAppV2 {
 
         protected global::System.Web.UI.WebControls.Literal litMenuAulas;
         protected global::System.Web.UI.WebControls.Literal litMenuRutinas;
+        protected global::System.Web.UI.WebControls.Literal litMenuCalculoRM;
+
+        protected global::System.Web.UI.WebControls.Panel pnlAvisoPrecio;
+        protected global::System.Web.UI.WebControls.Literal litAvisoPrecio;
+        protected global::System.Web.UI.WebControls.LinkButton btnAvisoVisto;
+        protected global::System.Web.UI.WebControls.Literal litAvisoVisto;
         protected global::System.Web.UI.WebControls.Literal litMenuPermisos;
         protected global::System.Web.UI.WebControls.Literal litMenuBitacora;
         protected global::System.Web.UI.WebControls.Literal litMenuRespaldo;
         protected global::System.Web.UI.WebControls.Literal litMenuPagos;
+        protected global::System.Web.UI.WebControls.Literal litMenuPrecios;
         protected global::System.Web.UI.WebControls.Literal litMenuPerfil;
         protected global::System.Web.UI.WebControls.Literal litMenuIdioma;
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liIdioma;

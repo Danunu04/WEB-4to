@@ -33,6 +33,35 @@ namespace gymAppV2.Rutinas
 
         protected global::System.Web.UI.WebControls.Literal litListaTitulo;
         protected global::System.Web.UI.WebControls.GridView gvRutinas;
+
+        // Ejercicios de la rutina
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnEjercicios;
+        protected global::System.Web.UI.WebControls.Literal litBtnEjercicios;
+        protected global::System.Web.UI.WebControls.Panel pnlEjercicios;
+        protected global::System.Web.UI.WebControls.Literal litEjerciciosTitulo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarEjercicios;
+        protected global::System.Web.UI.WebControls.Literal litEjerciciosRutina;
+        protected global::System.Web.UI.WebControls.Repeater rptEjercicios;
+        protected global::System.Web.UI.WebControls.Panel pnlSinEjercicios;
+        protected global::System.Web.UI.WebControls.Literal litSinEjercicios;
+        protected global::System.Web.UI.WebControls.Panel pnlAgregarEjercicio;
+        protected global::System.Web.UI.WebControls.Literal litAgregarTitulo;
+        protected global::System.Web.UI.WebControls.Literal litCampoEjercicio;
+        protected global::System.Web.UI.WebControls.DropDownList ddlEjercicio;
+        protected global::System.Web.UI.WebControls.Literal litCampoSeries;
+        protected global::System.Web.UI.WebControls.TextBox txtSeries;
+        protected global::System.Web.UI.WebControls.Literal litCampoReps;
+        protected global::System.Web.UI.WebControls.TextBox txtRepeticiones;
+        protected global::System.Web.UI.WebControls.Literal litCampoPeso;
+        protected global::System.Web.UI.WebControls.TextBox txtPesoEjercicio;
+        protected global::System.Web.UI.WebControls.Literal litCampoDescanso;
+        protected global::System.Web.UI.WebControls.TextBox txtDescanso;
+        protected global::System.Web.UI.WebControls.Literal litCampoObservaciones;
+        protected global::System.Web.UI.WebControls.TextBox txtObservaciones;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnAgregarEjercicio;
+        protected global::System.Web.UI.WebControls.Literal litBtnAgregarEjercicio;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarEjercicios2;
+        protected global::System.Web.UI.WebControls.Literal litBtnCerrarEjercicios;
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl footerText;
         protected global::System.Web.UI.HtmlControls.HtmlButton btnCrear;
         protected global::System.Web.UI.WebControls.Literal litBtnCrear;

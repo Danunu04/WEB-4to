@@ -700,7 +700,13 @@ namespace gymAppV2.Alumnos
         {
             if (VincularAAlumnoExistente)
             {
-                bllAlumno.AsociarFamiliar(DniAlumnoPendiente.Value, usuario, parentesco);
+                RespuestaAlumnoWS respuesta = LlamarServicio(ws => ws.AsociarAlumnoAUsuario(DniAlumnoPendiente.Value, usuario, parentesco));
+                if (!respuesta.Exito)
+                {
+                    MostrarError(MensajeServicio(respuesta));
+                    return;
+                }
+
                 MostrarExito(T("alumnos_msg_familiar_vinculado"));
                 CerrarAsistente();
                 MostrarCredencialesFinal();
@@ -721,21 +727,29 @@ namespace gymAppV2.Alumnos
                 if (!string.IsNullOrEmpty(txtPeso.Text) && decimal.TryParse(txtPeso.Text, out decimal p))
                     peso = p;
 
-                var alumno = new Alumno(dni, peso, false, chkActivo.Checked, "");
-                bllAlumno.CrearAlumno(alumno);
+                // El alta la hace el web service: crea el alumno y lo vincula a la cuenta de la
+                // persona (o a la del tutor). El evento de alta lo registra la BLL.
+                RespuestaAlumnoWS respuesta = LlamarServicio(ws => ws.RegistrarAlumno(new SolicitudAlumno
+                {
+                    Dni = dni,
+                    Peso = peso,
+                    Activo = chkActivo.Checked,
+                    UsuarioVinculo = VinculoUsuarioObjetivo,
+                    Parentesco = VinculoParentescoObjetivo
+                }));
+                if (!respuesta.Exito)
+                {
+                    MostrarError(MensajeServicio(respuesta));
+                    return;
+                }
 
-                var usuarioExistente = bllUsuario.ObtenerUsuarioPorDni(dni);
-                string usuarioVinculo = VinculoUsuarioObjetivo ?? usuarioExistente.USUARIO_Usuario;
-                string parentesco = VinculoUsuarioObjetivo != null ? VinculoParentescoObjetivo : "Titular";
-                bllAlumno.AsociarFamiliar(dni, usuarioVinculo, parentesco);
-
-                bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
                 MostrarExito(T("alumnos_msg_creado"));
                 CerrarAsistente();
                 MostrarCredencialesFinal();
                 CargarAlumnos();
                 DniSeleccionado = dni;
                 pnlForm.Visible = false;
+                OfrecerCobroPrimerMes(dni);
             }
             catch (Exception ex)
             {
@@ -763,47 +777,44 @@ namespace gymAppV2.Alumnos
                     return;
                 }
 
-                string contrasena = txtAsistenteContrasena.Text;
-                bool autogenerada = string.IsNullOrEmpty(contrasena);
-                if (autogenerada) contrasena = bllUsuario.GenerarContrasenaSegura();
-
                 decimal? peso = null;
                 if (!string.IsNullOrEmpty(txtPeso.Text) && decimal.TryParse(txtPeso.Text, out decimal p))
                     peso = p;
 
-                bllUsuario.CrearUsuario(
-                    usuarioNuevo, contrasena, 4, // Cliente
-                    txtNombre.Text.Trim(), txtApellido.Text.Trim(),
-                    string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text,
-                    null,
-                    DateTime.Parse(txtFechaNacimiento.Text),
-                    null, dni);
+                DateTime? fechaNacimiento = DateTime.TryParse(txtFechaNacimiento.Text, out DateTime fecha) ? fecha : (DateTime?)null;
 
-                var alumno = bllAlumno.ObtenerAlumno(dni);
-                if (alumno != null)
+                // El alta la hace el web service: crea la cuenta de Cliente (con contraseña generada si
+                // no se escribió una), el alumno y, si viene de un tutor, el vínculo con su cuenta.
+                RespuestaAlumnoWS respuesta = LlamarServicio(ws => ws.RegistrarAlumno(new SolicitudAlumno
                 {
-                    alumno.Peso = peso;
-                    alumno.Activo = chkActivo.Checked;
-                    bllAlumno.ActualizarAlumno(alumno);
+                    Dni = dni,
+                    Nombre = txtNombre.Text.Trim(),
+                    Apellido = txtApellido.Text.Trim(),
+                    Telefono = string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text,
+                    FechaNacimiento = fechaNacimiento,
+                    Peso = peso,
+                    Activo = chkActivo.Checked,
+                    Usuario = usuarioNuevo,
+                    Contrasena = string.IsNullOrEmpty(txtAsistenteContrasena.Text) ? null : txtAsistenteContrasena.Text,
+                    UsuarioVinculo = VinculoUsuarioObjetivo,
+                    Parentesco = VinculoParentescoObjetivo
+                }));
+                if (!respuesta.Exito)
+                {
+                    MostrarError(MensajeServicio(respuesta));
+                    return;
                 }
 
-                if (autogenerada) RegistrarCredencialGenerada(usuarioNuevo, contrasena, T("alumnos_rol_titular"));
+                if (!string.IsNullOrEmpty(respuesta.ContrasenaGenerada))
+                    RegistrarCredencialGenerada(respuesta.UsuarioCreado, respuesta.ContrasenaGenerada, T("alumnos_rol_titular"));
 
-                if (!string.IsNullOrEmpty(VinculoUsuarioObjetivo))
-                {
-                    // CrearUsuario ya auto-vinculó al propio titular; si viene de un flujo de
-                    // tutor, hay que reemplazar ese vínculo por el del familiar correspondiente.
-                    bllAlumno.DesasociarFamiliar(dni, usuarioNuevo);
-                    bllAlumno.AsociarFamiliar(dni, VinculoUsuarioObjetivo, VinculoParentescoObjetivo);
-                }
-
-                bllEvento.RegistrarAltaAlumno(ObtenerUsuarioActual(), dni);
                 MostrarExito(T("alumnos_msg_creado"));
                 CerrarAsistente();
                 MostrarCredencialesFinal();
                 CargarAlumnos();
                 DniSeleccionado = dni;
                 pnlForm.Visible = false;
+                OfrecerCobroPrimerMes(dni);
             }
             catch (Exception ex)
             {
@@ -857,6 +868,22 @@ namespace gymAppV2.Alumnos
             }
         }
 
+        /// <summary>
+        /// Al terminar un alta, ofrece cobrar el primer mes (RFN1: la asociación se completa con el
+        /// pago). El botón abre Pagos con el formulario de cobro y el alumno ya elegido.
+        /// </summary>
+        private void OfrecerCobroPrimerMes(int dni)
+        {
+            if (!BllRol.UsuarioActualTieneAcceso(PermisosSistema.Pagos))
+                return;
+
+            litPrimerMes.Text = Server.HtmlEncode(Texto("alumnos_primer_mes",
+                "Alumno dado de alta. Cobrale el primer mes para completar la asociación."));
+            litCobrarPrimerMes.Text = Server.HtmlEncode(Texto("alumnos_btn_cobrar_primer_mes", "Cobrar primer mes"));
+            lnkCobrarPrimerMes.NavigateUrl = ResolveUrl("~/Pagos/PagosCliente.aspx?cobrar=" + dni);
+            pnlPrimerMes.Visible = true;
+        }
+
         private void CerrarAsistente()
         {
             Paso = PasoAsistente.Ninguno;
@@ -902,7 +929,12 @@ namespace gymAppV2.Alumnos
                 if (e.CommandName == "Quitar" && DniSeleccionado.HasValue)
                 {
                     string usuario = e.CommandArgument.ToString();
-                    bllAlumno.DesasociarFamiliar(DniSeleccionado.Value, usuario);
+                    RespuestaAlumnoWS respuesta = LlamarServicio(ws => ws.DesasociarAlumnoDeUsuario(DniSeleccionado.Value, usuario));
+                    if (!respuesta.Exito)
+                    {
+                        MostrarError(MensajeServicio(respuesta));
+                        return;
+                    }
                     MostrarExito(T("alumnos_msg_familiar_desvinculado"));
 
                     var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
@@ -938,19 +970,19 @@ namespace gymAppV2.Alumnos
                     peso = p;
                 }
 
-                var alumno = bllAlumno.ObtenerAlumno(DniSeleccionado.Value);
-                if (alumno == null)
+                // La modificación la hace el web service (el evento lo registra la BLL)
+                int dniModificado = DniSeleccionado.Value;
+                RespuestaAlumnoWS respuesta = LlamarServicio(ws => ws.ModificarAlumno(new SolicitudAlumno
                 {
-                    MostrarError(T("alumnos_msg_no_existe"));
+                    Dni = dniModificado,
+                    Peso = peso,
+                    Activo = chkActivo.Checked
+                }));
+                if (!respuesta.Exito)
+                {
+                    MostrarError(MensajeServicio(respuesta));
                     return;
                 }
-
-                alumno.Peso = peso;
-                alumno.Activo = chkActivo.Checked;
-                bllAlumno.ActualizarAlumno(alumno);
-
-                bllEvento.RegistrarModificacionAlumno(ObtenerUsuarioActual(), alumno.DNI);
-                bllEvento.RegistrarCambioDatosAlumno(ObtenerUsuarioActual(), alumno.DNI, "datos alumno");
 
                 MostrarExito(T("alumnos_msg_modificado"));
                 pnlForm.Visible = false;
@@ -972,9 +1004,22 @@ namespace gymAppV2.Alumnos
                     return;
                 }
 
-                bllAlumno.EliminarAlumno(dni);
-                MostrarExito(T("alumnos_msg_eliminado"));
-                bllEvento.RegistrarBajaAlumno(ObtenerUsuarioActual(), dni);
+                // Baja lógica por el web service: se conservan pagos, rutinas e historial
+                RespuestaAlumnoWS respuesta = LlamarServicio(ws => ws.DarDeBajaAlumno(dni));
+                if (!respuesta.Exito)
+                {
+                    MostrarError(MensajeServicio(respuesta));
+                    return;
+                }
+                List<string> cuentasDesactivadas = respuesta.CuentasDesactivadas ?? new List<string>();
+
+                string mensaje = Texto("alumnos_msg_baja", "Alumno dado de baja. Sus pagos, rutinas e historial se conservan.");
+                if (cuentasDesactivadas.Count > 0)
+                {
+                    mensaje += " " + Texto("alumnos_msg_baja_cuentas", "También se desactivó la cuenta: {0}.",
+                        string.Join(", ", cuentasDesactivadas));
+                }
+                MostrarExito(mensaje);
 
                 pnlConfirmarEliminar.Visible = false;
                 CargarAlumnos();
@@ -986,6 +1031,28 @@ namespace gymAppV2.Alumnos
         }
 
         // ==================== MÉTODOS AUXILIARES ====================
+
+        /// <summary>
+        /// Llama al web service de alumnos (alta, baja, modificación y asociación pasan por él).
+        /// </summary>
+        private RespuestaAlumnoWS LlamarServicio(Func<AlumnosWSCliente, RespuestaAlumnoWS> llamada)
+        {
+            using (var ws = AlumnosWSCliente.Crear(this))
+            {
+                return llamada(ws);
+            }
+        }
+
+        /// <summary>Mensaje de una respuesta del servicio, traducido si trae clave.</summary>
+        private string MensajeServicio(RespuestaAlumnoWS respuesta)
+        {
+            string respaldo = string.IsNullOrEmpty(respuesta.Mensaje) ? T("msg_error_generico") : respuesta.Mensaje;
+            if (string.IsNullOrEmpty(respuesta.Clave))
+                return respaldo;
+
+            object[] argumentos = (respuesta.Argumentos ?? new List<string>()).Cast<object>().ToArray();
+            return Texto(respuesta.Clave, respaldo, argumentos);
+        }
 
         private string ObtenerUsuarioActual()
         {

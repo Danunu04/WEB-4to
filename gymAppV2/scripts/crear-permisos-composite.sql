@@ -199,7 +199,7 @@ SELECT v.nombre, ''
 FROM (VALUES
     ('Dashboard'), ('Perfil'),
     ('GestionUsuarios'), ('GestionAlumnos'), ('GestionEntrenadores'), ('Bitacora'),
-    ('ActividadesCalendario'), ('GestionActividades'), ('GestionAulas'), ('GestionRutinas'),
+    ('ActividadesCalendario'), ('GestionActividades'), ('GestionAulas'), ('GestionRutinas'), ('CalculoRM'),
     ('Pagos'), ('PreciosCuota'),
     ('VerificacionDV'), ('Backup'), ('Restore'), ('RecalcularDV'), ('EncriptarDatos'),
     ('GestionPermisos'), ('GestionIdiomas')
@@ -224,10 +224,13 @@ BEGIN
         ('PORTAL_CLIENTE',   'ActividadesCalendario'),
         ('PORTAL_CLIENTE',   'Pagos'),
         ('PORTAL_CLIENTE',   'Perfil'),
+        ('PORTAL_CLIENTE',   'CalculoRM'),
+        ('PORTAL_CLIENTE',   'GestionRutinas'),
         ('OPERACION',        'GestionAlumnos'),
         ('OPERACION',        'GestionEntrenadores'),
         ('OPERACION',        'GestionActividades'),
         ('OPERACION',        'GestionRutinas'),
+        ('OPERACION',        'CalculoRM'),
         ('ADMIN_GIMNASIO',   'GestionAulas'),
         ('CAJA',             'Pagos'),
         ('CAJA',             'PreciosCuota'),
@@ -272,6 +275,7 @@ BEGIN
         ('RECEPCION',  'ActividadesCalendario'),
         ('ENTRENADOR', 'Dashboard'),
         ('ENTRENADOR', 'GestionRutinas'),
+        ('ENTRENADOR', 'CalculoRM'),
         ('CLIENTE',    'Dashboard'),
         ('FAMILIAR',   'Dashboard'),
         ('FAMILIAR',   'GestionAlumnos')

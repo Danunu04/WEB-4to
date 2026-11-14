@@ -517,6 +517,11 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales2;
 
         protected global::System.Web.UI.WebControls.Literal litTitulo;
+
+        protected global::System.Web.UI.WebControls.Panel pnlPrimerMes;
+        protected global::System.Web.UI.WebControls.Literal litPrimerMes;
+        protected global::System.Web.UI.WebControls.HyperLink lnkCobrarPrimerMes;
+        protected global::System.Web.UI.WebControls.Literal litCobrarPrimerMes;
         protected global::System.Web.UI.WebControls.Literal litStatTotal;
         protected global::System.Web.UI.WebControls.Literal litStatActivos;
         protected global::System.Web.UI.WebControls.Literal litStatConRutinas;

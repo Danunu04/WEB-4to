@@ -1,0 +1,127 @@
+/* =============================================
+   REGISTRO (Crear cuenta) — se apoya en StyleSheet1.css del login
+   ============================================= */
+
+.registro-bloque { min-height: 0; }
+
+.registro-formulario {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    text-align: left;
+    max-width: 36rem;
+}
+
+.registro-formulario .titulo { text-align: center; }
+
+.registro-paso {
+    display: block;
+    text-align: center;
+    color: #FAECE7;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.registro-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.registro-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.registro-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.registro-campo label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #5A1E1A;
+}
+
+.registro-formulario .registro-campo input.form-control,
+.registro-formulario .registro-campo select {
+    text-align: left;
+    background: rgba(255, 255, 255, 0.75);
+    border: 0.125rem solid rgba(255, 255, 255, 0.6);
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.95rem;
+}
+
+.registro-ayuda {
+    font-size: 0.8rem;
+    color: #5A1E1A;
+    margin: 0;
+}
+
+.registro-demo {
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.registro-resumen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    color: #2D2D2D;
+}
+
+.registro-resumen span { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03rem; }
+.registro-resumen strong { font-size: 1.75rem; color: #C2410C; }
+.registro-resumen small { font-size: 0.8rem; color: #6B6B6B; }
+
+.registro-medios { display: flex; gap: 1.25rem; }
+.registro-medios input { margin-right: 0.35rem; }
+.registro-medios label { font-weight: 500; }
+
+.registro-acciones {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.registro-acciones .btnFormLogIn { margin-top: 0; flex: 2; }
+
+.registro-btn-secundario {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.85);
+    color: #C2410C;
+    border: 0.125rem solid rgba(255, 255, 255, 0.6);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.registro-btn-secundario:hover { background: #fff; }
+
+.registro-mensaje {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: #FFE5EB;
+    color: #7A1E33;
+    font-size: 0.875rem;
+}
+
+.registro-exito { align-items: center; text-align: center; color: #2D2D2D; }
+.registro-exito > i { font-size: 3rem; color: #0F6E56; }
+.registro-exito h2 { font-size: 1.35rem; font-weight: 700; margin: 0; }
+.registro-exito .registro-acciones { width: 100%; }
+
+@media (max-width: 48rem) {
+    .registro-fila { grid-template-columns: 1fr; }
+    .registro-acciones { flex-direction: column-reverse; }
+}

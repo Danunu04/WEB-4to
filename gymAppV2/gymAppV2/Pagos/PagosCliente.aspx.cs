@@ -63,6 +63,12 @@ namespace gymAppV2.Pagos
 
                 AplicarIdioma();
                 CargarDatos();
+
+                // Viene del alta de un alumno (Alumnos -> "Cobrar primer mes"): abrir el cobro ya elegido
+                if (!EsCliente && int.TryParse(Request.QueryString["cobrar"], out int dniCobro))
+                {
+                    AbrirFormulario(dniCobro);
+                }
             }
         }
 
@@ -288,43 +294,10 @@ namespace gymAppV2.Pagos
         /// </summary>
         private string ValidarTarjeta()
         {
-            string numero = Regex.Replace(txtTarjetaNumero.Text ?? string.Empty, @"[\s-]", string.Empty);
-            if (!Regex.IsMatch(numero, @"^\d{13,19}$") || !PasaLuhn(numero))
-                return Texto("pagos_err_tarjeta_numero", "El número de tarjeta no es válido.");
+            string clave = ValidadorTarjeta.Validar(txtTarjetaNumero.Text, txtTarjetaTitular.Text,
+                txtTarjetaVence.Text, txtTarjetaCvv.Text, DateTime.Today);
 
-            if (string.IsNullOrWhiteSpace(txtTarjetaTitular.Text))
-                return Texto("pagos_err_tarjeta_titular", "Ingresá el nombre del titular.");
-
-            Match vence = Regex.Match((txtTarjetaVence.Text ?? string.Empty).Trim(), @"^(0[1-9]|1[0-2])/(\d{2})$");
-            if (!vence.Success)
-                return Texto("pagos_err_tarjeta_vence", "El vencimiento de la tarjeta no es válido o ya pasó.");
-
-            var finDeMes = new DateTime(2000 + int.Parse(vence.Groups[2].Value), int.Parse(vence.Groups[1].Value), 1).AddMonths(1);
-            if (finDeMes <= DateTime.Today)
-                return Texto("pagos_err_tarjeta_vence", "El vencimiento de la tarjeta no es válido o ya pasó.");
-
-            if (!Regex.IsMatch((txtTarjetaCvv.Text ?? string.Empty).Trim(), @"^\d{3,4}$"))
-                return Texto("pagos_err_tarjeta_cvv", "El código de seguridad no es válido.");
-
-            return null;
-        }
-
-        private static bool PasaLuhn(string numero)
-        {
-            int suma = 0;
-            bool duplicar = false;
-            for (int i = numero.Length - 1; i >= 0; i--)
-            {
-                int digito = numero[i] - '0';
-                if (duplicar)
-                {
-                    digito *= 2;
-                    if (digito > 9) digito -= 9;
-                }
-                suma += digito;
-                duplicar = !duplicar;
-            }
-            return suma % 10 == 0;
+            return clave == null ? null : Texto(clave, ValidadorTarjeta.MensajeRespaldo(clave));
         }
 
         // ==================== VISTA ADMIN ====================

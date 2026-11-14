@@ -55,6 +55,11 @@
     <Compile Include="MPPPreguntaSeguridad.cs" />
     <Compile Include="MPPPermiso.cs" />
     <Compile Include="MPPRutina.cs" />
+    <Compile Include="MPPCalculoRM.cs" />
+    <Compile Include="MPPPesoCorporal.cs" />
+    <Compile Include="MPPAvisoPrecio.cs" />
+    <Compile Include="MPPAlertaCheckin.cs" />
+    <Compile Include="MPPRutinaEjercicio.cs" />
     <Compile Include="MPPUsuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MPPDigitoVerificador.cs" />

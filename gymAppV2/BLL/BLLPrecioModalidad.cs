@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
+using System.Net;
 using BE;
 using MPP;
+using SERVICIOS;
 
 namespace BLL
 {
@@ -48,7 +51,7 @@ namespace BLL
         {
             if (precio <= 0)
             {
-                throw new Exception("El precio debe ser mayor a 0");
+                throw new ReglaNegocioException("precios_err_precio", "El precio debe ser mayor a 0.");
             }
         }
 
@@ -101,6 +104,12 @@ namespace BLL
 
                 decimal precioAnterior = modalidadAnterior.Precio;
 
+                // Sin cambio real no se guarda ni se avisa a nadie
+                if (nuevoPrecio == precioAnterior)
+                {
+                    throw new ReglaNegocioException("precios_err_sin_cambio", "El precio nuevo es igual al actual.");
+                }
+
                 // Actualizar el precio
                 mppPrecioModalidad.ActualizarPrecio(id, nuevoPrecio);
 
@@ -112,8 +121,8 @@ namespace BLL
                     nuevoPrecio
                 );
 
-                // Disparar notificación a todos los usuarios que no sean Entrenadores (rol != 3)
-                NotificarCambioDePrecio(id, precioAnterior, nuevoPrecio, usuarioModificador);
+                // Alerta interna (banner) y email a todos los usuarios que no son Entrenadores
+                NotificarCambioDePrecio(modalidadAnterior, precioAnterior, nuevoPrecio, usuarioModificador);
             }
             catch (Exception ex)
             {
@@ -122,65 +131,93 @@ namespace BLL
         }
 
         /// <summary>
-        /// Notifica el cambio de precio a todos los usuarios que no sean Entrenadores
-        /// Según LogicaNegocio.txt: alerta interna + email
+        /// Notifica el cambio de precio a todos los usuarios activos que no son Entrenadores
+        /// (G05 - Notificaciones): crea el aviso que ven como banner y les manda un email.
+        /// Si algo falla se registra en la bitácora, pero el precio ya quedó modificado.
         /// </summary>
-        private void NotificarCambioDePrecio(int id, decimal precioAnterior, decimal precioNuevo, string usuarioModificador = null)
+        private void NotificarCambioDePrecio(PrecioModalidad modalidad, decimal precioAnterior, decimal precioNuevo, string usuarioModificador)
         {
-            // Si no hay usuario válido, no registrar eventos de notificación
-            // (las notificaciones son eventos secundarios, el evento principal ya se registró)
             if (string.IsNullOrEmpty(usuarioModificador))
             {
                 return;
             }
 
+            string descripcion = modalidad.ObtenerDescripcion();
+
+            // 1. Alerta interna (banner)
             try
             {
-                // Obtener todos los usuarios excepto Entrenadores (rol != 3)
-                List<UsuarioGestion> usuarios = bllUsuario.ListarUsuarios()
-                    .Where(u => u.USUARIO_Tipo != "Entrenador")
-                    .ToList();
-
-                // Registrar evento de notificación masiva
-                string detalleNotificacion = $"Precio modificado para {ObtenerModalidad(id)?.ObtenerDescripcion()}: ${precioAnterior} -> ${precioNuevo}";
-
-                foreach (var usuario in usuarios)
+                new BLLAvisoPrecio().Crear(new AvisoPrecio
                 {
-                    // Registrar evento individual de notificación (criticidad 4 = Baja)
-                    bllEvento.RegistrarEvento(
-                        "notificacion_cambio_precio",
-                        usuarioModificador,
-                        $"Notificación enviada a {usuario.USUARIO_Usuario}: {detalleNotificacion}",
-                        4
-                    );
-
-                    // TODO: Enviar email al correo registrado del usuario
-                    // Esto requiere implementar un servicio de email
-                    // EnviarEmail(usuario.Email, "Cambio de Precio - Sportio", detalleNotificacion);
-                }
-
-                // Registrar evento consolidado (criticidad 4 = Baja)
-                bllEvento.RegistrarEvento(
-                    "notificacion_masiva_precio",
-                    usuarioModificador,
-                    $"Notificación de cambio de precio enviada a {usuarios.Count} usuarios no-entrenadores",
-                    4
-                );
+                    ModalidadId = modalidad.Id,
+                    Descripcion = descripcion,
+                    PrecioAnterior = precioAnterior,
+                    PrecioNuevo = precioNuevo,
+                    Fecha = DateTime.Now,
+                    UsuarioRegistro = usuarioModificador
+                });
             }
             catch (Exception ex)
             {
-                // No impedir la modificación si falla la notificación (criticidad 4 = Baja)
-                // Solo registrar si hay usuario válido
-                if (!string.IsNullOrEmpty(usuarioModificador))
-                {
-                    bllEvento.RegistrarEvento(
-                        "error_notificacion_precio",
-                        usuarioModificador,
-                        $"Error al notificar cambio de precio: {ex.Message}",
-                        4
-                    );
-                }
+                bllEvento.RegistrarEvento("error_notificacion_precio", usuarioModificador,
+                    $"No se pudo crear el aviso interno de cambio de precio: {ex.Message}", 4, "Precios");
             }
+
+            // 2. Email a cada usuario con email cargado
+            int enviados = 0, sinEmail = 0, conError = 0;
+            var email = new EmailManager();
+            string asunto = "Sportio - Cambio en el precio de la cuota";
+
+            try
+            {
+                List<UsuarioGestion> destinatarios = bllUsuario.ListarUsuarios()
+                    .Where(u => u.USUARIO_Activo && u.USUARIO_Rol != PerfilesSistema.RolEntrenador)
+                    .ToList();
+
+                foreach (UsuarioGestion usuario in destinatarios)
+                {
+                    if (string.IsNullOrWhiteSpace(usuario.Email))
+                    {
+                        sinEmail++;
+                        continue;
+                    }
+
+                    try
+                    {
+                        email.Enviar(usuario.Email, asunto, ArmarCuerpoEmail(usuario, descripcion, precioAnterior, precioNuevo));
+                        enviados++;
+                    }
+                    catch
+                    {
+                        conError++;
+                    }
+                }
+
+                bllEvento.RegistrarEvento("notificacion_masiva_precio", usuarioModificador,
+                    $"Aviso de cambio de precio ({descripcion}: ${precioAnterior:0.##} -> ${precioNuevo:0.##}). " +
+                    $"Emails enviados: {enviados}, sin email: {sinEmail}, con error: {conError}.",
+                    4, "Precios");
+            }
+            catch (Exception ex)
+            {
+                bllEvento.RegistrarEvento("error_notificacion_precio", usuarioModificador,
+                    $"Error al enviar los emails de cambio de precio: {ex.Message}", 4, "Precios");
+            }
+        }
+
+        private static string ArmarCuerpoEmail(UsuarioGestion usuario, string descripcion, decimal precioAnterior, decimal precioNuevo)
+        {
+            CultureInfo cultura = CultureInfo.GetCultureInfo("es-AR");
+            string nombre = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(usuario.Nombre) ? usuario.USUARIO_Usuario : usuario.Nombre);
+
+            return $@"<div style=""font-family:Arial,sans-serif;font-size:14px;color:#2D2D2D"">
+<p>Hola {nombre}:</p>
+<p>Te avisamos que cambió el precio de la cuota mensual <strong>{WebUtility.HtmlEncode(descripcion)}</strong>:</p>
+<p>Antes: <strong>{precioAnterior.ToString("C", cultura)}</strong><br/>
+Ahora: <strong>{precioNuevo.ToString("C", cultura)}</strong></p>
+<p>El nuevo precio se aplica a partir del próximo pago del abono.</p>
+<p>Saludos,<br/>Sportio</p>
+</div>";
         }
 
         /// <summary>

@@ -143,6 +143,8 @@
     <Content Include="LogIn\PreguntasSeguridad.aspx" />
     <Content Include="LogIn\ConfigurarPreguntas.aspx" />
     <Content Include="LogIn\StyleSheet1.css" />
+    <Content Include="LogIn\Registro.aspx" />
+    <Content Include="LogIn\Registro.css" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -175,6 +177,10 @@
     <Content Include="Usuarios\UsuariosModulo.aspx" />
     <Content Include="Rutinas\Rutinas.aspx" />
     <Content Include="Rutinas\Rutinas.css" />
+    <Content Include="CalculoRM\CalculoRM.aspx" />
+    <Content Include="CalculoRM\CalculoRM.css" />
+    <Content Include="Precios\Precios.aspx" />
+    <Content Include="Precios\Precios.css" />
     <Content Include="Pagos\PagosCliente.aspx" />
     <Content Include="Pagos\Pagos.css" />
     <Content Include="Permisos\Permisos.aspx" />
@@ -354,6 +360,13 @@
     <Compile Include="LogIn\ConfigurarPreguntas.aspx.designer.cs">
       <DependentUpon>ConfigurarPreguntas.aspx</DependentUpon>
     </Compile>
+    <Compile Include="LogIn\Registro.aspx.cs">
+      <DependentUpon>Registro.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="LogIn\Registro.aspx.designer.cs">
+      <DependentUpon>Registro.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Site.Master.cs">
       <DependentUpon>Site.Master</DependentUpon>
@@ -403,6 +416,20 @@
     </Compile>
     <Compile Include="Rutinas\Rutinas.aspx.designer.cs">
       <DependentUpon>Rutinas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="CalculoRM\CalculoRM.aspx.cs">
+      <DependentUpon>CalculoRM.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CalculoRM\CalculoRM.aspx.designer.cs">
+      <DependentUpon>CalculoRM.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Precios\Precios.aspx.cs">
+      <DependentUpon>Precios.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Precios\Precios.aspx.designer.cs">
+      <DependentUpon>Precios.aspx</DependentUpon>
     </Compile>
     <Compile Include="Pagos\PagosCliente.aspx.cs">
       <DependentUpon>PagosCliente.aspx</DependentUpon>

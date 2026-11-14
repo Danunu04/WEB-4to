@@ -6,6 +6,7 @@ using BLL;
 using System.Web.UI;
 using SERVICIOS.Observer;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace gymAppV2
 {
@@ -41,6 +42,7 @@ namespace gymAppV2
             else
             {
                 ConfigurarMenuSegunRol();
+                CargarAvisoPrecio();
             }
         }
 
@@ -109,10 +111,12 @@ namespace gymAppV2
                 litMenuActividades.Text  = Traducir(dict, "menu_actividades");
                 litMenuAulas.Text        = Traducir(dict, "menu_aulas");
                 litMenuRutinas.Text      = Traducir(dict, "menu_rutinas");
+                litMenuCalculoRM.Text    = Traducir(dict, "menu_calculo_rm");
                 litMenuPermisos.Text     = Traducir(dict, "menu_permisos");
                 litMenuBitacora.Text     = Traducir(dict, "menu_bitacora");
                 litMenuRespaldo.Text     = Traducir(dict, "menu_respaldo");
                 litMenuPagos.Text        = Traducir(dict, "menu_pagos");
+                litMenuPrecios.Text      = TraducirConRespaldo(dict, "menu_precios", "Precios de cuota");
                 litMenuPerfil.Text       = Traducir(dict, "menu_perfil");
                 litMenuIdioma.Text       = Traducir(dict, "menu_idioma");
                 litMenuCambiarContra.Text = Traducir(dict, "menu_cambiar_contra");
@@ -143,6 +147,65 @@ namespace gymAppV2
         /// <summary>
         /// Muestra u oculta las opciones del menú lateral según el perfil del usuario logueado.
         /// </summary>
+        // ==================== AVISO DE CAMBIO DE PRECIO ====================
+
+        /// <summary>
+        /// Muestra el banner con los cambios de precio que el usuario todavía no vio.
+        /// Si las tablas de avisos no existen todavía, simplemente no se muestra.
+        /// </summary>
+        private void CargarAvisoPrecio()
+        {
+            try
+            {
+                List<AvisoPrecio> avisos = new BLLAvisoPrecio().ListarPendientes(Singleton.Instancia.Usuario);
+                pnlAvisoPrecio.Visible = avisos.Count > 0;
+                if (avisos.Count == 0)
+                    return;
+
+                var dict = new BLLTraduccion().ObtenerDiccionario(GestorIdioma.IdiomaActual);
+                string titulo = TraducirConRespaldo(dict, "aviso_precio_titulo", "Cambió el precio de la cuota");
+                string plantilla = TraducirConRespaldo(dict, "aviso_precio_detalle", "{0}: de {1} a {2} (desde el {3})");
+
+                IEnumerable<string> lineas = avisos.Select(a => HttpUtility.HtmlEncode(FormatearSeguro(plantilla,
+                    "{0}: de {1} a {2} (desde el {3})",
+                    a.Descripcion, a.PrecioAnterior.ToString("C"), a.PrecioNuevo.ToString("C"), a.Fecha.ToString("dd/MM/yyyy"))));
+
+                litAvisoPrecio.Text = "<strong>" + HttpUtility.HtmlEncode(titulo) + "</strong><br />" + string.Join("<br />", lineas);
+                litAvisoVisto.Text = HttpUtility.HtmlEncode(TraducirConRespaldo(dict, "aviso_precio_entendido", "Entendido"));
+            }
+            catch
+            {
+                pnlAvisoPrecio.Visible = false;
+            }
+        }
+
+        protected void btnAvisoVisto_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var bllAviso = new BLLAvisoPrecio();
+                Usuario usuario = Singleton.Instancia.Usuario;
+                bllAviso.MarcarVistos(usuario, bllAviso.ListarPendientes(usuario).Select(a => a.CodAviso).ToList());
+            }
+            catch
+            {
+                // Si no se pudo guardar, el aviso vuelve a aparecer en la próxima página
+            }
+
+            pnlAvisoPrecio.Visible = false;
+        }
+
+        private static string TraducirConRespaldo(Dictionary<string, string> dict, string tag, string respaldo)
+        {
+            return dict != null && dict.TryGetValue(tag, out var texto) && !string.IsNullOrEmpty(texto) ? texto : respaldo;
+        }
+
+        private static string FormatearSeguro(string plantilla, string respaldo, params object[] args)
+        {
+            try { return string.Format(plantilla, args); }
+            catch (FormatException) { return string.Format(respaldo, args); }
+        }
+
         private void ConfigurarMenuSegunRol()
         {
             var bllRol = new BLLRol();
@@ -154,11 +217,13 @@ namespace gymAppV2
             liActividades.Visible = bllRol.UsuarioActualTieneAcceso("ActividadesCalendario");
             liAulas.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.GestionAulas);
             liRutinas.Visible = bllRol.UsuarioActualTieneAcceso("GestionRutinas");
+            liCalculoRM.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.CalculoRM);
             liPermisos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.GestionPermisos);
             liBitacora.Visible = bllRol.UsuarioActualTieneAcceso("Bitacora");
             liRespaldo.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Backup)
                              || bllRol.UsuarioActualTieneAcceso(PermisosSistema.Restore);
             liPagos.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Pagos);
+            liPrecios.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.PreciosCuota);
             liPerfil.Visible = bllRol.UsuarioActualTieneAcceso(PermisosSistema.Perfil);
 
         }

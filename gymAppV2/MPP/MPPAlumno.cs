@@ -329,8 +329,12 @@ namespace MPP
         {
             try
             {
-                // Primero eliminar rutinas asociadas (cascada manual)
+                // Primero eliminar rutinas asociadas y sus ejercicios (cascada manual)
                 string eliminarRutinas = @"
+                    IF OBJECT_ID('[GymApp].[dbo].[RutinaEjercicio]', 'U') IS NOT NULL
+                        DELETE FROM [GymApp].[dbo].[RutinaEjercicio]
+                        WHERE codRutina IN (SELECT codRutina FROM [GymApp].[dbo].[Rutinas] WHERE dniAlumno = @DNI);
+
                     DELETE FROM [GymApp].[dbo].[Rutinas]
                     WHERE dniAlumno = @DNI";
 
@@ -359,7 +363,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(eliminarAlumno, parametros);
-                MPPDigitoVerificador.SincronizarControl("Rutinas", "ALUMNOS_USUARIOS", "ALUMNOS");
+                MPPDigitoVerificador.SincronizarControl("RutinaEjercicio", "Rutinas", "ALUMNOS_USUARIOS", "ALUMNOS");
             }
             catch (Exception ex)
             {

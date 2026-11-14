@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 using BE;
 using BLL;
 using gymAppV2;
@@ -11,6 +15,7 @@ namespace gymAppV2.Perfil
     {
         private BLLUsuario bllUsuario;
         private BLLEvento bllEvento;
+        private BLLPesoCorporal bllPesoCorporal;
 
         /// <summary>
         /// Usuario logueado actualmente. Se usa para asegurar que solo se modifiquen datos propios.
@@ -26,10 +31,12 @@ namespace gymAppV2.Perfil
 
             bllUsuario = new BLLUsuario();
             bllEvento = new BLLEvento();
+            bllPesoCorporal = new BLLPesoCorporal();
 
             if (!IsPostBack)
             {
                 CargarDatosUsuario();
+                CargarPesos();
             }
         }
 
@@ -112,6 +119,85 @@ namespace gymAppV2.Perfil
         {
             CargarDatosUsuario();
             pnlMensaje.Visible = false;
+        }
+
+        // ==================== PESO CORPORAL (CUN001) ====================
+
+        /// <summary>Texto del botón de cada alumno (se evalúa al enlazar el Repeater).</summary>
+        protected string TextoBotonPeso
+        {
+            get { return Texto("perfil_btn_registrar_peso", "Registrar peso"); }
+        }
+
+        /// <summary>
+        /// Una fila por alumno activo de la cuenta, con su peso actual y los últimos registros.
+        /// La tarjeta no se muestra si la cuenta no tiene alumnos.
+        /// </summary>
+        private void CargarPesos()
+        {
+            try
+            {
+                litPesoTitulo.Text = Texto("perfil_peso_titulo", "Peso corporal");
+                litPesoSubtitulo.Text = Texto("perfil_peso_subtitulo", "Registrá el peso de tus alumnos para seguir su evolución.");
+
+                List<Alumno> alumnos = UsuarioActual != null
+                    ? bllPesoCorporal.ListarAlumnosDeUsuario(UsuarioActual.USUARIO_Usuario)
+                    : new List<Alumno>();
+
+                pnlPeso.Visible = alumnos.Count > 0;
+
+                rptPesos.DataSource = alumnos.Select(a => new
+                {
+                    Dni = a.DNI,
+                    NombreCompleto = $"{a.Nombre} {a.Apellido}",
+                    TextoActual = a.Peso.HasValue
+                        ? Texto("perfil_peso_actual", "Peso actual: {0} kg", a.Peso.Value.ToString("0.##"))
+                        : Texto("perfil_peso_sin_dato", "Todavía no tiene peso registrado."),
+                    TextoHistorial = TextoHistorial(bllPesoCorporal.ListarUltimos(a.DNI))
+                }).ToList();
+                rptPesos.DataBind();
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje(MensajeDePermisos(ex) ?? Texto("msg_error_generico", "Ocurrió un error inesperado. Intente nuevamente."), false);
+            }
+        }
+
+        private string TextoHistorial(List<RegistroPeso> registros)
+        {
+            if (registros == null || registros.Count == 0)
+                return string.Empty;
+
+            string lista = string.Join(" · ", registros.Select(r => $"{r.Peso:0.##} kg ({r.Fecha:dd/MM/yyyy})"));
+            return Texto("perfil_peso_historial", "Últimos registros: {0}", lista);
+        }
+
+        protected void rptPesos_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName != "Registrar" || UsuarioActual == null)
+                return;
+
+            try
+            {
+                int dni = Convert.ToInt32(e.CommandArgument);
+                var txtPeso = (TextBox)e.Item.FindControl("txtPesoNuevo");
+                string texto = (txtPeso.Text ?? string.Empty).Trim().Replace(',', '.');
+
+                if (!decimal.TryParse(texto, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal peso))
+                {
+                    MostrarMensaje(Texto("perfil_err_peso", "El peso debe ser un número mayor que 0 y menor que 500 kg."), false);
+                    return;
+                }
+
+                bllPesoCorporal.RegistrarPeso(UsuarioActual.USUARIO_Usuario, dni, peso);
+
+                MostrarMensaje(Texto("perfil_msg_peso", "Peso registrado: {0} kg.", peso.ToString("0.##")), true);
+                CargarPesos();
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje(MensajeDePermisos(ex) ?? Texto("msg_error_generico", "Ocurrió un error inesperado. Intente nuevamente."), false);
+            }
         }
 
         private void MostrarMensaje(string mensaje, bool exito)

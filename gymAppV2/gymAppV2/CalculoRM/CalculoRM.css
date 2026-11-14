@@ -1,0 +1,277 @@
+/* =============================================
+   CÁLCULO DE RM
+   ============================================= */
+
+.rm-container *, .rm-container *::before, .rm-container *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.rm-container {
+  --mint: #B5EAD7;
+  --mint-light: #E5F9F0;
+  --mint-dark: #0F6E56;
+  --lavender-light: #F0EBFF;
+  --peach-light: #FFF0E5;
+  --red: #E24B4A;
+  --bg: #FFF8F0;
+  --surface: #ffffff;
+  --border: #E8E0D5;
+  --text: #2D2D2D;
+  --text-muted: #6B6B6B;
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  --shadow: 0 0.125rem 0.75rem rgba(181, 234, 215, 0.15);
+  padding: 2rem;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  color: var(--text);
+}
+
+/* ── ENCABEZADO ────────────────────── */
+.rm-title {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rm-title i {
+  width: 2.75rem; height: 2.75rem;
+  background: var(--mint-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mint-dark);
+  font-size: 1.1rem;
+}
+
+.rm-header p {
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.rm-empty {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.rm-empty i {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  color: var(--mint-dark);
+}
+
+/* ── TARJETAS ────────────────────── */
+.rm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+  margin-bottom: 1.25rem;
+}
+
+.rm-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 0.0625rem solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.rm-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 0.0625rem solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.rm-card-header h3 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rm-card-header h3 i { color: var(--mint-dark); }
+
+.rm-card-header-sub { border-top: 0.0625rem solid var(--border); }
+
+.rm-card-body {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.rm-historial-alumno {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── FORMULARIO ────────────────────── */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+.form-field { display: flex; flex-direction: column; gap: 0.3125rem; }
+
+.form-field label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025rem;
+}
+
+.form-field input, .form-field select {
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  width: 100%;
+  transition: border-color .2s, background .2s;
+}
+
+.form-field input:focus, .form-field select:focus {
+  border-color: var(--mint-dark);
+  background: #fff;
+}
+
+.rm-ayuda {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: var(--lavender-light);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+.rm-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  width: 100%;
+}
+
+.btn-calcular { background: var(--mint-light); color: var(--mint-dark); border: 0.09375rem solid var(--mint); }
+.btn-calcular:hover { background: var(--mint); }
+
+.btn-guardar { background: var(--mint-dark); color: #fff; border: 0.09375rem solid var(--mint-dark); }
+.btn-guardar:hover { background: #0c5a45; border-color: #0c5a45; }
+
+/* ── RESULTADO ────────────────────── */
+.rm-resultado .rm-card-body {
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1.25rem;
+}
+
+.rm-resultado-label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025rem;
+}
+
+.rm-resultado-valor {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--mint-dark);
+  line-height: 1.1;
+}
+
+.rm-resultado-serie { font-size: 0.88rem; color: var(--text); }
+
+.rm-resultado-anterior {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--peach-light);
+  border-radius: 1.25rem;
+  padding: 0.2rem 0.75rem;
+  margin-top: 0.35rem;
+}
+
+/* ── TABLAS ────────────────────── */
+.rm-tabla { width: 100%; border-collapse: collapse; }
+
+.rm-tabla th {
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03125rem;
+  background: var(--bg);
+  border-bottom: 0.0625rem solid var(--border);
+  white-space: nowrap;
+}
+
+.rm-tabla td {
+  padding: 0.6875rem 1rem;
+  font-size: 0.88rem;
+  border-bottom: 0.0625rem solid #f0f4f2;
+}
+
+.rm-tabla tr:last-child td { border-bottom: none; }
+
+.rm-tabla-cargas tr.rm-fila-maxima td {
+  font-weight: 700;
+  background: var(--mint-light);
+  color: var(--mint-dark);
+}
+
+.rm-tabla-vacia td {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem 1rem;
+}
+
+.pill-ejercicio {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 1.25rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--lavender-light);
+  color: #4C1D95;
+}
+
+/* ── RESPONSIVE ────────────────────── */
+@media screen and (max-width: 48rem) {
+  .rm-container { padding: 0; }
+  .rm-grid { grid-template-columns: 1fr; }
+  .form-row, .rm-acciones { grid-template-columns: 1fr; }
+}

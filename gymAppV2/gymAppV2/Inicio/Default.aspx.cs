@@ -116,6 +116,16 @@ namespace gymAppV2
                         $"Intento de check-in rechazado - Alumno DNI: {dni}, {alumno.Apellido}, {alumno.Nombre} " +
                         (vencimiento != null ? $"(abono vencido el {vencimiento})" : "(sin abono pago)"), 2, "Alumnos");
 
+                    // Alerta para recepción (se ve en el Dashboard). Si falla, el check-in igual queda rechazado.
+                    try
+                    {
+                        new BLLAlertaCheckin().Registrar(dni, abono?.FechaVencimiento);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Trace.WriteLine($"[Check-in] No se pudo registrar la alerta: {ex.Message}");
+                    }
+
                     MostrarAdvertencia(vencimiento != null
                         ? $"Tu abono venció el {vencimiento}. Podés renovarlo en recepción o desde la app."
                         : "No tenés un abono pago. Podés pagarlo en recepción o desde la app.");

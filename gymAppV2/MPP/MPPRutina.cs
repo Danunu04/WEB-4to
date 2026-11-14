@@ -229,7 +229,11 @@ namespace MPP
         {
             try
             {
+                // Primero sus ejercicios (FK de RutinaEjercicio)
                 string consulta = @"
+                    IF OBJECT_ID('[GymApp].[dbo].[RutinaEjercicio]', 'U') IS NOT NULL
+                        DELETE FROM [GymApp].[dbo].[RutinaEjercicio] WHERE codRutina = @CodRutina;
+
                     DELETE FROM [GymApp].[dbo].[Rutinas]
                     WHERE codRutina = @CodRutina";
 
@@ -239,7 +243,7 @@ namespace MPP
                 };
 
                 dal._686DPEscribir(consulta, parametros);
-                MPPDigitoVerificador.SincronizarControl("Rutinas");
+                MPPDigitoVerificador.SincronizarControl("Rutinas", "RutinaEjercicio");
             }
             catch (Exception ex)
             {

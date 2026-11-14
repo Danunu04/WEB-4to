@@ -46,6 +46,7 @@
     <Compile Include="CriptoManager.cs" />
     <Compile Include="CriptoMigracion.cs" />
     <Compile Include="DigitoVerificadorManager.cs" />
+    <Compile Include="EmailManager.cs" />
     <Compile Include="Composite\IComponente.cs" />
     <Compile Include="Composite\PermisoSimple.cs" />
     <Compile Include="Composite\Familia.cs" />

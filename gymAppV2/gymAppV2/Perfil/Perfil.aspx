@@ -129,6 +129,66 @@
             background: var(--color-accent-pink-light, #FFE5EB);
             color: #7a1e33;
         }
+
+        /* ── Peso corporal ── */
+        .perfil-peso { margin-top: 1.25rem; }
+
+        .perfil-peso h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--color-text, #2D2D2D);
+        }
+
+        .perfil-peso > p {
+            color: var(--color-muted, #6B6B6B);
+            font-size: 0.875rem;
+            margin: 0.25rem 0 1rem 0;
+        }
+
+        .peso-alumno {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem;
+            align-items: end;
+            padding: 0.875rem 0;
+            border-top: 0.0625rem solid var(--color-border, #E8E0D5);
+        }
+
+        .peso-alumno strong { display: block; font-size: 0.95rem; }
+
+        .peso-actual { font-size: 0.875rem; color: var(--color-text, #2D2D2D); }
+
+        .peso-historial { font-size: 0.78rem; color: var(--color-muted, #6B6B6B); margin-top: 0.15rem; }
+
+        .peso-carga { display: flex; gap: 0.5rem; align-items: center; }
+
+        .peso-carga input {
+            width: 7rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 0.0625rem solid var(--color-border, #E8E0D5);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+        }
+
+        .peso-carga .btn-primary {
+            padding: 0.5rem 1rem;
+            background: var(--color-accent-lavender, #C7B5FF);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 48rem) {
+            .peso-alumno { grid-template-columns: 1fr; }
+            .peso-carga input { flex: 1; width: auto; }
+        }
     </style>
 </asp:Content>
 
@@ -182,5 +242,28 @@
                 </div>
             </div>
         </div>
+
+        <!-- Peso corporal de los alumnos de la cuenta (CUN001) -->
+        <asp:Panel ID="pnlPeso" runat="server" Visible="false" CssClass="perfil-card perfil-peso">
+            <h2><asp:Literal ID="litPesoTitulo" runat="server" Text="Peso corporal" /></h2>
+            <p><asp:Literal ID="litPesoSubtitulo" runat="server" Text="Registrá el peso de tus alumnos para seguir su evolución." /></p>
+
+            <asp:Repeater ID="rptPesos" runat="server" OnItemCommand="rptPesos_ItemCommand">
+                <ItemTemplate>
+                    <div class="peso-alumno">
+                        <div>
+                            <strong><%#: Eval("NombreCompleto") %></strong>
+                            <div class="peso-actual"><%#: Eval("TextoActual") %></div>
+                            <div class="peso-historial"><%#: Eval("TextoHistorial") %></div>
+                        </div>
+                        <div class="peso-carga">
+                            <asp:TextBox ID="txtPesoNuevo" runat="server" TextMode="Number" step="0.1" min="1" max="499" placeholder="kg" />
+                            <asp:Button ID="btnRegistrarPeso" runat="server" CssClass="btn-primary"
+                                CommandName="Registrar" CommandArgument='<%# Eval("Dni") %>' Text='<%# TextoBotonPeso %>' />
+                        </div>
+                    </div>
+                </ItemTemplate>
+            </asp:Repeater>
+        </asp:Panel>
     </div>
 </asp:Content>

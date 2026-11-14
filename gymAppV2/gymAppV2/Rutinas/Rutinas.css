@@ -402,3 +402,90 @@ tbody tr:last-child td { border-bottom: none; }
   .table-actions { flex-direction: column; }
   .btn-action { width: 100%; justify-content: center; }
 }
+
+/* ── Ejercicios de la rutina (CUN008) ────────────────────── */
+.btn-ejercicios { background: var(--lavender-light); color: #4C1D95; border: 0.09375rem solid var(--lavender-light); }
+.btn-ejercicios:hover { background: #E2D9FF; border-color: #4C1D95; color: #4C1D95; }
+
+.btn-detalle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--lavender-light);
+  color: #4C1D95;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-detalle:hover { background: #E2D9FF; }
+
+.modal-content.modal-ejercicios { max-width: 60rem; }
+
+.ej-rutina {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem !important;
+}
+
+.ej-tabla { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+
+.ej-tabla th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background: var(--bg);
+  border-bottom: 0.0625rem solid var(--border);
+}
+
+.ej-tabla td {
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.86rem;
+  border-bottom: 0.0625rem solid #f0f4f2;
+}
+
+.ej-tabla tbody tr { cursor: default; }
+
+.ej-num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.btn-quitar {
+  color: #A32D2D;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-quitar:hover { background: var(--red-light); }
+
+.ej-agregar {
+  border-top: 0.0625rem solid var(--border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ej-agregar h4 {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ej-form {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.ej-form .ej-campo-ejercicio { grid-column: span 2; }
+.ej-form .ej-campo-observaciones { grid-column: 1 / -1; }
+
+@media screen and (max-width: 48rem) {
+  .ej-form { grid-template-columns: 1fr 1fr; }
+  .ej-form .ej-campo-ejercicio { grid-column: 1 / -1; }
+}

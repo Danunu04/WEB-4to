@@ -1155,3 +1155,74 @@ body {
 .modal-404-close:active {
     transform: scale(0.95);
 }
+
+/* ============================================
+   AVISO DE CAMBIO DE PRECIO (banner en la master)
+   ============================================ */
+.aviso-precio {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 1rem 1.5rem 0 1.5rem;
+    padding: 0.875rem 1rem;
+    background: #FFF0E5;
+    border: 0.0625rem solid #FFD5B5;
+    border-radius: 0.75rem;
+    color: #2D2D2D;
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.aviso-precio > i {
+    font-size: 1.25rem;
+    color: #B45309;
+    margin-top: 0.1rem;
+}
+
+.aviso-precio-texto { flex: 1; }
+
+.aviso-precio-cerrar {
+    align-self: center;
+    padding: 0.4rem 0.875rem;
+    border-radius: 0.5rem;
+    background: #0F6E56;
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.aviso-precio-cerrar:hover { background: #0c5a45; }
+
+@media (max-width: 48rem) {
+    .aviso-precio { margin: 0.75rem 0 0 0; flex-wrap: wrap; }
+    .aviso-precio-cerrar { margin-left: auto; }
+}
+
+/* ============================================
+   ALERTAS DE CHECK-IN (Dashboard de administración)
+   ============================================ */
+.alertas-checkin { border-left: 0.25rem solid #F59E0B; }
+
+.alertas-checkin .card-title i { color: #B45309; }
+
+.alertas-checkin-header { gap: 0.75rem; flex-wrap: wrap; }
+
+.btn-alerta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.875rem;
+    border-radius: 0.5rem;
+    border: 0.0625rem solid #E8E0D5;
+    background: #FFFFFF;
+    color: #0F6E56;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-alerta:hover { background: #E5F9F0; border-color: #0F6E56; }
+
+.btn-alerta-sm { padding: 0.25rem 0.625rem; font-size: 0.75rem; }

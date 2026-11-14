@@ -94,5 +94,10 @@ namespace gymAppV2.Perfil
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancelar;
+
+        protected global::System.Web.UI.WebControls.Panel pnlPeso;
+        protected global::System.Web.UI.WebControls.Literal litPesoTitulo;
+        protected global::System.Web.UI.WebControls.Literal litPesoSubtitulo;
+        protected global::System.Web.UI.WebControls.Repeater rptPesos;
     }
 }

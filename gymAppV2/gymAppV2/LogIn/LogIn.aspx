@@ -79,6 +79,7 @@
                     Display="Dynamic"></asp:RegularExpressionValidator>
                     <asp:Button ID="btnLogIn" runat="server" CssClass="btnFormLogIn" Text="Iniciar Sesión" OnClick="btnLogIn_Click" CausesValidation="true" ValidationGroup="LoginGroup" />
                     <a href="<%= ResolveUrl("~/LogIn/PreguntasSeguridad.aspx") %>" class="link-volver">¿Olvidaste tu contraseña? / Cuenta bloqueada</a>
+                    <a href="<%= ResolveUrl("~/LogIn/Registro.aspx") %>" class="link-volver d-block mt-3"><strong>¿No tenés cuenta? Creala y asociate</strong></a>
                 </div>
             </div>
         </div>

@@ -12,30 +12,10 @@ namespace MPP
     public class MPPPrecioModalidad
     {
         private DalGeneral dal;
-        private DigitoVerificadorManager dvManager;
 
         public MPPPrecioModalidad()
         {
             dal = new DalGeneral();
-            dvManager = new DigitoVerificadorManager();
-        }
-
-        /// <summary>
-        /// Calcula DVH y DVV de una modalidad de precio a partir de sus valores.
-        /// </summary>
-        private string CalcularDigitosPrecioModalidad(PrecioModalidad modalidad)
-        {
-            var valores = new Dictionary<string, object>
-            {
-                { "Id", modalidad.Id },
-                { "DiasPorSemana", modalidad.DiasPorSemana },
-                { "EsDiario", modalidad.EsDiario },
-                { "Precio", modalidad.Precio },
-                { "Activo", modalidad.Activo },
-                { "FechaModificacion", modalidad.FechaModificacion }
-            };
-
-            return dvManager.CalcularDVH(valores);
         }
 
         /// <summary>
@@ -144,28 +124,25 @@ namespace MPP
                 if (modalidad == null)
                     throw new Exception("No se encontró la modalidad de precio.");
 
-                modalidad.Precio = nuevoPrecio;
-                modalidad.FechaModificacion = DateTime.Now;
-
-                string dvh = CalcularDigitosPrecioModalidad(modalidad);
-
+                // El dvh se calcula después, leyendo la fila guardada: la columna datetime redondea
+                // los milisegundos de FechaModificacion y un hash armado en memoria no coincidiría
+                // con el de la verificación.
                 string consulta = @"
                     UPDATE [GymApp].[dbo].[PrecioModalidad]
                     SET Precio = @Precio,
                         FechaModificacion = @FechaModificacion,
-                        dvh = @DVH
+                        dvh = ''
                     WHERE Id = @Id";
 
                 List<SqlParameter> parametros = new List<SqlParameter>
                 {
                     new SqlParameter("@Precio", nuevoPrecio),
-                    new SqlParameter("@FechaModificacion", modalidad.FechaModificacion),
-                    new SqlParameter("@DVH", dvh),
+                    new SqlParameter("@FechaModificacion", DateTime.Now),
                     new SqlParameter("@Id", id)
                 };
 
                 dal._686DPEscribir(consulta, parametros);
-                MPPDigitoVerificador.SincronizarControl("PrecioModalidad");
+                MPPDigitoVerificador.RecalcularDvhFilas("PrecioModalidad", "Id = @Id", new SqlParameter("@Id", id));
             }
             catch (Exception ex)
             {

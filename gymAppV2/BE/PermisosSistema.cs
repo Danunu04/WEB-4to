@@ -25,6 +25,7 @@ namespace BE
         public const string GestionActividades = "GestionActividades";
         public const string GestionAulas = "GestionAulas";
         public const string GestionRutinas = "GestionRutinas";
+        public const string CalculoRM = "CalculoRM";
 
         // --- Pagos y precios ---
         public const string Pagos = "Pagos";
@@ -46,7 +47,7 @@ namespace BE
         {
             Dashboard, Perfil,
             GestionUsuarios, GestionAlumnos, GestionEntrenadores, Bitacora,
-            ActividadesCalendario, GestionActividades, GestionAulas, GestionRutinas,
+            ActividadesCalendario, GestionActividades, GestionAulas, GestionRutinas, CalculoRM,
             Pagos, PreciosCuota,
             VerificacionDV, Backup, Restore, RecalcularDV, EncriptarDatos, GestionPermisos, GestionIdiomas
         }.AsReadOnly();

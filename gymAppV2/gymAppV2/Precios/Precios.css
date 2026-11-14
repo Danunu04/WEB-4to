@@ -1,0 +1,111 @@
+/* =============================================
+   PRECIOS DE CUOTA
+   ============================================= */
+
+.precios-container *, .precios-container *::before, .precios-container *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.precios-container {
+  --mint-light: #E5F9F0;
+  --mint-dark: #0F6E56;
+  --peach-light: #FFF0E5;
+  --bg: #FFF8F0;
+  --surface: #ffffff;
+  --border: #E8E0D5;
+  --text: #2D2D2D;
+  --text-muted: #6B6B6B;
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  padding: 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  color: var(--text);
+}
+
+.precios-title {
+  font-family: 'Fraunces', system-ui, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.precios-title i {
+  width: 2.75rem; height: 2.75rem;
+  background: var(--mint-light);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mint-dark);
+  font-size: 1.1rem;
+}
+
+.precios-header p { color: var(--text-muted); margin-top: 0.25rem; font-size: 0.875rem; }
+
+.precios-aviso {
+  font-size: 0.82rem;
+  background: var(--peach-light);
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.875rem;
+}
+
+.precios-card {
+  background: var(--surface);
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.precios-tabla { width: 100%; border-collapse: collapse; }
+
+.precios-tabla th {
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03125rem;
+  background: var(--bg);
+  border-bottom: 0.0625rem solid var(--border);
+}
+
+.precios-tabla td {
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  border-bottom: 0.0625rem solid #f0f4f2;
+  vertical-align: middle;
+}
+
+.precios-tabla tr:last-child td { border-bottom: none; }
+
+.precios-carga { display: flex; gap: 0.5rem; align-items: center; }
+
+.precios-carga input {
+  width: 8rem;
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6875rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.85rem;
+  background: var(--bg);
+}
+
+.btn-guardar {
+  background: var(--mint-dark);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.btn-guardar:hover { background: #0c5a45; }
+
+@media screen and (max-width: 48rem) {
+  .precios-container { padding: 0; }
+  .precios-carga input { flex: 1; width: auto; }
+}

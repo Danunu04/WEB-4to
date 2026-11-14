@@ -49,6 +49,7 @@ namespace BLL
         public const string EVENTO_MODIFICACION_ENTRENADOR = "modificacion_entrenador";
         public const string EVENTO_CAMBIO_DATOS_ALUMNO = "cambio_datos_alumno";
         public const string EVENTO_CAMBIO_DATOS_USUARIO = "cambio_datos_usuario";
+        public const string EVENTO_RM_ALTA = "rm_alta";
 
         // ================================
         // CRITICIDAD 4 - BAJA (Básicos/Configuración)
@@ -294,6 +295,11 @@ namespace BLL
         public int RegistrarRutinaBaja(string usuario, int dniAlumno)
         {
             return RegistrarEvento(EVENTO_RUTINA_BAJA, usuario, $"Rutina eliminada para alumno DNI: {dniAlumno}", 2, "Rutinas");
+        }
+
+        public int RegistrarRMAlta(string usuario, int dniAlumno, string ejercicio, decimal rm)
+        {
+            return RegistrarEvento(EVENTO_RM_ALTA, usuario, $"1RM registrada - Alumno DNI: {dniAlumno}, Ejercicio: {ejercicio}, 1RM: {rm} kg", 3, "Cálculo de RM");
         }
 
         public int RegistrarAsociarUsuario(string usuario, int dniAlumno)

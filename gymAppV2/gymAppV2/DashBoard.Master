@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Fraunces:opsz,wght@9..144,400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=5") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Content/dashboard.css?v=6") %>" rel="stylesheet" type="text/css" />
     <link href="<%= ResolveUrl("~/Content/toast.css?v=2") %>" rel="stylesheet" type="text/css" />
 
     <!-- Toast helper global: se define en el head para estar disponible antes de los startup scripts del form -->
@@ -120,6 +120,12 @@
                             <span class="menu-text"><asp:Literal ID="litMenuRutinas" runat="server" Text="Rutinas" /></span>
                         </a>
                     </li>
+                    <li id="liCalculoRM" runat="server">
+                        <a href="/CalculoRM/CalculoRM.aspx">
+                            <i class="bi bi-calculator"></i>
+                            <span class="menu-text"><asp:Literal ID="litMenuCalculoRM" runat="server" Text="Cálculo de RM" /></span>
+                        </a>
+                    </li>
                     <li id="liPermisos" runat="server">
                         <a href="/Permisos/Permisos.aspx">
                             <i class="bi bi-shield-lock"></i>
@@ -142,6 +148,12 @@
                         <a href="/Pagos/PagosCliente.aspx">
                             <i class="bi bi-credit-card"></i>
                             <span class="menu-text"><asp:Literal ID="litMenuPagos" runat="server" Text="Pagos" /></span>
+                        </a>
+                    </li>
+                    <li id="liPrecios" runat="server">
+                        <a href="/Precios/Precios.aspx">
+                            <i class="bi bi-tags"></i>
+                            <span class="menu-text"><asp:Literal ID="litMenuPrecios" runat="server" Text="Precios de cuota" /></span>
                         </a>
                     </li>
                     <li id="liPerfil" runat="server">
@@ -177,6 +189,14 @@
                 </ul>
             </nav>
             <main class="main-content">
+                <!-- Aviso de cambio de precio de cuota (no se muestra a entrenadores) -->
+                <asp:Panel ID="pnlAvisoPrecio" runat="server" Visible="false" CssClass="aviso-precio" role="status">
+                    <i class="bi bi-megaphone"></i>
+                    <div class="aviso-precio-texto"><asp:Literal ID="litAvisoPrecio" runat="server" /></div>
+                    <asp:LinkButton ID="btnAvisoVisto" runat="server" CssClass="aviso-precio-cerrar" OnClick="btnAvisoVisto_Click" CausesValidation="false">
+                        <asp:Literal ID="litAvisoVisto" runat="server" Text="Entendido" />
+                    </asp:LinkButton>
+                </asp:Panel>
                 <asp:ContentPlaceHolder ID="MainContent" runat="server" />
             </main>
         </div>

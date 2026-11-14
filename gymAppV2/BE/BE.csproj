@@ -55,6 +55,17 @@
     <Compile Include="PrecioModalidad.cs" />
     <Compile Include="PreguntaSeguridad.cs" />
     <Compile Include="Rutina.cs" />
+    <Compile Include="Ejercicio.cs" />
+    <Compile Include="RegistroRM.cs" />
+    <Compile Include="CargaRM.cs" />
+    <Compile Include="RegistroPeso.cs" />
+    <Compile Include="AvisoPrecio.cs" />
+    <Compile Include="AlertaCheckin.cs" />
+    <Compile Include="DatosRegistro.cs" />
+    <Compile Include="SolicitudAlumno.cs" />
+    <Compile Include="RespuestaAlumnoWS.cs" />
+    <Compile Include="ResultadoAltaAlumno.cs" />
+    <Compile Include="RutinaEjercicio.cs" />
     <Compile Include="Usuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UsuarioCrearDTO.cs" />

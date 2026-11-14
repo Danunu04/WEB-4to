@@ -246,6 +246,181 @@ namespace BLL
             }
         }
 
+        /// <summary>
+        /// Alta de un alumno (CUN011.2), la usa el web service. Si ya hay una persona con ese DNI
+        /// (ej. un familiar con cuenta), se crea solo el alumno y se lo vincula a esa cuenta o a la
+        /// del tutor. Si no existe, se crea también su cuenta de Cliente con los datos personales
+        /// (encriptados) y, si se informa un tutor, el alumno queda vinculado a él.
+        /// </summary>
+        public ResultadoAltaAlumno RegistrarAlumno(SolicitudAlumno solicitud)
+        {
+            if (solicitud == null)
+                throw new ReglaNegocioException("alumnos_err_datos", "Faltan los datos del alumno.");
+
+            int dni = solicitud.Dni;
+            ComoRegla(() => ValidarDNI(dni.ToString()), "alumnos_msg_dni_invalido");
+            if (solicitud.Peso.HasValue)
+                ComoRegla(() => ValidarPeso(solicitud.Peso), "alumnos_msg_peso_invalido");
+
+            if (AlumnoExiste(dni))
+                throw new ReglaNegocioException("alumnos_err_ya_existe", $"Ya existe un alumno con DNI {dni}.", dni);
+
+            bool conTutor = !string.IsNullOrWhiteSpace(solicitud.UsuarioVinculo);
+            var bllUsuario = new BLLUsuario();
+            var resultado = new ResultadoAltaAlumno { Dni = dni };
+
+            try
+            {
+                Usuario persona = bllUsuario.ObtenerUsuarioPorDni(dni);
+                if (persona != null)
+                {
+                    // La persona ya tiene cuenta: se crea el alumno y se vincula
+                    CrearAlumno(new Alumno(dni, solicitud.Peso, false, solicitud.Activo, ""));
+                    AsociarFamiliar(dni,
+                        conTutor ? solicitud.UsuarioVinculo : persona.USUARIO_Usuario,
+                        conTutor ? solicitud.Parentesco : "Titular");
+                    return resultado;
+                }
+
+                // Persona nueva: datos personales obligatorios y cuenta de Cliente
+                ComoRegla(() => ValidarNombreApellido(solicitud.Nombre, "nombre"), "alumnos_msg_nombre_oblig");
+                ComoRegla(() => ValidarNombreApellido(solicitud.Apellido, "apellido"), "alumnos_msg_nombre_oblig");
+                ComoRegla(() => ValidarTelefono(solicitud.Telefono), "alumnos_msg_telefono_invalido");
+                if (!solicitud.FechaNacimiento.HasValue)
+                    throw new ReglaNegocioException("alumnos_msg_fecha_invalida", "La fecha de nacimiento es obligatoria.");
+                ComoRegla(() => ValidarFechaNacimiento(solicitud.FechaNacimiento.Value), "alumnos_msg_fecha_invalida");
+
+                string usuario = string.IsNullOrWhiteSpace(solicitud.Usuario) ? $"cliente_{dni}" : solicitud.Usuario.Trim();
+                if (bllUsuario.UsuarioExiste(usuario))
+                    throw new ReglaNegocioException("alumnos_asistente_error_usuario_existe", $"El usuario '{usuario}' ya existe.", usuario);
+
+                string contrasena = solicitud.Contrasena;
+                if (string.IsNullOrEmpty(contrasena))
+                {
+                    contrasena = bllUsuario.GenerarContrasenaSegura();
+                    resultado.ContrasenaGenerada = contrasena;
+                }
+                else
+                {
+                    ComoRegla(() => bllUsuario.ValidarRequisitosContrasena(contrasena), "registro_err_contrasena");
+                }
+
+                bllUsuario.CrearUsuario(usuario, contrasena, PerfilesSistema.RolCliente,
+                    solicitud.Nombre.Trim(), solicitud.Apellido.Trim(),
+                    string.IsNullOrWhiteSpace(solicitud.Telefono) ? null : solicitud.Telefono.Trim(),
+                    null, solicitud.FechaNacimiento, null, dni);
+                resultado.UsuarioCreado = usuario;
+
+                Alumno creado = mppAlumno.ObtenerAlumno(dni);
+                if (creado != null)
+                {
+                    creado.Peso = solicitud.Peso;
+                    creado.Activo = solicitud.Activo;
+                    mppAlumno.ActualizarAlumno(creado);
+                }
+
+                if (conTutor)
+                {
+                    // CrearUsuario vinculó al propio titular: se reemplaza por el tutor
+                    DesasociarFamiliar(dni, usuario);
+                    AsociarFamiliar(dni, solicitud.UsuarioVinculo, solicitud.Parentesco);
+                }
+
+                return resultado;
+            }
+            catch (ReglaNegocioException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al registrar el alumno: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Los validadores de esta clase lanzan Exception con un mensaje para el usuario: se pasa a
+        /// ReglaNegocioException para que el web service y las pantallas lo muestren tal cual.
+        /// </summary>
+        private static void ComoRegla(Action validacion, string clave)
+        {
+            try
+            {
+                validacion();
+            }
+            catch (ReglaNegocioException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new ReglaNegocioException(clave, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Baja lógica (CUN011.1): el alumno queda inactivo y se conservan sus pagos, rutinas,
+        /// inscripciones y 1RM. Las cuentas de Cliente o Familiar vinculadas se desactivan si no
+        /// les queda otro alumno activo (un familiar con otro hijo activo sigue entrando).
+        /// Devuelve los usuarios que se desactivaron.
+        /// </summary>
+        public List<string> DarDeBajaAlumno(int dni)
+        {
+            try
+            {
+                Alumno alumno = mppAlumno.ObtenerAlumno(dni);
+                if (alumno == null)
+                {
+                    throw new ReglaNegocioException("alumnos_err_no_existe", $"No existe un alumno con DNI {dni}.", dni);
+                }
+
+                if (alumno.Activo)
+                {
+                    alumno.Activo = false;
+                    mppAlumno.ActualizarAlumno(alumno);
+                }
+
+                var bllUsuario = new BLLUsuario();
+                var desactivados = new List<string>();
+
+                foreach (AlumnoUsuarioVinculo vinculo in mppAlumno.ObtenerUsuariosDeAlumno(dni))
+                {
+                    Usuario cuenta = bllUsuario.ObtenerUsuario(vinculo.Usuario);
+                    if (cuenta == null || !cuenta.USUARIO_Activo)
+                        continue;
+
+                    if (cuenta.USUARIO_Rol != PerfilesSistema.RolCliente && cuenta.USUARIO_Rol != PerfilesSistema.RolFamiliar)
+                        continue;
+
+                    bool tieneOtroActivo = (mppAlumno.ObtenerAlumnosDeUsuario(cuenta.USUARIO_Usuario) ?? new List<Alumno>())
+                        .Any(a => a.DNI != dni && a.Activo);
+
+                    if (!tieneOtroActivo)
+                    {
+                        bllUsuario.DesactivarUsuario(cuenta.USUARIO_Usuario);
+                        desactivados.Add(cuenta.USUARIO_Usuario);
+                    }
+                }
+
+                var usuario = HttpContext.Current?.Session["UsuarioLogueado"] as Usuario;
+                if (usuario != null)
+                {
+                    bllEvento.RegistrarBajaAlumno(usuario.USUARIO_Usuario, dni);
+                }
+
+                return desactivados;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al dar de baja al alumno: " + ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Borrado físico del alumno, sus rutinas y sus vínculos. Solo lo usa BLLUsuario cuando a
+        /// un cliente se le cambia el DNI (hay que liberar la FK). Para dar de baja a un alumno
+        /// desde la pantalla se usa DarDeBajaAlumno.
+        /// </summary>
         public void EliminarAlumno(int dni)
         {
             try
@@ -280,20 +455,20 @@ namespace BLL
             {
                 if (!AlumnoExiste(dni))
                 {
-                    throw new Exception($"No existe un alumno con DNI {dni}");
+                    throw new ReglaNegocioException("alumnos_err_no_existe", $"No existe un alumno con DNI {dni}.", dni);
                 }
 
                 BLLUsuario bllUsuario = new BLLUsuario();
                 BE.Usuario usuarioBD = bllUsuario.ObtenerUsuario(usuario);
                 if (usuarioBD == null)
                 {
-                    throw new Exception($"No existe el usuario '{usuario}'");
+                    throw new ReglaNegocioException("alumnos_err_usuario_no_existe", $"No existe el usuario '{usuario}'.", usuario);
                 }
 
                 List<AlumnoUsuarioVinculo> vinculos = mppAlumno.ObtenerUsuariosDeAlumno(dni);
                 if (vinculos.Any(v => v.Usuario.Equals(usuario, StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new Exception($"El usuario '{usuario}' ya está vinculado a este alumno");
+                    throw new ReglaNegocioException("alumnos_err_ya_vinculado", $"El usuario '{usuario}' ya está vinculado a este alumno.", usuario);
                 }
 
                 mppAlumno.AsociarFamiliar(dni, usuario, parentesco);
@@ -311,7 +486,7 @@ namespace BLL
             {
                 if (!AlumnoExiste(dni))
                 {
-                    throw new Exception($"No existe un alumno con DNI {dni}");
+                    throw new ReglaNegocioException("alumnos_err_no_existe", $"No existe un alumno con DNI {dni}.", dni);
                 }
 
                 mppAlumno.DesasociarFamiliar(dni, usuario);

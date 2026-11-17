@@ -18,6 +18,15 @@ namespace gymAppV2.Aulas
         protected global::System.Web.UI.WebControls.LinkButton btnNuevaAula;
         protected global::System.Web.UI.WebControls.Literal litBtnNueva;
         protected global::System.Web.UI.WebControls.Repeater rptAulas;
+
+        /// <summary>
+        /// pagAulas control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::gymAppV2.Controles.Paginador pagAulas;
         protected global::System.Web.UI.WebControls.PlaceHolder phSinAulas;
         protected global::System.Web.UI.WebControls.Panel pnlForm;
         protected global::System.Web.UI.WebControls.Literal litFormTitulo;

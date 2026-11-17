@@ -39,6 +39,15 @@ namespace gymAppV2.Permisos
         protected global::System.Web.UI.WebControls.TextBox txtBuscarUsuario;
         protected global::System.Web.UI.WebControls.LinkButton btnBuscarUsuario;
         protected global::System.Web.UI.WebControls.Repeater rptUsuarios;
+
+        /// <summary>
+        /// pagUsuarios control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::gymAppV2.Controles.Paginador pagUsuarios;
         protected global::System.Web.UI.WebControls.PlaceHolder phSinUsuarios;
         protected global::System.Web.UI.WebControls.Panel pnlEditor;
         protected global::System.Web.UI.WebControls.Literal litEditorTitulo;

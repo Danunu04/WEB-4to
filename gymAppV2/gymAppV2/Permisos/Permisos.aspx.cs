@@ -254,7 +254,7 @@ namespace gymAppV2.Permisos
                     .OrderBy(f => f.Usuario, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                rptUsuarios.DataSource = filas;
+                rptUsuarios.DataSource = pagUsuarios.Paginar(filas);
                 rptUsuarios.DataBind();
 
                 phSinUsuarios.Visible = filas.Count == 0;
@@ -458,6 +458,12 @@ namespace gymAppV2.Permisos
         }
 
         protected void btnBuscarUsuario_Click(object sender, EventArgs e)
+        {
+            pagUsuarios.Reiniciar();
+            CargarUsuarios();
+        }
+
+        protected void pagUsuarios_CambioPagina(object sender, EventArgs e)
         {
             CargarUsuarios();
         }

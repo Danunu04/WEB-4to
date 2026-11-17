@@ -405,6 +405,12 @@ namespace gymAppV2.Pagos
             txtAlias.Text = new BLLTransferencia().ObtenerAlias();
         }
 
+        protected void gvTransferencias_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            gvTransferencias.PageIndex = e.NewPageIndex;
+            CargarTransferencias();
+        }
+
         protected void gvTransferencias_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             if (!int.TryParse(Convert.ToString(e.CommandArgument), out int codTransferencia))
@@ -539,6 +545,12 @@ namespace gymAppV2.Pagos
             {
                 AbrirFormulario(dni);
             }
+        }
+
+        protected void gvPagosCliente_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            gvPagosCliente.PageIndex = e.NewPageIndex;
+            CargarVistaCliente();
         }
 
         protected void gvPagos_PageIndexChanging(object sender, GridViewPageEventArgs e)

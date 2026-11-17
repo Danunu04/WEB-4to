@@ -426,6 +426,12 @@ namespace gymAppV2.Rutinas
             AbrirEjercicios(CodRutinaSeleccionado.Value);
         }
 
+        protected void gvRutinasCliente_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            gvRutinasCliente.PageIndex = e.NewPageIndex;
+            CargarRutinasCliente();
+        }
+
         protected void gvRutinasCliente_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             if (e.CommandName == "Detalle" && int.TryParse(Convert.ToString(e.CommandArgument), out int codRutina))

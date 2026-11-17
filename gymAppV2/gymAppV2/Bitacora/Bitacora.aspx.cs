@@ -102,7 +102,7 @@ namespace gymAppV2.Bitacora
                 }
                 else
                 {
-                    rptEventos.DataSource = eventos;
+                    rptEventos.DataSource = pagEventos.Paginar(eventos);
                     rptEventos.DataBind();
                     pnlNoEventos.Visible = false;
                     pnlEventos.Visible = true;
@@ -130,6 +130,7 @@ namespace gymAppV2.Bitacora
             ViewState["filtroCriticidad"] = filtroCriticidadActual;
             ViewState["filtroModulo"] = filtroModuloActual;
 
+            pagEventos.Reiniciar();
             CargarBitacora();
         }
 
@@ -142,6 +143,7 @@ namespace gymAppV2.Bitacora
             ViewState["filtroCriticidad"] = filtroCriticidadActual;
             ViewState["filtroModulo"] = filtroModuloActual;
 
+            pagEventos.Reiniciar();
             CargarBitacora();
         }
 
@@ -155,6 +157,7 @@ namespace gymAppV2.Bitacora
             ViewState["filtroCriticidad"] = filtroCriticidadActual;
             ViewState["filtroModulo"] = filtroModuloActual;
 
+            pagEventos.Reiniciar();
             CargarBitacora();
         }
 
@@ -168,6 +171,12 @@ namespace gymAppV2.Bitacora
             ViewState["filtroCriticidad"] = filtroCriticidadActual;
             ViewState["filtroModulo"] = filtroModuloActual;
 
+            pagEventos.Reiniciar();
+            CargarBitacora();
+        }
+
+        protected void pagEventos_CambioPagina(object sender, EventArgs e)
+        {
             CargarBitacora();
         }
 

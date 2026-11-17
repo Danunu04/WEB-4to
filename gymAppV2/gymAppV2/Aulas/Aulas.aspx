@@ -102,6 +102,7 @@
                     </asp:PlaceHolder>
                 </tbody>
             </table>
+            <gym:Paginador ID="pagAulas" runat="server" OnCambioPagina="pagAulas_CambioPagina" />
         </div>
 
         <!-- Alta / modificación de aula -->

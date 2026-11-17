@@ -435,6 +435,78 @@ body {
     }
 }
 
+/* ===== Paginación =====
+   Mismo aspecto para el paginador de los GridView (<PagerStyle CssClass="pagination" />)
+   y para el control Paginador de las listas con Repeater (Controles/Paginador.ascx). */
+table tr.pagination {
+    display: table-row; /* Bootstrap le pone display:flex a .pagination */
+}
+
+table tr.pagination > td {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+table tr.pagination table {
+    display: inline-table;
+    border-collapse: separate;
+    border-spacing: 0.25rem 0;
+}
+
+table tr.pagination table td {
+    padding: 0;
+    border: none;
+}
+
+.paginador {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+}
+
+table tr.pagination table a,
+table tr.pagination table span,
+.paginador a,
+.paginador span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+table tr.pagination table a:hover,
+.paginador a:hover {
+    border-color: var(--color-accent-pink);
+    background: var(--color-accent-pink-light);
+    color: var(--color-text);
+}
+
+/* Página actual: el GridView y el Paginador la muestran como <span>, no como link */
+table tr.pagination table span,
+.paginador span {
+    border-color: var(--color-accent-pink);
+    background: var(--color-accent-pink-light);
+    color: var(--color-text);
+    font-weight: 600;
+    cursor: default;
+}
+
 /* ===== Tablas como tarjetas en el celular =====
    Se activa con la clase "tabla-tarjetas" en la tabla (o en el CssClass del GridView).
    Las etiquetas de cada dato (data-label) las pone el script de DashBoard.Master a partir de

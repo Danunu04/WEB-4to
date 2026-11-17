@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Respaldo - GymApp</title>
-    <link href="<%= ResolveUrl("~/Admin/BackupRestore.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Admin/BackupRestore.css?v=4") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -33,7 +33,8 @@
                     <asp:TextBox ID="txtRutaBackup" runat="server" CssClass="form-control" placeholder="C:\Backups\GymApp_20250701_120000.bak" />
                     <asp:Button ID="btnGenerarNombre" runat="server" Text="Generar nombre" CssClass="btn-secondary" OnClick="btnGenerarNombre_Click" />
                 </div>
-                <asp:Button ID="btnRealizarBackup" runat="server" Text="Realizar backup" CssClass="btn-primary" OnClick="btnRealizarBackup_Click" />
+                <asp:Button ID="btnRealizarBackup" runat="server" Text="Realizar backup" CssClass="btn-primary" OnClick="btnRealizarBackup_Click"
+                    OnClientClick="return iniciarBackup(this);" />
             </div>
         </asp:Panel>
 
@@ -80,6 +81,17 @@
                 <button type="button" class="btn-secondary" id="btnRestoreCancelar">Cancelar</button>
                 <button type="button" class="btn-danger" id="btnRestoreConfirmar">Sí, restaurar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de carga mientras corre el backup o el restore: no deja usar ni salir de la página -->
+    <div id="cargaOperacion" class="carga-overlay" hidden tabindex="-1" role="alertdialog" aria-modal="true"
+        aria-labelledby="cargaTitulo" aria-describedby="cargaTexto">
+        <div class="carga-box">
+            <div class="carga-spinner" aria-hidden="true"></div>
+            <h3 id="cargaTitulo"></h3>
+            <p id="cargaTexto">Esto puede tardar varios minutos según el tamaño de la base. No cierres ni salgas de esta pantalla hasta que termine.</p>
+            <p class="carga-tiempo">Tiempo transcurrido: <span id="cargaTiempo">0:00</span></p>
         </div>
     </div>
 
@@ -141,7 +153,65 @@
             document.getElementById('btnRestoreConfirmar').addEventListener('click', function () {
                 var nombre = botonPendiente ? botonPendiente.name : null;
                 cerrarModal();
-                if (nombre) __doPostBack(nombre, '');
+                if (!nombre) return;
+                var formato = formatoElegido('<%= rblFormatoRestore.ClientID %>');
+                mostrarCarga('Restaurando la base desde ' + formato + '...');
+                __doPostBack(nombre, '');
+            });
+
+            // ===== Pantalla de carga =====
+            // El backup y el restore son un postback que tarda: mientras el servidor trabaja se muestra
+            // el cartel, se bloquea el resto de la página y se avisa si el usuario intenta salir.
+            // Cuando llega la respuesta la página se recarga y el cartel desaparece solo.
+            var carga = document.getElementById('cargaOperacion');
+            var operacionEnCurso = false;
+            var saltarAvisoPropio = false;
+
+            function formatoElegido(rblId) {
+                var marcado = document.querySelector('#' + rblId + ' input[type="radio"]:checked');
+                return marcado && marcado.value === 'bacpac' ? '.bacpac' : '.bak';
+            }
+
+            function mostrarCarga(titulo) {
+                document.getElementById('cargaTitulo').textContent = titulo;
+
+                // Se pasa al final del body para poder dejar inerte todo lo demás (menú, links, botones)
+                document.body.appendChild(carga);
+                Array.prototype.forEach.call(document.body.children, function (el) {
+                    if (el !== carga) el.inert = true;
+                });
+                carga.hidden = false;
+                carga.focus();
+
+                operacionEnCurso = true;
+                // El propio postback dispara un beforeunload: ese no tiene que mostrar el aviso
+                saltarAvisoPropio = true;
+                setTimeout(function () { saltarAvisoPropio = false; }, 1000);
+
+                var inicio = Date.now();
+                var reloj = document.getElementById('cargaTiempo');
+                setInterval(function () {
+                    var seg = Math.floor((Date.now() - inicio) / 1000);
+                    reloj.textContent = Math.floor(seg / 60) + ':' + ('0' + (seg % 60)).slice(-2);
+                }, 1000);
+            }
+
+            window.iniciarBackup = function (boton) {
+                var formato = formatoElegido('<%= rblFormatoBackup.ClientID %>');
+                mostrarCarga('Generando backup ' + formato + '...');
+                __doPostBack(boton.name, '');
+                return false;
+            };
+
+            // Cerrar la pestaña, recargar o ir atrás mientras corre la operación: el navegador pide confirmar
+            window.addEventListener('beforeunload', function (e) {
+                if (!operacionEnCurso) return;
+                if (saltarAvisoPropio) {
+                    saltarAvisoPropio = false;
+                    return;
+                }
+                e.preventDefault();
+                e.returnValue = '';
             });
         })();
     </script>

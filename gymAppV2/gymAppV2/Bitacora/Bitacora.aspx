@@ -116,6 +116,7 @@
                             </div>
                         </ItemTemplate>
                     </asp:Repeater>
+                    <gym:Paginador ID="pagEventos" runat="server" OnCambioPagina="pagEventos_CambioPagina" />
                 </asp:Panel>
 
                 <asp:Panel ID="pnlNoEventos" runat="server" Visible="false" CssClass="no-events">

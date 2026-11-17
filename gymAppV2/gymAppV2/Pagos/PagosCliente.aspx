@@ -67,7 +67,8 @@
                     <div class="table-card-header">
                         <h3><i class="fa-solid fa-table-list"></i><asp:Literal ID="litListaClienteTitulo" runat="server" Text="Mis pagos" /></h3>
                     </div>
-                    <asp:GridView ID="gvPagosCliente" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas" GridLines="None">
+                    <asp:GridView ID="gvPagosCliente" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas" GridLines="None"
+                        AllowPaging="true" PageSize="10" OnPageIndexChanging="gvPagosCliente_PageIndexChanging">
                         <Columns>
                             <asp:TemplateField HeaderText="Alumno">
                                 <ItemTemplate>
@@ -85,6 +86,7 @@
                             <asp:BoundField DataField="FechaPago" HeaderText="Fecha de pago" DataFormatString="{0:dd/MM/yyyy}" />
                             <asp:BoundField DataField="MetodoPago" HeaderText="Método" />
                         </Columns>
+                        <PagerStyle CssClass="pagination" />
                         <EmptyDataTemplate>
                             <div class="pagos-empty-inline">
                                 <i class="fa-solid fa-receipt"></i>
@@ -209,7 +211,8 @@
                         <small class="form-hint"><asp:Literal ID="litAliasAyuda" runat="server" Text="De 6 a 20 caracteres: letras sin tilde, números, puntos o guiones." /></small>
                     </asp:Panel>
                     <asp:GridView ID="gvTransferencias" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas"
-                        GridLines="None" OnRowCommand="gvTransferencias_RowCommand">
+                        GridLines="None" AllowPaging="true" PageSize="10" OnPageIndexChanging="gvTransferencias_PageIndexChanging"
+                        OnRowCommand="gvTransferencias_RowCommand">
                         <Columns>
                             <asp:BoundField DataField="FechaSolicitud" HeaderText="Informada" DataFormatString="{0:dd/MM/yyyy HH:mm}" />
                             <asp:TemplateField HeaderText="Alumno">
@@ -238,6 +241,7 @@
                                 </ItemTemplate>
                             </asp:TemplateField>
                         </Columns>
+                        <PagerStyle CssClass="pagination" />
                         <EmptyDataTemplate>
                             <div class="pagos-empty-inline">
                                 <i class="fa-solid fa-circle-check"></i>

@@ -61,7 +61,7 @@ namespace gymAppV2.Aulas
                     .GroupBy(h => h.CodAula)
                     .ToDictionary(g => g.Key, g => g.Count());
 
-                rptAulas.DataSource = aulas.Select(a => new
+                rptAulas.DataSource = pagAulas.Paginar(aulas.Select(a => new
                 {
                     a.CodAula,
                     a.Nombre,
@@ -69,7 +69,7 @@ namespace gymAppV2.Aulas
                     a.Activo,
                     Turnos = turnosPorAula.TryGetValue(a.CodAula, out int cantidad) ? cantidad : 0,
                     EstadoTexto = a.Activo ? T("actividades_estado_activa") : T("actividades_estado_inactiva")
-                }).ToList();
+                }).ToList());
                 rptAulas.DataBind();
 
                 phSinAulas.Visible = aulas.Count == 0;
@@ -87,6 +87,11 @@ namespace gymAppV2.Aulas
             txtNombre.Text = string.Empty;
             txtCupo.Text = string.Empty;
             pnlForm.Visible = true;
+        }
+
+        protected void pagAulas_CambioPagina(object sender, EventArgs e)
+        {
+            CargarAulas();
         }
 
         protected void rptAulas_ItemCommand(object source, RepeaterCommandEventArgs e)

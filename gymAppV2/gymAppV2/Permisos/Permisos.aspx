@@ -158,6 +158,7 @@
                             </asp:PlaceHolder>
                         </tbody>
                     </table>
+                    <gym:Paginador ID="pagUsuarios" runat="server" OnCambioPagina="pagUsuarios_CambioPagina" />
                 </div>
             </asp:Panel>
         </asp:Panel>

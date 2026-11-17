@@ -26,6 +26,7 @@
                     <h3><i class="fa-solid fa-table-list" style="margin-right:7px;color:var(--mint-dark)"></i><asp:Literal ID="litListaClienteTitulo" runat="server" Text="Mis rutinas" /></h3>
                 </div>
                 <asp:GridView ID="gvRutinasCliente" runat="server" AutoGenerateColumns="false" CssClass="table tabla-tarjetas" GridLines="None"
+                    AllowPaging="true" PageSize="10" OnPageIndexChanging="gvRutinasCliente_PageIndexChanging"
                     OnRowCommand="gvRutinasCliente_RowCommand">
                     <Columns>
                         <asp:BoundField DataField="Fecha" HeaderText="Fecha" DataFormatString="{0:dd/MM/yyyy}" />
@@ -49,6 +50,7 @@
                             </ItemTemplate>
                         </asp:TemplateField>
                     </Columns>
+                    <PagerStyle CssClass="pagination" />
                     <EmptyDataTemplate>
                         <div class="rutinas-empty">
                             <i class="bi bi-list-check"></i>

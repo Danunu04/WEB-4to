@@ -220,6 +220,7 @@
     <Content Include="Site.Master" />
     <Content Include="DashBoard.Master" />
     <Content Include="ErrorState.Master" />
+    <Content Include="Controles\Paginador.ascx" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
     <Content Include="Bundle.config" />
@@ -388,6 +389,13 @@
     </Compile>
     <Compile Include="Usuarios\UsuariosModulo.aspx.designer.cs">
       <DependentUpon>UsuariosModulo.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Controles\Paginador.ascx.cs">
+      <DependentUpon>Paginador.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Controles\Paginador.ascx.designer.cs">
+      <DependentUpon>Paginador.ascx</DependentUpon>
     </Compile>
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>

@@ -61,6 +61,7 @@
     <Compile Include="BLLPesoCorporal.cs" />
     <Compile Include="BLLAvisoPrecio.cs" />
     <Compile Include="BLLAlertaCheckin.cs" />
+    <Compile Include="BLLTransferencia.cs" />
     <Compile Include="BLLRegistro.cs" />
     <Compile Include="ValidadorTarjeta.cs" />
     <Compile Include="BLLUsuario.cs" />

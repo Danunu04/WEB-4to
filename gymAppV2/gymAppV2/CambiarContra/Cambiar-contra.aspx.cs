@@ -44,6 +44,13 @@ namespace gymAppV2.CambiarContra
             return _dict.TryGetValue(tag, out var val) ? val : tag;
         }
 
+        // Igual que T(), pero con un texto de respaldo si la clave no está traducida.
+        private string Texto(string tag, string respaldo)
+        {
+            string valor = T(tag);
+            return string.IsNullOrEmpty(valor) || valor == tag ? respaldo : valor;
+        }
+
         private bool ModoRecuperacion
         {
             get { return ViewState["ModoRecuperacion"] as bool? ?? false; }
@@ -261,16 +268,48 @@ namespace gymAppV2.CambiarContra
                 }
                 else
                 {
-                    string msg = T("cambio_msg_ok");
+                    // Por seguridad, después de cambiar la contraseña desde la sesión se cierra
+                    // la sesión y hay que volver a entrar con la contraseña nueva.
+                    System.Web.Security.FormsAuthentication.SignOut();
+                    try { Singleton.Instancia.LogOut(); } catch { }
+                    string msg = T("cambio_msg_ok") + " " + Texto("cambio_msg_reingresar", "Volvé a iniciar sesión con la contraseña nueva.");
                     MostrarMensaje(msg, "success");
                     MostrarToast(msg, "success");
-                    RedirigirConDelay("~/DashBoard/WebForm1.aspx", 1500);
+                    RedirigirConDelay("~/LogIn/LogIn.aspx", 2500);
                 }
             }
             catch (ThreadAbortException) { }
+            catch (ExcepcionesLogIn ex)
+            {
+                // La contraseña actual no es correcta (o la cuenta quedó bloqueada por los intentos).
+                if (ex.Result == ResultadosLogIn.AccountLocked)
+                {
+                    System.Web.Security.FormsAuthentication.SignOut();
+                    try { Singleton.Instancia.LogOut(); } catch { }
+                    string msg = Texto("cambio_msg_bloqueado", "La cuenta se bloqueó por demasiados intentos. Vas a poder recuperarla desde el inicio de sesión.");
+                    MostrarMensaje(msg, "danger");
+                    RedirigirConDelay("~/LogIn/LogIn.aspx", 3000);
+                }
+                else
+                {
+                    MostrarMensaje(T("cambio_msg_contra_incorrecta"), "danger");
+                }
+
+                try
+                {
+                    if (!string.IsNullOrEmpty(usuario))
+                        BllEvento.RegistrarError(usuario, $"Cambio de contraseña rechazado - {ex.Result}");
+                }
+                catch { }
+            }
             catch (Exception ex)
             {
-                string mensaje = ex.Message;
+                // La BLL envuelve sus validaciones (Exception común) con "Error al cambiar contraseña: ".
+                // Esas se muestran; cualquier otra (base de datos, etc.) se reemplaza por un mensaje genérico.
+                Exception causa = ex.InnerException ?? ex;
+                string mensaje = causa.GetType() == typeof(Exception)
+                    ? causa.Message
+                    : Texto("cambio_msg_error_generico", "No se pudo cambiar la contraseña. Intentá de nuevo en unos minutos.");
 
                 if (mensaje.Contains("reutilizar"))
                     mensaje = T("cambio_msg_reutilizar");

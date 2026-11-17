@@ -41,6 +41,13 @@ namespace gymAppV2.Pagos
             set { ViewState["Busqueda"] = value; }
         }
 
+        /// <summary>Transferencia que se está por rechazar (ventana de confirmación).</summary>
+        private int? TransferenciaARechazar
+        {
+            get { return ViewState["TransferenciaARechazar"] as int?; }
+            set { ViewState["TransferenciaARechazar"] = value; }
+        }
+
         /// <summary>Alumno cuyo abono está pagando el cliente en la ventana de pago.</summary>
         private int? DniPagoCliente
         {
@@ -97,8 +104,10 @@ namespace gymAppV2.Pagos
             litTarjetaTitular.Text = Texto("pagos_tarjeta_titular", "Titular");
             litTarjetaVence.Text = Texto("pagos_tarjeta_vence", "Vencimiento (MM/AA)");
             litTarjetaCvv.Text = Texto("pagos_tarjeta_cvv", "Código de seguridad");
-            litTransferenciaDatos.Text = Texto("pagos_transferencia_datos",
-                "Transferí el monto al alias SPORTIO.GYM.PAGOS y confirmá el pago.");
+            litTransferenciaAliasTitulo.Text = Texto("pagos_transferencia_alias", "Alias del gimnasio");
+            litTransferenciaAlias.Text = Server.HtmlEncode(new BLLTransferencia().ObtenerAlias());
+            litTransferenciaDatos.Text = Texto("pagos_transferencia_info",
+                "Transferí el monto a ese alias y después tocá \"Informar transferencia\". Recepción verifica que llegó y recién ahí se activa el abono.");
             litAvisoDemo.Text = Texto("pagos_aviso_demo",
                 "Pago de demostración: no se hace ningún cobro real y los datos de la tarjeta no se guardan.");
             litBtnConfirmarPago.Text = Texto("pagos_btn_confirmar", "Confirmar pago");
@@ -106,6 +115,16 @@ namespace gymAppV2.Pagos
             rblClienteMetodo.Items.FindByValue("Transferencia").Text = Texto("pagos_medio_transferencia", "Transferencia");
 
             // Administración
+            litTransferenciasTitulo.Text = Texto("pagos_transf_titulo", "Transferencias a confirmar");
+            litTransferenciasAyuda.Text = Texto("pagos_transf_ayuda",
+                "Comprobá en la cuenta del gimnasio que la transferencia llegó antes de confirmarla. Al confirmarla se activa el abono.");
+            litAliasTitulo.Text = Texto("pagos_alias_titulo", "Alias que ven los clientes para transferir");
+            litBtnGuardarAlias.Text = Texto("pagos_alias_guardar", "Guardar alias");
+            litAliasAyuda.Text = Texto("pagos_alias_ayuda", "De 6 a 20 caracteres: letras sin tilde, números, puntos o guiones.");
+            litRechazarTitulo.Text = Texto("pagos_transf_rechazar_titulo", "Rechazar transferencia");
+            litBtnConfirmarRechazo.Text = Texto("pagos_transf_rechazar_si", "Sí, rechazar");
+            TitularColumnas(gvTransferencias, "pagos_transf_col_fecha", "pagos_col_alumno", "pagos_col_dni", "pagos_col_modalidad", "pagos_col_monto", "pagos_transf_col_informo", null);
+
             litEstadosTitulo.Text = Texto("pagos_estados_titulo", "Estado de abonos");
             txtBuscar.Attributes["placeholder"] = Texto("pagos_buscar_placeholder", "Buscar por nombre, apellido o DNI");
             btnBuscar.Text = Texto("pagos_btn_buscar", "Buscar");
@@ -150,6 +169,7 @@ namespace gymAppV2.Pagos
             }
             else
             {
+                CargarTransferencias();
                 CargarEstados();
                 CargarPagos();
             }
@@ -210,11 +230,6 @@ namespace gymAppV2.Pagos
             ActualizarPreviewCliente();
         }
 
-        protected void rblClienteMetodo_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            MostrarMedioCliente();
-        }
-
         protected void btnCerrarPagoCliente_Click(object sender, EventArgs e)
         {
             CerrarPagoCliente();
@@ -237,6 +252,17 @@ namespace gymAppV2.Pagos
                 }
 
                 string metodo = rblClienteMetodo.SelectedValue;
+                if (metodo == "Transferencia")
+                {
+                    // La transferencia no activa el abono: queda pendiente hasta que recepción la confirma
+                    new BLLTransferencia().Informar(UsuarioActual, DniPagoCliente.Value, modalidadId);
+                    CerrarPagoCliente();
+                    MostrarExito(Texto("pagos_transf_informada",
+                        "Recibimos el aviso de tu transferencia. El abono se activa cuando recepción confirme que llegó."));
+                    CargarVistaCliente();
+                    return;
+                }
+
                 if (metodo == "Tarjeta")
                 {
                     string errorTarjeta = ValidarTarjeta();
@@ -267,11 +293,42 @@ namespace gymAppV2.Pagos
             pnlPagoCliente.Visible = false;
         }
 
+        /// <summary>
+        /// Muestra los datos de la tarjeta o los de la transferencia según el medio elegido. Los dos
+        /// paneles se envían siempre: al cambiar de medio, el script de la página los alterna sin
+        /// recargar; acá se deja el estado correcto en cada respuesta del servidor.
+        /// </summary>
         private void MostrarMedioCliente()
         {
-            bool tarjeta = rblClienteMetodo.SelectedValue == "Tarjeta";
-            pnlTarjeta.Visible = tarjeta;
-            pnlTransferencia.Visible = !tarjeta;
+            bool tarjeta = rblClienteMetodo.SelectedValue != "Transferencia";
+            MostrarSegun(pnlTarjeta, tarjeta);
+            MostrarSegun(pnlTransferencia, !tarjeta);
+            litBtnConfirmarPago.Text = tarjeta ? TextoBotonTarjeta : TextoBotonTransferencia;
+        }
+
+        private static void MostrarSegun(Panel panel, bool visible)
+        {
+            if (visible)
+                panel.Style.Remove("display");
+            else
+                panel.Style["display"] = "none";
+        }
+
+        protected string TextoBotonTarjeta
+        {
+            get { return System.Web.HttpUtility.HtmlAttributeEncode(Texto("pagos_btn_confirmar", "Confirmar pago")); }
+        }
+
+        protected string TextoBotonTransferencia
+        {
+            get { return System.Web.HttpUtility.HtmlAttributeEncode(Texto("pagos_btn_informar_transf", "Informar transferencia")); }
+        }
+
+        protected override void OnPreRender(EventArgs e)
+        {
+            base.OnPreRender(e);
+            if (pnlPagoCliente.Visible)
+                MostrarMedioCliente();
         }
 
         private void ActualizarPreviewCliente()
@@ -294,6 +351,9 @@ namespace gymAppV2.Pagos
         /// </summary>
         private string ValidarTarjeta()
         {
+            txtTarjetaNumero.Text = ValidadorTarjeta.Normalizar(txtTarjetaNumero.Text) ?? txtTarjetaNumero.Text;
+            txtTarjetaVence.Text = ValidadorTarjeta.NormalizarVencimiento(txtTarjetaVence.Text) ?? txtTarjetaVence.Text;
+
             string clave = ValidadorTarjeta.Validar(txtTarjetaNumero.Text, txtTarjetaTitular.Text,
                 txtTarjetaVence.Text, txtTarjetaCvv.Text, DateTime.Today);
 
@@ -301,6 +361,125 @@ namespace gymAppV2.Pagos
         }
 
         // ==================== VISTA ADMIN ====================
+
+        protected string TextoBotonConfirmarTransferencia
+        {
+            get { return Texto("pagos_transf_confirmar", "Confirmar"); }
+        }
+
+        protected string TextoBotonRechazarTransferencia
+        {
+            get { return Texto("pagos_transf_rechazar", "Rechazar"); }
+        }
+
+        /// <summary>Transferencias informadas sin confirmar. La sección se muestra siempre, aunque esté vacía.</summary>
+        private void CargarTransferencias()
+        {
+            try
+            {
+                var bllTransferencia = new BLLTransferencia();
+                gvTransferencias.DataSource = bllTransferencia.ListarPendientes();
+                gvTransferencias.DataBind();
+                txtAlias.Text = bllTransferencia.ObtenerAlias();
+                pnlTransferencias.Visible = true;
+            }
+            catch (Exception)
+            {
+                // Si la tabla todavía no existe (falta el script), la sección no se muestra
+                pnlTransferencias.Visible = false;
+            }
+        }
+
+        protected void btnGuardarAlias_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                new BLLTransferencia().ActualizarAlias(txtAlias.Text);
+                MostrarExito(Texto("pagos_alias_ok", "Alias actualizado. Los clientes ya ven el nuevo."));
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+
+            txtAlias.Text = new BLLTransferencia().ObtenerAlias();
+        }
+
+        protected void gvTransferencias_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (!int.TryParse(Convert.ToString(e.CommandArgument), out int codTransferencia))
+                return;
+
+            if (e.CommandName == "Confirmar")
+            {
+                try
+                {
+                    Pago pago = new BLLTransferencia().Confirmar(codTransferencia, UsuarioActual);
+                    MostrarExito(Texto("pagos_transf_confirmada", "Transferencia confirmada. El abono cubre del {0} al {1}.",
+                        pago.FechaInicio.ToString("dd/MM/yyyy"), pago.FechaVencimiento.ToString("dd/MM/yyyy")));
+                }
+                catch (Exception ex)
+                {
+                    MostrarError(MensajeError(ex));
+                }
+
+                CargarTransferencias();
+                CargarEstados();
+                CargarPagos();
+            }
+            else if (e.CommandName == "Rechazar")
+            {
+                TransferenciaPendiente transferencia = null;
+                try
+                {
+                    transferencia = new BLLTransferencia().ListarPendientes().FirstOrDefault(t => t.CodTransferencia == codTransferencia);
+                }
+                catch (Exception ex)
+                {
+                    MostrarError(MensajeError(ex));
+                    return;
+                }
+
+                if (transferencia == null)
+                {
+                    CargarTransferencias();
+                    return;
+                }
+
+                TransferenciaARechazar = codTransferencia;
+                litRechazarMensaje.Text = Server.HtmlEncode(Texto("pagos_transf_rechazar_msg",
+                    "¿Rechazar la transferencia de {0} por {1}? El abono no se activa y el cliente tiene que volver a pagar.",
+                    transferencia.AlumnoNombreCompleto, transferencia.Monto.ToString("C")));
+                pnlRechazarTransferencia.Visible = true;
+            }
+        }
+
+        protected void btnCancelarRechazo_Click(object sender, EventArgs e)
+        {
+            TransferenciaARechazar = null;
+            pnlRechazarTransferencia.Visible = false;
+        }
+
+        protected void btnConfirmarRechazo_Click(object sender, EventArgs e)
+        {
+            pnlRechazarTransferencia.Visible = false;
+            if (!TransferenciaARechazar.HasValue)
+                return;
+
+            try
+            {
+                new BLLTransferencia().Rechazar(TransferenciaARechazar.Value, UsuarioActual);
+                MostrarExito(Texto("pagos_transf_rechazada", "Transferencia rechazada."));
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeError(ex));
+            }
+
+            TransferenciaARechazar = null;
+            CargarTransferencias();
+            CargarEstados();
+        }
 
         private void CargarEstados()
         {
@@ -516,6 +695,11 @@ namespace gymAppV2.Pagos
                 clase = "estado-inactivo";
                 texto = Texto("pagos_estado_inactivo", "Dado de baja");
             }
+            else if (estado.TieneTransferenciaPendiente && !estado.EstaAlDia)
+            {
+                clase = "estado-transferencia";
+                texto = Texto("pagos_estado_transf_pendiente", "Transferencia a confirmar");
+            }
             else
             {
                 switch (estado.Situacion)
@@ -555,7 +739,7 @@ namespace gymAppV2.Pagos
         protected bool PuedePagar(object item)
         {
             var estado = (EstadoAbono)item;
-            return estado.AlumnoActivo && !estado.TieneAbonoAdelantado;
+            return estado.AlumnoActivo && !estado.TieneAbonoAdelantado && !estado.TieneTransferenciaPendiente;
         }
 
         protected bool MostrarMontoAPagar(object item)
@@ -573,6 +757,8 @@ namespace gymAppV2.Pagos
                 aviso = Texto("pagos_aviso_inactivo", "El alumno está dado de baja. Consultá en recepción.");
             else if (estado.TieneAbonoAdelantado)
                 aviso = Texto("pagos_aviso_adelantado", "El próximo abono ya está pago.");
+            else if (estado.TieneTransferenciaPendiente)
+                aviso = Texto("pagos_aviso_transf_pendiente", "Transferencia informada: el abono se activa cuando recepción la confirme.");
 
             return aviso == null ? string.Empty : $"<p class=\"abono-card-aviso\">{Server.HtmlEncode(aviso)}</p>";
         }

@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Alumnos - GymApp</title>
-    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=4") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Alumnos/Alumnos.css?v=5") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -206,7 +206,7 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="form-row" id="filaEstado" runat="server">
                         <div class="form-field">
                             <label>Estado</label>
                             <asp:CheckBox ID="chkActivo" runat="server" />
@@ -375,6 +375,46 @@
                         </button>
                     </div>
                 </asp:Panel>
+            </div>
+        </div>
+    </asp:Panel>
+
+    <!-- Primer mes del abono al terminar un alta: se cobra ahora o queda para después (RFN1) -->
+    <asp:Panel ID="pnlCobroAlta" runat="server" Visible="false" CssClass="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-cash-register"></i> <asp:Literal ID="litCobroAltaTitulo" runat="server" Text="Primer mes del abono" /></h3>
+                <button id="btnCerrarCobroAlta" runat="server" class="btn-close" onserverclick="btnCobroAltaDespues_Click">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="cobro-alta-alumno"><asp:Literal ID="litCobroAltaAlumno" runat="server" /></p>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label><asp:Literal ID="litCobroAltaModalidad" runat="server" Text="Clases por semana" /> *</label>
+                        <asp:DropDownList ID="ddlCobroAltaModalidad" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlCobroAltaModalidad_SelectedIndexChanged"></asp:DropDownList>
+                    </div>
+                    <div class="form-field">
+                        <label><asp:Literal ID="litCobroAltaMedio" runat="server" Text="Medio de pago" /> *</label>
+                        <asp:DropDownList ID="ddlCobroAltaMedio" runat="server">
+                            <asp:ListItem Value="Efectivo">Efectivo</asp:ListItem>
+                            <asp:ListItem Value="Transferencia">Transferencia</asp:ListItem>
+                            <asp:ListItem Value="Tarjeta">Tarjeta</asp:ListItem>
+                        </asp:DropDownList>
+                    </div>
+                </div>
+                <p class="cobro-alta-monto"><asp:Literal ID="litCobroAltaMontoTitulo" runat="server" Text="Monto" />: <strong><asp:Label ID="lblCobroAltaMonto" runat="server" Text="—" /></strong></p>
+                <p class="cobro-alta-cobertura"><asp:Label ID="lblCobroAltaCobertura" runat="server" /></p>
+                <p class="cobro-alta-ayuda"><asp:Literal ID="litCobroAltaAyuda" runat="server" Text="Si prefiere pagar después, tocá Más tarde: se puede cobrar en cualquier momento desde Pagos." /></p>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCobroAltaDespues" runat="server" class="btn-action btn-cancelar" onserverclick="btnCobroAltaDespues_Click">
+                    <i class="fa-solid fa-clock"></i> <asp:Literal ID="litBtnCobroAltaDespues" runat="server" Text="Más tarde" />
+                </button>
+                <button id="btnCobroAltaCobrar" runat="server" class="btn-action btn-guardar" onserverclick="btnCobroAltaCobrar_Click">
+                    <i class="fa-solid fa-check"></i> <asp:Literal ID="litBtnCobroAltaCobrar" runat="server" Text="Cobrar ahora" />
+                </button>
             </div>
         </div>
     </asp:Panel>

@@ -100,7 +100,7 @@
                     <div class="registro-campo">
                         <label>Medio de pago</label>
                         <asp:RadioButtonList ID="rblMetodo" runat="server" RepeatLayout="Flow" RepeatDirection="Horizontal"
-                            CssClass="registro-medios" AutoPostBack="true" OnSelectedIndexChanged="rblMetodo_SelectedIndexChanged">
+                            CssClass="registro-medios">
                             <asp:ListItem Value="Tarjeta" Selected="True">Tarjeta</asp:ListItem>
                             <asp:ListItem Value="Transferencia">Transferencia</asp:ListItem>
                         </asp:RadioButtonList>
@@ -118,7 +118,7 @@
                         <div class="registro-fila">
                             <div class="registro-campo">
                                 <label for="<%= txtTarjetaVence.ClientID %>">Vencimiento (MM/AA)</label>
-                                <asp:TextBox ID="txtTarjetaVence" runat="server" CssClass="form-control" MaxLength="5" autocomplete="off" placeholder="MM/AA" />
+                                <asp:TextBox ID="txtTarjetaVence" runat="server" CssClass="form-control" MaxLength="5" autocomplete="off" inputmode="numeric" placeholder="MM/AA" />
                             </div>
                             <div class="registro-campo">
                                 <label for="<%= txtTarjetaCvv.ClientID %>">Código de seguridad</label>
@@ -127,15 +127,17 @@
                         </div>
                     </asp:Panel>
 
-                    <asp:Panel ID="pnlTransferencia" runat="server" Visible="false">
-                        <p class="registro-ayuda">Transferí el monto al alias SPORTIO.GYM.PAGOS y confirmá el pago.</p>
+                    <asp:Panel ID="pnlTransferencia" runat="server">
+                        <p class="registro-ayuda">Transferí el monto al alias <strong><%= Server.HtmlEncode(AliasTransferencia) %></strong> y después tocá el botón para avisarnos.
+                            El abono se activa cuando recepción confirme que la transferencia llegó.</p>
                     </asp:Panel>
 
                     <p class="registro-ayuda registro-demo">Pago de demostración: no se hace ningún cobro real y los datos de la tarjeta no se guardan.</p>
 
                     <div class="registro-acciones">
                         <asp:Button ID="btnVolver3" runat="server" CssClass="registro-btn-secundario" Text="Volver" OnClick="btnVolver3_Click" />
-                        <asp:Button ID="btnPagar" runat="server" CssClass="btnFormLogIn" Text="Pagar y crear cuenta" OnClick="btnPagar_Click" />
+                        <asp:Button ID="btnPagar" runat="server" CssClass="btnFormLogIn" Text="Pagar y crear cuenta" OnClick="btnPagar_Click"
+                            data-tarjeta="Pagar y crear cuenta" data-transferencia="Crear cuenta e informar transferencia" />
                     </div>
                 </asp:Panel>
 
@@ -151,6 +153,43 @@
                 </asp:Panel>
             </div>
         </div>
+    <script>
+        // Tarjeta / transferencia: se cambia en el navegador, sin recargar la página.
+        (function () {
+            function aplicarMedio() {
+                var marcado = document.querySelector('input[name="<%= rblMetodo.UniqueID %>"]:checked');
+                var esTarjeta = !marcado || marcado.value === 'Tarjeta';
+                var tarjeta = document.getElementById('<%= pnlTarjeta.ClientID %>');
+                var transferencia = document.getElementById('<%= pnlTransferencia.ClientID %>');
+                if (tarjeta) tarjeta.style.display = esTarjeta ? '' : 'none';
+                if (transferencia) transferencia.style.display = esTarjeta ? 'none' : '';
+                var boton = document.getElementById('<%= btnPagar.ClientID %>');
+                if (boton) boton.value = boton.getAttribute(esTarjeta ? 'data-tarjeta' : 'data-transferencia');
+            }
+            document.addEventListener('change', function (e) {
+                if (e.target && e.target.name === '<%= rblMetodo.UniqueID %>') aplicarMedio();
+            });
+        })();
+
+        // Número de tarjeta: solo dígitos (hasta 16), en grupos de 4. Código de seguridad: solo dígitos.
+        document.addEventListener('input', function (e) {
+            if (!e.target) return;
+            if (e.target.id === '<%= txtTarjetaNumero.ClientID %>') {
+                var numero = e.target.value.replace(/\D/g, '').slice(0, 16);
+                e.target.value = numero.replace(/(\d{4})(?=\d)/g, '$1 ');
+            } else if (e.target.id === '<%= txtTarjetaCvv.ClientID %>') {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+            }
+        });
+
+        // Vencimiento de la tarjeta: solo dígitos y la barra se agrega sola (MM/AA).
+        document.addEventListener('input', function (e) {
+            if (!e.target || e.target.id !== '<%= txtTarjetaVence.ClientID %>') return;
+            var digitos = e.target.value.replace(/\D/g, '').slice(0, 4);
+            if (digitos.length === 1 && digitos > '1') digitos = '0' + digitos;
+            e.target.value = digitos.length > 2 ? digitos.slice(0, 2) + '/' + digitos.slice(2) : digitos;
+        });
+    </script>
     </form>
 </body>
 </html>

@@ -433,6 +433,21 @@ namespace gymAppV2.Usuarios
         protected global::System.Web.UI.WebControls.Label lblMensajeForm;
 
         /// <summary>
+        /// campoEstadoForm control.
+        /// </summary>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl campoEstadoForm;
+
+        /// <summary>
+        /// Credenciales de la cuenta recién creada.
+        /// </summary>
+        protected global::System.Web.UI.WebControls.Panel pnlCredencialesNuevas;
+        protected global::System.Web.UI.WebControls.Literal litCredencialesTitulo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales;
+        protected global::System.Web.UI.WebControls.Literal litCredencialesAviso;
+        protected global::System.Web.UI.WebControls.Literal litCredencialesDatos;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales2;
+
+        /// <summary>
         /// btnGuardar control.
         /// </summary>
         /// <remarks>

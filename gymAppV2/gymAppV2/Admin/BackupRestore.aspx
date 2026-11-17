@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Respaldo - GymApp</title>
-    <link href="<%= ResolveUrl("~/Admin/BackupRestore.css?v=2") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Admin/BackupRestore.css?v=3") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -65,9 +65,22 @@
                 <asp:Label ID="lblRutaRestore" runat="server" CssClass="form-label" AssociatedControlID="txtRutaRestore">Ruta del archivo a restaurar</asp:Label>
                 <asp:TextBox ID="txtRutaRestore" runat="server" CssClass="form-control" placeholder="C:\GymApp\GymApp_20250701_120000.bak" />
                 <asp:Button ID="btnRealizarRestore" runat="server" Text="Restaurar backup" CssClass="btn-danger" OnClick="btnRealizarRestore_Click"
-                    OnClientClick="return confirm('¿Confirma que desea restaurar? Esta operación reemplaza todos los datos actuales.');" />
+                    OnClientClick="return confirmarRestore(this);" />
             </div>
         </asp:Panel>
+    </div>
+
+    <!-- Confirmación del restore (reemplaza el confirm() del navegador) -->
+    <div id="modalRestore" class="confirm-overlay" hidden>
+        <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="modalRestoreTitulo">
+            <h3 id="modalRestoreTitulo">¿Restaurar este backup?</h3>
+            <p>Se van a reemplazar todos los datos actuales por los del archivo elegido. Los cambios hechos después de ese backup se pierden.</p>
+            <p class="confirm-archivo" id="modalRestoreArchivo"></p>
+            <div class="confirm-acciones">
+                <button type="button" class="btn-secondary" id="btnRestoreCancelar">Cancelar</button>
+                <button type="button" class="btn-danger" id="btnRestoreConfirmar">Sí, restaurar</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -103,6 +116,33 @@
 
             adjuntar('<%= rblFormatoBackup.ClientID %>', '<%= txtRutaBackup.ClientID %>');
             adjuntar('<%= rblFormatoRestore.ClientID %>', '<%= txtRutaRestore.ClientID %>');
+
+            // Confirmación del restore: el primer clic abre el cartel; "Sí, restaurar" hace el postback del botón.
+            var modal = document.getElementById('modalRestore');
+            var botonPendiente = null;
+
+            function cerrarModal() {
+                modal.hidden = true;
+                botonPendiente = null;
+            }
+
+            window.confirmarRestore = function (boton) {
+                var ruta = document.getElementById('<%= txtRutaRestore.ClientID %>');
+                document.getElementById('modalRestoreArchivo').textContent = ruta && ruta.value ? ruta.value : '';
+                botonPendiente = boton;
+                modal.hidden = false;
+                document.getElementById('btnRestoreCancelar').focus();
+                return false;
+            };
+
+            document.getElementById('btnRestoreCancelar').addEventListener('click', cerrarModal);
+            modal.addEventListener('click', function (e) { if (e.target === modal) cerrarModal(); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) cerrarModal(); });
+            document.getElementById('btnRestoreConfirmar').addEventListener('click', function () {
+                var nombre = botonPendiente ? botonPendiente.name : null;
+                cerrarModal();
+                if (nombre) __doPostBack(nombre, '');
+            });
         })();
     </script>
 </asp:Content>

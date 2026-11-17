@@ -39,7 +39,7 @@
     <form id="form1" runat="server">
         <asp:ScriptManager runat="server" />
         <div>
-            <asp:Button CssClass="BtnInicio" ID="Button1" runat="server" Text="Ir a inicio" OnClick="Button1_Click" />
+            <asp:Button CssClass="BtnInicio" ID="Button1" runat="server" Text="Ir a inicio" OnClick="Button1_Click" Visible="false" />
             <!-- Toast Notifications Container -->
             <div id="toastContainer" style="position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.75rem;max-width:min(25rem, calc(100vw - 3rem));"></div>
             <div class="BloqueRosa">

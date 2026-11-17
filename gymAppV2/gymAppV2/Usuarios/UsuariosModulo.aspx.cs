@@ -373,6 +373,8 @@ namespace gymAppV2.Usuarios
             lblFormTitle.Text = T("usuarios_form_nuevo");
             pnlForm.Visible = true;
             passwordRow.Visible = true;
+            // Una cuenta nueva siempre se crea activa: el estado solo se cambia al modificar
+            campoEstadoForm.Visible = false;
         }
 
         protected void btnModificar_Click(object sender, EventArgs e)
@@ -389,6 +391,7 @@ namespace gymAppV2.Usuarios
                 lblFormTitle.Text = T("usuarios_form_modificar");
                 pnlForm.Visible = true;
                 passwordRow.Visible = false;
+                campoEstadoForm.Visible = true;
             }
         }
 
@@ -479,7 +482,8 @@ namespace gymAppV2.Usuarios
             }
             string telefono = txtTelefono.Text.Trim();
             string usuario = txtUsuario.Text;
-            string contrasenia = string.IsNullOrEmpty(txtContrasena.Text) ? bllUsuario.GenerarContrasenaSegura() : txtContrasena.Text;
+            bool contraseniaGenerada = string.IsNullOrEmpty(txtContrasena.Text);
+            string contrasenia = contraseniaGenerada ? bllUsuario.GenerarContrasenaSegura() : txtContrasena.Text;
             string email = txtEmail.Text;
             DateTime? fechaNacimiento = null;
             bool activo = ddlEstadoForm.SelectedValue == "1";
@@ -510,6 +514,7 @@ namespace gymAppV2.Usuarios
                 }
                 else
                 {
+                    activo = true;
                     switch (ddlRolForm.SelectedValue)
                     {
                         case "5":
@@ -545,14 +550,18 @@ namespace gymAppV2.Usuarios
             }
             catch (Exception ex)
             {
-                // Las reglas de perfiles (ej. quién puede crear un WebMaster) se informan tal cual
-                MostrarError(MensajeDePermisos(ex) ?? T("msg_error_generico"));
+                // Las reglas de perfiles y las validaciones (usuario repetido, contraseña débil...) se informan tal cual
+                MostrarError(MensajeDeValidacion(ex) ?? T("msg_error_generico"));
                 return;
             }
 
+            bool fueAlta = !(!string.IsNullOrEmpty(SelectedUsuario) && lblFormTitle.Text == T("usuarios_form_modificar"));
             CerrarFormulario();
             CargarUsuarios();
             ActualizarEstadisticas();
+
+            if (fueAlta)
+                MostrarCredenciales(usuario, contraseniaGenerada ? contrasenia : null);
         }
 
         protected void btnCancelarForm_Click(object sender, EventArgs e)
@@ -619,6 +628,29 @@ namespace gymAppV2.Usuarios
 
             // Mostrar campos específicos según el rol
             MostrarCamposSegunRol();
+        }
+
+        /// <summary>
+        /// Muestra el usuario creado y, si la contraseña se generó automáticamente, la contraseña
+        /// (es la única vez que se ve). Si la escribió el administrador, no se repite.
+        /// </summary>
+        private void MostrarCredenciales(string usuario, string contraseniaGenerada)
+        {
+            litCredencialesTitulo.Text = Server.HtmlEncode(Texto("usuarios_cred_titulo", "Usuario creado"));
+            litCredencialesAviso.Text = Server.HtmlEncode(contraseniaGenerada != null
+                ? Texto("usuarios_cred_aviso", "Pasale estos datos a la persona. La contraseña no se vuelve a mostrar y la va a tener que cambiar en el primer inicio de sesión.")
+                : Texto("usuarios_cred_aviso_propia", "La persona entra con la contraseña que escribiste y la va a tener que cambiar en el primer inicio de sesión."));
+            litCredencialesDatos.Text = Server.HtmlEncode(Texto("usuarios_cred_usuario", "Usuario") + ": " + usuario)
+                + (contraseniaGenerada != null
+                    ? "<br/>" + Server.HtmlEncode(Texto("usuarios_cred_contrasena", "Contraseña") + ": " + contraseniaGenerada)
+                    : string.Empty);
+            pnlCredencialesNuevas.Visible = true;
+        }
+
+        protected void btnCerrarCredenciales_Click(object sender, EventArgs e)
+        {
+            pnlCredencialesNuevas.Visible = false;
+            litCredencialesDatos.Text = string.Empty;
         }
 
         private void CerrarFormulario()

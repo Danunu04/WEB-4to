@@ -227,6 +227,15 @@
     transition: outline 0.2s ease, background-color 0.2s ease;
 }
 
+.btn-exportar {
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.btn-exportar:hover {
+    background-color: var(--color-surface-2);
+}
+
 .filter-select:focus {
     outline: none;
     box-shadow: 0 0 0 0.125rem var(--color-accent-lavender);

@@ -38,6 +38,9 @@ namespace BE
         /// <summary>Ya tiene un abono pago que todavía no empezó (no puede pagar otro).</summary>
         public bool TieneAbonoAdelantado { get; set; }
 
+        /// <summary>Informó una transferencia que todavía no se confirmó (no puede pagar otra vez).</summary>
+        public bool TieneTransferenciaPendiente { get; set; }
+
         public bool EstaAlDia
         {
             get { return Situacion == SituacionAbono.Vigente || Situacion == SituacionAbono.PorVencer; }

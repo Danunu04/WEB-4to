@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using BE;
@@ -185,6 +186,65 @@ namespace gymAppV2.Bitacora
                 ViewState["EventosExpandidos"] = expandidos;
                 CargarBitacora();
             }
+        }
+
+        /// <summary>
+        /// Descarga en CSV los eventos que se ven con los filtros aplicados (tipo, búsqueda,
+        /// criticidad y módulo). Separado por ";" y en UTF-8 con BOM para que Excel lo abra bien.
+        /// </summary>
+        protected void btnExportarCsv_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                bllEvento = new BLLEvento();
+                List<BE.Evento> eventos = bllEvento.ObtenerEventos(filtroActual, busquedaActual, filtroCriticidadActual, filtroModuloActual);
+
+                var csv = new System.Text.StringBuilder();
+                csv.AppendLine("ID;Fecha;Hora;Tipo;Criticidad;Usuario;Módulo;Acción");
+                foreach (var evento in eventos)
+                {
+                    csv.AppendLine(string.Join(";", new[]
+                    {
+                        evento.EVENTO_Id.ToString(),
+                        evento.EVENTO_Timestamp.ToString("dd/MM/yyyy"),
+                        evento.EVENTO_Timestamp.ToString("HH:mm:ss"),
+                        CampoCsv(GetLabelForType(evento.EVENTO_Tipo)),
+                        CampoCsv(GetCriticidadLabel(evento.EVENTO_Criticidad)),
+                        CampoCsv(evento.EVENTO_Usuario),
+                        CampoCsv(evento.EVENTO_Modulo),
+                        CampoCsv(evento.EVENTO_Accion)
+                    }));
+                }
+
+                byte[] contenido = new System.Text.UTF8Encoding(true).GetPreamble()
+                    .Concat(System.Text.Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+
+                Response.Clear();
+                Response.ContentType = "text/csv";
+                Response.AddHeader("Content-Disposition", $"attachment; filename=Bitacora_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+                Response.BinaryWrite(contenido);
+                Response.Flush();
+                Response.SuppressContent = true;
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            catch (System.Threading.ThreadAbortException) { }
+            catch (Exception)
+            {
+                lblError.Text = "No se pudo exportar la bitácora. Intente nuevamente.";
+                lblError.Visible = true;
+            }
+        }
+
+        /// <summary>
+        /// Entre comillas y con las comillas internas duplicadas. Si empieza con =, +, - o @ se le
+        /// antepone un apóstrofo para que Excel no lo tome como fórmula.
+        /// </summary>
+        private static string CampoCsv(string valor)
+        {
+            string texto = (valor ?? string.Empty).Replace("\r", " ").Replace("\n", " ");
+            if (texto.Length > 0 && "=+-@".IndexOf(texto[0]) >= 0)
+                texto = "'" + texto;
+            return "\"" + texto.Replace("\"", "\"\"") + "\"";
         }
 
         private void ActualizarBotonesFiltro(Dictionary<string, int> stats)

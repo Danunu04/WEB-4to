@@ -6,7 +6,8 @@ namespace BLL
     /// <summary>
     /// Validación de formato de una tarjeta para el pago simulado (Pagos y Registro). Los datos
     /// no se guardan ni se envían a ningún lado. Devuelve la clave de traducción del error, o
-    /// null si la tarjeta es válida.
+    /// null si la tarjeta es válida. Como es una demo, acepta cualquier número de 16 dígitos
+    /// (no controla el dígito verificador de las tarjetas reales).
     /// </summary>
     public static class ValidadorTarjeta
     {
@@ -15,16 +16,48 @@ namespace BLL
         public const string ERROR_VENCE = "pagos_err_tarjeta_vence";
         public const string ERROR_CVV = "pagos_err_tarjeta_cvv";
 
+        /// <summary>
+        /// Lleva el número al formato único "0000 0000 0000 0000". Acepta 16 dígitos juntos o en
+        /// grupos de 4 separados por espacios o por guiones (siempre el mismo separador).
+        /// Devuelve null si no tiene ninguno de esos formatos.
+        /// </summary>
+        public static string Normalizar(string numero)
+        {
+            Match m = Regex.Match((numero ?? string.Empty).Trim(), @"^(\d{4})([ -]?)(\d{4})\2(\d{4})\2(\d{4})$");
+            if (!m.Success)
+                return null;
+
+            return $"{m.Groups[1].Value} {m.Groups[3].Value} {m.Groups[4].Value} {m.Groups[5].Value}";
+        }
+
+        /// <summary>
+        /// Lleva el vencimiento al formato "MM/AA". Acepta el mes con 1 o 2 dígitos y el año con 2 o 4,
+        /// juntos o separados por "/", "-", "." o espacios (ej. "10/29", "10 29", "1029", "1/2029").
+        /// Devuelve null si no se puede interpretar.
+        /// </summary>
+        public static string NormalizarVencimiento(string vence)
+        {
+            Match m = Regex.Match((vence ?? string.Empty).Trim(), @"^(\d{1,2})\s*[/\-. ]?\s*(\d{4}|\d{2})$");
+            if (!m.Success)
+                return null;
+
+            int mes = int.Parse(m.Groups[1].Value);
+            string anio = m.Groups[2].Value;
+            if (mes < 1 || mes > 12 || (anio.Length == 4 && !anio.StartsWith("20")))
+                return null;
+
+            return $"{mes:00}/{anio.Substring(anio.Length - 2)}";
+        }
+
         public static string Validar(string numero, string titular, string vence, string cvv, DateTime hoy)
         {
-            string digitos = Regex.Replace(numero ?? string.Empty, @"[\s-]", string.Empty);
-            if (!Regex.IsMatch(digitos, @"^\d{13,19}$") || !PasaLuhn(digitos))
+            if (Normalizar(numero) == null)
                 return ERROR_NUMERO;
 
             if (string.IsNullOrWhiteSpace(titular))
                 return ERROR_TITULAR;
 
-            Match fecha = Regex.Match((vence ?? string.Empty).Trim(), @"^(0[1-9]|1[0-2])/(\d{2})$");
+            Match fecha = Regex.Match(NormalizarVencimiento(vence) ?? string.Empty, @"^(0[1-9]|1[0-2])/(\d{2})$");
             if (!fecha.Success)
                 return ERROR_VENCE;
 
@@ -49,24 +82,6 @@ namespace BLL
                 case ERROR_CVV: return "El código de seguridad no es válido.";
                 default: return null;
             }
-        }
-
-        private static bool PasaLuhn(string numero)
-        {
-            int suma = 0;
-            bool duplicar = false;
-            for (int i = numero.Length - 1; i >= 0; i--)
-            {
-                int digito = numero[i] - '0';
-                if (duplicar)
-                {
-                    digito *= 2;
-                    if (digito > 9) digito -= 9;
-                }
-                suma += digito;
-                duplicar = !duplicar;
-            }
-            return suma % 10 == 0;
         }
     }
 }

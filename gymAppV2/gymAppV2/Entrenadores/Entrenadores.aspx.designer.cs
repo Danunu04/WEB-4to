@@ -54,6 +54,17 @@ namespace gymAppV2.Entrenadores
         protected global::System.Web.UI.WebControls.TextBox txtNombre;
         protected global::System.Web.UI.WebControls.TextBox txtFechaNacimiento;
         protected global::System.Web.UI.WebControls.CheckBox chkActivo;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl campoEstado;
+        protected global::System.Web.UI.WebControls.Panel pnlCuenta;
+        protected global::System.Web.UI.WebControls.TextBox txtUsuario;
+        protected global::System.Web.UI.WebControls.TextBox txtEmail;
+        protected global::System.Web.UI.WebControls.TextBox txtContrasena;
+        protected global::System.Web.UI.WebControls.Panel pnlCredenciales;
+        protected global::System.Web.UI.WebControls.Literal litCredencialesTitulo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales;
+        protected global::System.Web.UI.WebControls.Literal litCredencialesAviso;
+        protected global::System.Web.UI.WebControls.Literal litCredencialesDatos;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCredenciales2;
 
         /// <summary>
         /// btnGuardar control.

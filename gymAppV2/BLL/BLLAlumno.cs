@@ -110,19 +110,23 @@ namespace BLL
             }
         }
 
+        /// <summary>Rango razonable del peso corporal de una persona (en kg).</summary>
+        public const decimal PESO_CORPORAL_MINIMO = 20m;
+        public const decimal PESO_CORPORAL_MAXIMO = 300m;
+
+        public static bool PesoCorporalValido(decimal peso)
+        {
+            return peso >= PESO_CORPORAL_MINIMO && peso <= PESO_CORPORAL_MAXIMO;
+        }
+
         /// <summary>
-        /// Valida que el peso esté en rango válido (0-500 kg)
+        /// Valida que el peso esté en un rango razonable para una persona (20 a 300 kg)
         /// </summary>
         public void ValidarPeso(decimal? peso)
         {
-            if (!peso.HasValue || peso <= 0)
+            if (!peso.HasValue || !PesoCorporalValido(peso.Value))
             {
-                throw new Exception("El peso debe ser mayor a 0");
-            }
-
-            if (peso >= 500)
-            {
-                throw new Exception("El peso debe ser menor a 500 kg");
+                throw new Exception($"El peso debe estar entre {PESO_CORPORAL_MINIMO:0} y {PESO_CORPORAL_MAXIMO:0} kg");
             }
         }
 

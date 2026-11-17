@@ -732,3 +732,10 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .btn-primer-mes:hover { background: #0c5a45; }
+
+/* Primer mes del abono al terminar un alta */
+.cobro-alta-alumno { font-weight: 600; margin-bottom: 0.75rem; }
+.cobro-alta-monto { margin-top: 0.75rem; font-size: 0.9375rem; }
+.cobro-alta-cobertura { font-size: 0.8125rem; color: var(--text-muted); }
+.cobro-alta-cobertura .cobro-alta-error { color: #A32D2C; }
+.cobro-alta-ayuda { margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted); }

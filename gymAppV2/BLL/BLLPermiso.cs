@@ -269,7 +269,7 @@ namespace BLL
             int idPrueba = idFamilia == 0 ? ID_NUEVO : idFamilia;
             EstructuraPermisos prueba = estructura.Clonar();
             prueba.DefinirFamilia(idPrueba, nombre, codigo, permisos, familias);
-            ValidarEstructura(prueba, familia);
+            ValidarEstructura(prueba, familia, estructura);
 
             int id;
             try
@@ -348,16 +348,21 @@ namespace BLL
             else
                 ValidarNombre(nombre, estructura.Perfiles.Where(p => p.Key != idPerfil).Select(p => p.Value.Nombre), "permisos_err_nombre_repetido_perfil");
 
+            ValidarQueExisten(estructura, permisos, familias);
+
+            // WebMaster y Administrador conservan siempre Dashboard y Permisos: si al editarlos
+            // quedan sin alguno, se les agrega solo (en vez de rechazar el cambio)
+            if (ConservaPermisosFijos(codigo))
+                permisos = CompletarPermisosFijos(estructura, idPerfil, nombre, codigo, permisos, familias);
+
             if (permisos.Count + familias.Count == 0)
                 throw new PermisoException("permisos_err_perfil_vacio", "El perfil tiene que tener al menos un permiso o una familia.");
-
-            ValidarQueExisten(estructura, permisos, familias);
 
             Perfil perfil = ArmarPerfil(estructura, idPerfil, nombre, codigo, permisos, familias);
 
             EstructuraPermisos prueba = estructura.Clonar();
             prueba.DefinirPerfil(idPerfil == 0 ? ID_NUEVO : idPerfil, nombre, codigo, permisos, familias);
-            ValidarEstructura(prueba, perfil);
+            ValidarEstructura(prueba, perfil, estructura);
 
             int id;
             try
@@ -584,8 +589,11 @@ namespace BLL
         /// <summary>
         /// Arma todas las familias y perfiles de la estructura (así se detectan ciclos y permisos
         /// repetidos en cualquier lugar donde se use lo editado) y controla las reglas fijas.
+        /// La regla de WebMaster y Administrador (conservar Dashboard y Permisos) se exige al perfil
+        /// editado y a los que la cumplían antes del cambio: si otro perfil ya estaba sin esos
+        /// permisos (ej. WebMaster vacío), eso no bloquea cambios que no lo tocan.
         /// </summary>
-        private void ValidarEstructura(EstructuraPermisos estructura, object editado)
+        private void ValidarEstructura(EstructuraPermisos estructura, object editado, EstructuraPermisos original)
         {
             foreach (int idFamilia in estructura.Familias.Keys)
                 ConstruirValidando(() => estructura.ConstruirFamilia(idFamilia), editado);
@@ -596,7 +604,8 @@ namespace BLL
 
                 bool conservaFijos = perfil.EsWebMaster
                     || string.Equals(perfil.Codigo, PerfilesSistema.CodigoAdministrador, StringComparison.OrdinalIgnoreCase);
-                if (conservaFijos && !(perfil.TienePermiso(PermisosSistema.Dashboard) && perfil.TienePermiso(PermisosSistema.GestionPermisos)))
+                if (conservaFijos && !TienePermisosFijos(perfil)
+                    && (EsLoEditado(perfil, editado) || TeniaPermisosFijos(original, datos.Key)))
                 {
                     throw new PermisoException("permisos_err_admin_fijos",
                         $"El perfil '{perfil.Nombre}' tiene que conservar los permisos Dashboard y Permisos.", perfil);
@@ -604,6 +613,51 @@ namespace BLL
             }
 
             ValidarQueQuedeGestor(estructura, mpp.ListarUsuariosActivos());
+        }
+
+        private static bool ConservaPermisosFijos(string codigoPerfil)
+        {
+            return string.Equals(codigoPerfil, PerfilesSistema.CodigoWebMaster, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(codigoPerfil, PerfilesSistema.CodigoAdministrador, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Agrega como permisos sueltos Dashboard y Permisos si no le llegan al perfil por ningún
+        /// camino (sueltos o dentro de una familia). Si ya los tiene, devuelve la lista sin cambios.
+        /// </summary>
+        private IList<int> CompletarPermisosFijos(EstructuraPermisos estructura, int idPerfil, string nombre, string codigo,
+            IList<int> permisos, IList<int> familias)
+        {
+            Perfil armado = ArmarPerfil(estructura, idPerfil, nombre, codigo, permisos, familias);
+
+            List<int> faltantes = new[] { PermisosSistema.Dashboard, PermisosSistema.GestionPermisos }
+                .Where(clave => !armado.TienePermiso(clave))
+                .Select(clave => estructura.Permisos.FirstOrDefault(p => string.Equals(p.Value, clave, StringComparison.OrdinalIgnoreCase)).Key)
+                .Where(id => id != 0)
+                .ToList();
+
+            return faltantes.Count == 0 ? permisos : permisos.Concat(faltantes).ToList();
+        }
+
+        private static bool TienePermisosFijos(Perfil perfil)
+        {
+            return perfil.TienePermiso(PermisosSistema.Dashboard) && perfil.TienePermiso(PermisosSistema.GestionPermisos);
+        }
+
+        /// <summary>Si el perfil cumplía la regla antes del cambio (si no existía o no se puede armar, false).</summary>
+        private static bool TeniaPermisosFijos(EstructuraPermisos original, int idPerfil)
+        {
+            if (original == null || !original.Perfiles.ContainsKey(idPerfil))
+                return false;
+
+            try
+            {
+                return TienePermisosFijos(original.ConstruirPerfil(idPerfil));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>

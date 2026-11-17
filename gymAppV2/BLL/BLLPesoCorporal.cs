@@ -50,14 +50,14 @@ namespace BLL
         }
 
         /// <summary>
-        /// Registra el peso de hoy para un alumno de la cuenta: valida el valor (mayor que 0 y
-        /// menor que 500 kg), actualiza el peso del alumno y lo agrega al historial.
+        /// Registra el peso de hoy para un alumno de la cuenta: valida el valor (rango razonable,
+        /// de 20 a 300 kg), actualiza el peso del alumno y lo agrega al historial.
         /// </summary>
         public void RegistrarPeso(string usuario, int dni, decimal peso)
         {
-            if (peso <= 0 || peso >= 500)
+            if (!BLLAlumno.PesoCorporalValido(peso))
             {
-                throw new ReglaNegocioException("perfil_err_peso", "El peso debe ser un número mayor que 0 y menor que 500 kg.");
+                throw new ReglaNegocioException("perfil_err_peso", "El peso debe estar entre 20 y 300 kg.");
             }
 
             bool esSuyo = !string.IsNullOrEmpty(usuario)

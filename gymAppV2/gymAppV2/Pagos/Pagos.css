@@ -461,6 +461,31 @@
 
 .abono-aviso-demo { display: flex; gap: 0.375rem; align-items: flex-start; }
 
+.abono-transferencia > div { display: flex; flex-direction: column; gap: 0.375rem; }
+.abono-alias strong { font-family: monospace; font-size: 0.95rem; letter-spacing: 0.02em; }
+
+/* Transferencias a confirmar (administración) */
+.transferencias-card { border-color: var(--peach-dark); }
+.transferencias-ayuda { padding: 0 1.25rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); }
+.alias-editor { display: flex; flex-direction: column; gap: 0.375rem; padding: 0 1.25rem 1rem; }
+.alias-editor label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+.alias-editor-fila { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.alias-editor-fila input {
+  flex: 1 1 12rem;
+  max-width: 20rem;
+  padding: 0.5rem 0.75rem;
+  border: 0.09375rem solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+.alias-editor-fila input:focus { outline: none; border-color: var(--peach-dark); }
+.transferencia-acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.btn-rechazar:hover { border-color: var(--red); color: #A32D2C; background: var(--red-light); }
+.btn-rechazar-confirmar { background: var(--red); }
+.btn-rechazar-confirmar:hover { background: #A32D2C; }
+.estado-transferencia { background: #E8F0FE; color: #1E4FA3; }
+
 @media screen and (max-width: 48rem) {
   .pagos-buscador { flex-wrap: wrap; }
   .pagos-buscador input { flex-basis: 100%; }

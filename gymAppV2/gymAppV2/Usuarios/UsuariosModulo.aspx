@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Gestión de Usuarios - GymApp</title>
-    <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=4") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Usuarios/Usuarios.css?v=5") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script type="text/javascript">
         function soloNumeros(e) {
@@ -265,7 +265,7 @@
                             <asp:TextBox ID="txtFechaNacimiento" runat="server" TextMode="Date"></asp:TextBox>
                             <asp:RequiredFieldValidator ID="RequiredFieldValidator8" runat="server" ErrorMessage="La fecha de nacimiento es obligatoria" ControlToValidate="txtFechaNacimiento" CssClass="field-error" Display="Dynamic"></asp:RequiredFieldValidator>
                         </div>
-                        <div class="form-field">
+                        <div class="form-field" id="campoEstadoForm" runat="server">
                             <label>Estado</label>
                             <asp:DropDownList ID="ddlEstadoForm" runat="server">
                                 <asp:ListItem Value="1">Activo</asp:ListItem>
@@ -302,6 +302,25 @@
                     <button id="btnGuardar" runat="server" class="btn-action btn-guardar" onserverclick="btnGuardar_Click" type="button">
                         <i class="fa-solid fa-floppy-disk"></i> <asp:Literal ID="litBtnGuardar" runat="server" Text="Guardar" />
                     </button>
+                </div>
+            </div>
+        </asp:Panel>
+
+        <!-- Credenciales de la cuenta recién creada: se muestran una única vez -->
+        <asp:Panel ID="pnlCredencialesNuevas" runat="server" Visible="false" CssClass="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-key"></i> <asp:Literal ID="litCredencialesTitulo" runat="server" Text="Usuario creado" /></h3>
+                    <button id="btnCerrarCredenciales" runat="server" class="btn-close" onserverclick="btnCerrarCredenciales_Click" type="button">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><asp:Literal ID="litCredencialesAviso" runat="server" Text="Pasale estos datos a la persona. La contraseña no se vuelve a mostrar y la va a tener que cambiar en el primer inicio de sesión." /></p>
+                    <p class="credenciales-datos"><asp:Literal ID="litCredencialesDatos" runat="server" /></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btnCerrarCredenciales2" runat="server" class="btn-action btn-guardar" onserverclick="btnCerrarCredenciales_Click" type="button">OK</button>
                 </div>
             </div>
         </asp:Panel>

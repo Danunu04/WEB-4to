@@ -329,6 +329,8 @@ namespace gymAppV2.Alumnos
                 LimpiarFormulario();
                 lblFormTitle.Text = T("alumnos_form_nuevo");
                 EsModificacion = false;
+                // Un alumno nuevo siempre se crea activo: el estado solo se cambia al modificar.
+                filaEstado.Visible = false;
                 DniSeleccionado = null;
                 txtDNI.Enabled = true;
                 btnGuardar.Visible = false;
@@ -369,6 +371,7 @@ namespace gymAppV2.Alumnos
                 txtFechaNacimiento.Text = alumno.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
                 txtPeso.Text = alumno.Peso?.ToString("F2") ?? "";
                 chkActivo.Checked = alumno.Activo;
+                filaEstado.Visible = true;
 
                 CargarFamiliares(alumno);
 
@@ -643,7 +646,7 @@ namespace gymAppV2.Alumnos
             }
             catch (Exception ex)
             {
-                MostrarError(ex.Message);
+                MostrarError(MensajeDeValidacion(ex) ?? T("msg_error_generico"));
             }
         }
 
@@ -687,7 +690,7 @@ namespace gymAppV2.Alumnos
             }
             catch (Exception ex)
             {
-                MostrarError(ex.Message);
+                MostrarError(MensajeDeValidacion(ex) ?? T("msg_error_generico"));
             }
         }
 
@@ -733,7 +736,7 @@ namespace gymAppV2.Alumnos
                 {
                     Dni = dni,
                     Peso = peso,
-                    Activo = chkActivo.Checked,
+                    Activo = true,
                     UsuarioVinculo = VinculoUsuarioObjetivo,
                     Parentesco = VinculoParentescoObjetivo
                 }));
@@ -753,7 +756,7 @@ namespace gymAppV2.Alumnos
             }
             catch (Exception ex)
             {
-                MostrarError(ex.Message);
+                MostrarError(MensajeDeValidacion(ex) ?? T("msg_error_generico"));
             }
         }
 
@@ -793,7 +796,7 @@ namespace gymAppV2.Alumnos
                     Telefono = string.IsNullOrEmpty(txtTelefono.Text) ? null : txtTelefono.Text,
                     FechaNacimiento = fechaNacimiento,
                     Peso = peso,
-                    Activo = chkActivo.Checked,
+                    Activo = true,
                     Usuario = usuarioNuevo,
                     Contrasena = string.IsNullOrEmpty(txtAsistenteContrasena.Text) ? null : txtAsistenteContrasena.Text,
                     UsuarioVinculo = VinculoUsuarioObjetivo,
@@ -818,7 +821,7 @@ namespace gymAppV2.Alumnos
             }
             catch (Exception ex)
             {
-                MostrarError(ex.Message);
+                MostrarError(MensajeDeValidacion(ex) ?? T("msg_error_generico"));
             }
         }
 
@@ -868,15 +871,125 @@ namespace gymAppV2.Alumnos
             }
         }
 
+        // DNI del alumno recién dado de alta al que se le ofrece cobrar el primer mes.
+        private int? DniCobroAlta
+        {
+            get { return ViewState["DniCobroAlta"] as int?; }
+            set { ViewState["DniCobroAlta"] = value; }
+        }
+
         /// <summary>
         /// Al terminar un alta, ofrece cobrar el primer mes (RFN1: la asociación se completa con el
-        /// pago). El botón abre Pagos con el formulario de cobro y el alumno ya elegido.
+        /// pago): se eligen las clases por semana y el medio de pago y se cobra en el momento, o se
+        /// deja para después.
         /// </summary>
         private void OfrecerCobroPrimerMes(int dni)
         {
             if (!BllRol.UsuarioActualTieneAcceso(PermisosSistema.Pagos))
                 return;
 
+            try
+            {
+                Alumno alumno = bllAlumno.ObtenerAlumno(dni);
+                DniCobroAlta = dni;
+
+                litCobroAltaTitulo.Text = Server.HtmlEncode(Texto("alumnos_cobro_titulo", "Primer mes del abono"));
+                litCobroAltaAlumno.Text = Server.HtmlEncode(alumno != null ? $"{alumno.Apellido}, {alumno.Nombre} (DNI {dni})" : $"DNI {dni}");
+                litCobroAltaModalidad.Text = Server.HtmlEncode(Texto("alumnos_cobro_modalidad", "Clases por semana"));
+                litCobroAltaMedio.Text = Server.HtmlEncode(Texto("pagos_campo_metodo", "Medio de pago"));
+                litCobroAltaMontoTitulo.Text = Server.HtmlEncode(Texto("pagos_campo_monto", "Monto"));
+                litCobroAltaAyuda.Text = Server.HtmlEncode(Texto("alumnos_cobro_ayuda",
+                    "Si prefiere pagar después, tocá Más tarde: se puede cobrar en cualquier momento desde Pagos."));
+                litBtnCobroAltaDespues.Text = Server.HtmlEncode(Texto("alumnos_cobro_despues", "Más tarde"));
+                litBtnCobroAltaCobrar.Text = Server.HtmlEncode(Texto("alumnos_cobro_ahora", "Cobrar ahora"));
+
+                ddlCobroAltaModalidad.Items.Clear();
+                foreach (var modalidad in (new BLLPrecioModalidad().ListarModalidades() ?? new List<PrecioModalidad>()).Where(m => m.Activo))
+                {
+                    ddlCobroAltaModalidad.Items.Add(new ListItem($"{modalidad.ObtenerDescripcion()} — {modalidad.Precio:C}", modalidad.Id.ToString()));
+                }
+                ddlCobroAltaMedio.SelectedIndex = 0;
+
+                ActualizarPreviewCobroAlta();
+                pnlCobroAlta.Visible = true;
+            }
+            catch (Exception)
+            {
+                // Si no se puede armar el cobro, queda el aviso con el enlace a Pagos
+                MostrarAvisoPrimerMes(dni);
+            }
+        }
+
+        protected void ddlCobroAltaModalidad_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarPreviewCobroAlta();
+        }
+
+        private void ActualizarPreviewCobroAlta()
+        {
+            lblCobroAltaMonto.Text = "—";
+            lblCobroAltaCobertura.Text = string.Empty;
+            lblCobroAltaCobertura.CssClass = string.Empty;
+
+            if (!DniCobroAlta.HasValue || !int.TryParse(ddlCobroAltaModalidad.SelectedValue, out int modalidadId))
+                return;
+
+            try
+            {
+                Pago abono = new BLLPago().PrevisualizarAbono(DniCobroAlta.Value, modalidadId, DateTime.Now);
+                lblCobroAltaMonto.Text = abono.Monto.ToString("C");
+                lblCobroAltaCobertura.Text = Server.HtmlEncode(Texto("pagos_cobertura", "El abono cubre del {0} al {1}.",
+                    abono.FechaInicio.ToString("dd/MM/yyyy"), abono.FechaVencimiento.ToString("dd/MM/yyyy")));
+            }
+            catch (Exception ex)
+            {
+                lblCobroAltaCobertura.Text = Server.HtmlEncode(MensajeDePermisos(ex) ?? T("msg_error_generico"));
+                lblCobroAltaCobertura.CssClass = "cobro-alta-error";
+            }
+        }
+
+        protected void btnCobroAltaCobrar_Click(object sender, EventArgs e)
+        {
+            if (!DniCobroAlta.HasValue)
+            {
+                pnlCobroAlta.Visible = false;
+                return;
+            }
+
+            if (!int.TryParse(ddlCobroAltaModalidad.SelectedValue, out int modalidadId))
+            {
+                MostrarError(Texto("pagos_err_modalidad", "Debe seleccionar una modalidad válida."));
+                return;
+            }
+
+            try
+            {
+                // Lo cobra recepción en persona: con transferencia, ya comprobó que llegó
+                Pago pago = new BLLPago().RegistrarPago(DniCobroAlta.Value, modalidadId, ddlCobroAltaMedio.SelectedValue,
+                    Singleton.Instancia.Usuario?.USUARIO_Usuario);
+
+                pnlCobroAlta.Visible = false;
+                DniCobroAlta = null;
+                MostrarExito(Texto("pagos_ok", "Pago registrado. El abono cubre del {0} al {1}.",
+                    pago.FechaInicio.ToString("dd/MM/yyyy"), pago.FechaVencimiento.ToString("dd/MM/yyyy")));
+            }
+            catch (Exception ex)
+            {
+                MostrarError(MensajeDePermisos(ex) ?? T("msg_error_generico"));
+            }
+        }
+
+        protected void btnCobroAltaDespues_Click(object sender, EventArgs e)
+        {
+            pnlCobroAlta.Visible = false;
+            if (DniCobroAlta.HasValue)
+                MostrarAvisoPrimerMes(DniCobroAlta.Value);
+            DniCobroAlta = null;
+        }
+
+        /// <summary>Aviso arriba de la grilla con el enlace para cobrar el primer mes desde Pagos.</summary>
+        private void MostrarAvisoPrimerMes(int dni)
+        {
             litPrimerMes.Text = Server.HtmlEncode(Texto("alumnos_primer_mes",
                 "Alumno dado de alta. Cobrale el primer mes para completar la asociación."));
             litCobrarPrimerMes.Text = Server.HtmlEncode(Texto("alumnos_btn_cobrar_primer_mes", "Cobrar primer mes"));
@@ -962,7 +1075,7 @@ namespace gymAppV2.Alumnos
                 decimal? peso = null;
                 if (!string.IsNullOrEmpty(txtPeso.Text) && decimal.TryParse(txtPeso.Text, out decimal p))
                 {
-                    if (p <= 0 || p >= 500)
+                    if (!BLLAlumno.PesoCorporalValido(p))
                     {
                         MostrarError(T("alumnos_msg_peso_invalido"));
                         return;

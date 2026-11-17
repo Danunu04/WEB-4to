@@ -2,7 +2,7 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <title>Bitácora - GymApp</title>
-    <link href="<%= ResolveUrl("~/Bitacora/Bitacora.css?v=2") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Bitacora/Bitacora.css?v=3") %>" rel="stylesheet" type="text/css" />
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -63,6 +63,7 @@
                     </asp:DropDownList>
                     <asp:DropDownList ID="ddlModulo" runat="server" CssClass="filter-select" AutoPostBack="true" OnSelectedIndexChanged="ddlModulo_SelectedIndexChanged">
                     </asp:DropDownList>
+                    <asp:Button ID="btnExportarCsv" runat="server" Text="Exportar CSV" CssClass="filter-select btn-exportar" OnClick="btnExportarCsv_Click" ToolTip="Exporta los eventos con los filtros aplicados" />
                 </div>
 
                 <div class="filter-buttons">

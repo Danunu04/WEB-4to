@@ -57,48 +57,6 @@
             </div>
         </asp:Panel>
 
-        <!-- Alertas de check-in rechazado por abono vencido (administración y recepción) -->
-        <asp:Panel ID="pnlAlertasCheckin" runat="server" Visible="false" CssClass="card mb-6 alertas-checkin">
-            <div class="flex items-center justify-between mb-4 alertas-checkin-header">
-                <h3 class="card-title"><i class="bi bi-exclamation-triangle"></i> <asp:Literal ID="litAlertasTitulo" runat="server" Text="Check-in rechazados" /></h3>
-                <asp:LinkButton ID="btnAlertasTodas" runat="server" CssClass="btn-alerta" OnClick="btnAlertasTodas_Click" CausesValidation="false">
-                    <asp:Literal ID="litAlertasTodas" runat="server" Text="Marcar todas como vistas" />
-                </asp:LinkButton>
-            </div>
-            <div class="table-container">
-                <asp:Repeater ID="rptAlertas" runat="server" OnItemCommand="rptAlertas_ItemCommand">
-                    <HeaderTemplate>
-                        <table class="table tabla-tarjetas">
-                            <thead>
-                                <tr>
-                                    <th><%# Texto("dash_alertas_col_fecha", "Fecha y hora") %></th>
-                                    <th><%# Texto("dash_alertas_col_alumno", "Alumno") %></th>
-                                    <th>DNI</th>
-                                    <th><%# Texto("dash_alertas_col_situacion", "Situación") %></th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    </HeaderTemplate>
-                    <ItemTemplate>
-                                <tr>
-                                    <td class="tabular-nums"><%#: Eval("Fecha") %></td>
-                                    <td><%#: Eval("Alumno") %></td>
-                                    <td class="tabular-nums"><%# Eval("Dni") %></td>
-                                    <td><span class="badge badge-peach"><%#: Eval("Situacion") %></span></td>
-                                    <td>
-                                        <asp:LinkButton ID="btnAlertaVista" runat="server" CssClass="btn-alerta btn-alerta-sm"
-                                            CommandName="Vista" CommandArgument='<%# Eval("CodAlerta") %>' Text='<%# TextoBotonVista %>' />
-                                    </td>
-                                </tr>
-                    </ItemTemplate>
-                    <FooterTemplate>
-                            </tbody>
-                        </table>
-                    </FooterTemplate>
-                </asp:Repeater>
-            </div>
-        </asp:Panel>
 
         <!-- Abono de los alumnos del cliente (alumno o familiar) -->
         <asp:Panel ID="pnlAbonoCliente" runat="server" Visible="false" CssClass="mb-6">

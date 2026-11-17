@@ -61,6 +61,7 @@
     <Compile Include="RegistroPeso.cs" />
     <Compile Include="AvisoPrecio.cs" />
     <Compile Include="AlertaCheckin.cs" />
+    <Compile Include="TransferenciaPendiente.cs" />
     <Compile Include="DatosRegistro.cs" />
     <Compile Include="SolicitudAlumno.cs" />
     <Compile Include="RespuestaAlumnoWS.cs" />

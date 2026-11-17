@@ -18,6 +18,7 @@ namespace BLL
     public class BLLPago
     {
         private MPPPago mppPago;
+        private MPPTransferencia mppTransferencia;
         private BLLAlumno bllAlumno;
         private BLLPrecioModalidad bllPrecioModalidad;
         private BLLEvento bllEvento;
@@ -29,12 +30,17 @@ namespace BLL
 
         public static readonly string[] MEDIOS_PAGO_VALIDOS = { "Efectivo", "Transferencia", "Tarjeta" };
 
-        /// <summary>Medios con los que el cliente puede pagar desde la app (el efectivo es solo en recepción).</summary>
-        public static readonly string[] MEDIOS_PAGO_ONLINE = { "Tarjeta", "Transferencia" };
+        /// <summary>
+        /// Medios con los que el pago del cliente desde la app se registra en el acto. La transferencia
+        /// no: queda pendiente hasta que la confirma administración (BLLTransferencia). El efectivo es
+        /// solo en recepción.
+        /// </summary>
+        public static readonly string[] MEDIOS_PAGO_ONLINE = { "Tarjeta" };
 
         public BLLPago()
         {
             mppPago = new MPPPago();
+            mppTransferencia = new MPPTransferencia();
             bllAlumno = new BLLAlumno();
             bllPrecioModalidad = new BLLPrecioModalidad();
             bllEvento = new BLLEvento();
@@ -88,7 +94,9 @@ namespace BLL
                 }
 
                 Pago ultimo = mppPago.ListarUltimosAbonos(dni).FirstOrDefault();
-                return ArmarEstado(alumno, ultimo, hoy, ObtenerModalidades());
+                EstadoAbono estado = ArmarEstado(alumno, ultimo, hoy, ObtenerModalidades());
+                estado.TieneTransferenciaPendiente = DnisConTransferenciaPendiente().Contains(dni);
+                return estado;
             }
             catch (Exception ex)
             {
@@ -146,9 +154,15 @@ namespace BLL
         {
             Dictionary<int, Pago> ultimos = mppPago.ListarUltimosAbonos().ToDictionary(p => p.Dni);
             Dictionary<int, PrecioModalidad> modalidades = ObtenerModalidades();
+            HashSet<int> conTransferencia = DnisConTransferenciaPendiente();
 
             return alumnos
-                .Select(a => ArmarEstado(a, ultimos.TryGetValue(a.DNI, out Pago p) ? p : null, hoy, modalidades))
+                .Select(a =>
+                {
+                    EstadoAbono estado = ArmarEstado(a, ultimos.TryGetValue(a.DNI, out Pago p) ? p : null, hoy, modalidades);
+                    estado.TieneTransferenciaPendiente = conTransferencia.Contains(a.DNI);
+                    return estado;
+                })
                 .OrderBy(e => e.Apellido)
                 .ThenBy(e => e.Nombre)
                 .ToList();
@@ -193,6 +207,22 @@ namespace BLL
             }
 
             return estado;
+        }
+
+        /// <summary>
+        /// Alumnos con una transferencia informada sin confirmar. Si la tabla todavía no existe
+        /// (falta el script), se toma como que no hay ninguna.
+        /// </summary>
+        private HashSet<int> DnisConTransferenciaPendiente()
+        {
+            try
+            {
+                return mppTransferencia.ListarDnisPendientes();
+            }
+            catch (Exception)
+            {
+                return new HashSet<int>();
+            }
         }
 
         private Dictionary<int, PrecioModalidad> ObtenerModalidades()

@@ -105,13 +105,33 @@ namespace gymAppV2.LogIn
             ActualizarMonto();
         }
 
-        protected void rblMetodo_SelectedIndexChanged(object sender, EventArgs e)
+        /// <summary>Alias de la cuenta del gimnasio (lo configura administración en Pagos).</summary>
+        protected string AliasTransferencia
         {
-            bool esTarjeta = rblMetodo.SelectedValue == "Tarjeta";
-            pnlTarjeta.Visible = esTarjeta;
-            pnlTransferencia.Visible = !esTarjeta;
-            if (!esTarjeta)
-                LimpiarTarjeta();
+            get { return new BLLTransferencia().ObtenerAlias(); }
+        }
+
+        /// <summary>
+        /// Muestra los datos de la tarjeta o los de la transferencia según el medio elegido. Los dos
+        /// paneles se envían siempre: al cambiar de medio, el script de la página los alterna sin
+        /// recargar; acá se deja el estado correcto en cada respuesta del servidor.
+        /// </summary>
+        protected override void OnPreRender(EventArgs e)
+        {
+            base.OnPreRender(e);
+
+            bool esTarjeta = rblMetodo.SelectedValue != "Transferencia";
+            if (esTarjeta)
+                pnlTarjeta.Style.Remove("display");
+            else
+                pnlTarjeta.Style["display"] = "none";
+
+            if (esTarjeta)
+                pnlTransferencia.Style["display"] = "none";
+            else
+                pnlTransferencia.Style.Remove("display");
+
+            btnPagar.Text = esTarjeta ? "Pagar y crear cuenta" : "Crear cuenta e informar transferencia";
         }
 
         protected void btnPagar_Click(object sender, EventArgs e)
@@ -136,9 +156,12 @@ namespace gymAppV2.LogIn
                 Session.Remove(CLAVE_CONTRASENA);
                 LimpiarTarjeta();
                 OcultarMensaje();
-                litExito.Text = Server.HtmlEncode(
-                    $"Tu usuario es {datos.Usuario}. El abono de {datos.Nombre} {datos.Apellido} está pago " +
-                    $"del {pago.FechaInicio:dd/MM/yyyy} al {pago.FechaVencimiento:dd/MM/yyyy}.");
+                // Con transferencia no hay pago todavía: queda pendiente hasta que recepción la confirma
+                litExito.Text = Server.HtmlEncode(pago == null
+                    ? $"Tu usuario es {datos.Usuario}. Recibimos el aviso de tu transferencia: el abono de " +
+                      $"{datos.Nombre} {datos.Apellido} se activa cuando recepción confirme que llegó."
+                    : $"Tu usuario es {datos.Usuario}. El abono de {datos.Nombre} {datos.Apellido} está pago " +
+                      $"del {pago.FechaInicio:dd/MM/yyyy} al {pago.FechaVencimiento:dd/MM/yyyy}.");
                 MostrarPaso(4);
             }
             catch (Exception ex)
@@ -200,6 +223,8 @@ namespace gymAppV2.LogIn
         {
             int.TryParse((txtDni.Text ?? string.Empty).Trim(), out int dni);
             int.TryParse(ddlModalidad.SelectedValue, out int modalidadId);
+            txtTarjetaNumero.Text = ValidadorTarjeta.Normalizar(txtTarjetaNumero.Text) ?? txtTarjetaNumero.Text;
+            txtTarjetaVence.Text = ValidadorTarjeta.NormalizarVencimiento(txtTarjetaVence.Text) ?? txtTarjetaVence.Text;
 
             DateTime? fechaNacimiento = null;
             if (DateTime.TryParseExact((txtFechaNacimiento.Text ?? string.Empty).Trim(), "yyyy-MM-dd",

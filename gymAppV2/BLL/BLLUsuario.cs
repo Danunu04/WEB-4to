@@ -430,6 +430,9 @@ namespace BLL
                     throw new Exception("Las contraseñas no coinciden");
                 }
 
+                // Misma regla que al cambiarla (las generadas automáticamente ya la cumplen)
+                ValidarRequisitosContrasena(contrasena);
+
                 // La cuenta nueva recibe el perfil por defecto de su tipo: validar antes de crearla
                 bllPermiso.ValidarPerfilPorDefecto(rol);
 

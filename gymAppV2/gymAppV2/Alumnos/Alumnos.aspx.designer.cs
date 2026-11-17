@@ -249,6 +249,15 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.WebControls.CheckBox chkActivo;
 
         /// <summary>
+        /// filaEstado control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl filaEstado;
+
+        /// <summary>
         /// pnlFamiliares control.
         /// </summary>
         /// <remarks>
@@ -522,6 +531,22 @@ namespace gymAppV2.Alumnos
         protected global::System.Web.UI.WebControls.Literal litPrimerMes;
         protected global::System.Web.UI.WebControls.HyperLink lnkCobrarPrimerMes;
         protected global::System.Web.UI.WebControls.Literal litCobrarPrimerMes;
+        protected global::System.Web.UI.WebControls.Panel pnlCobroAlta;
+        protected global::System.Web.UI.WebControls.Literal litCobroAltaTitulo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarCobroAlta;
+        protected global::System.Web.UI.WebControls.Literal litCobroAltaAlumno;
+        protected global::System.Web.UI.WebControls.Literal litCobroAltaModalidad;
+        protected global::System.Web.UI.WebControls.DropDownList ddlCobroAltaModalidad;
+        protected global::System.Web.UI.WebControls.Literal litCobroAltaMedio;
+        protected global::System.Web.UI.WebControls.DropDownList ddlCobroAltaMedio;
+        protected global::System.Web.UI.WebControls.Literal litCobroAltaMontoTitulo;
+        protected global::System.Web.UI.WebControls.Label lblCobroAltaMonto;
+        protected global::System.Web.UI.WebControls.Label lblCobroAltaCobertura;
+        protected global::System.Web.UI.WebControls.Literal litCobroAltaAyuda;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCobroAltaDespues;
+        protected global::System.Web.UI.WebControls.Literal litBtnCobroAltaDespues;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCobroAltaCobrar;
+        protected global::System.Web.UI.WebControls.Literal litBtnCobroAltaCobrar;
         protected global::System.Web.UI.WebControls.Literal litStatTotal;
         protected global::System.Web.UI.WebControls.Literal litStatActivos;
         protected global::System.Web.UI.WebControls.Literal litStatConRutinas;

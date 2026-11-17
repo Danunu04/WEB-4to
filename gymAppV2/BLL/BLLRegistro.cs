@@ -96,7 +96,9 @@ namespace BLL
 
         /// <summary>
         /// Valida todo otra vez, crea la cuenta (rol Cliente) con su alumno y registra el pago del
-        /// primer mes. Devuelve el pago con las fechas del abono.
+        /// primer mes. Devuelve el pago con las fechas del abono. Si eligió transferencia, la deja
+        /// informada (pendiente de que la confirme recepción) y devuelve null: el abono se activa
+        /// recién cuando se confirma.
         /// </summary>
         public Pago Registrar(DatosRegistro datos)
         {
@@ -134,6 +136,12 @@ namespace BLL
 
                 try
                 {
+                    if (datos.MetodoPago == "Transferencia")
+                    {
+                        new BLLTransferencia().Informar(datos.Usuario, datos.Dni, datos.ModalidadId);
+                        return null;
+                    }
+
                     return bllPago.RegistrarPagoCliente(datos.Usuario, datos.Dni, datos.ModalidadId, datos.MetodoPago);
                 }
                 catch (Exception)

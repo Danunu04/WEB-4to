@@ -1,171 +1,56 @@
 ﻿using System;
 using System.Web.UI;
-using System.Web.UI.WebControls;
-using BE;
 using BLL;
 using Servicios.Singleton;
 
 namespace gymAppV2
 {
+    /// <summary>
+    /// Inicio público. Antes tenía el check-in por DNI (se sacó para la entrega final):
+    /// ahora redirige al Dashboard si hay sesión, o al inicio de sesión si no.
+    /// </summary>
     public partial class Default : Page
     {
-        private BLLAlumno bllAlumno;
-        private BLLEvento bllEvento;
-        private BLLPago bllPago;
-        private const string USUARIO_SISTEMA = "sistema";
-
         protected void Page_Load(object sender, EventArgs e)
         {
-            bllAlumno = new BLLAlumno();
-            bllEvento = new BLLEvento();
-            bllPago = new BLLPago();
-
-            // Si un usuario logueado no administrador llega a la home durante una pausa
-            // de integridad, se redirige a la pantalla de bloqueo.
-            VerificarPausaIntegridad();
+            Redirigir(HaySesion() ? DestinoConSesion() : "~/LogIn/LogIn.aspx");
         }
 
-        /// <summary>
-        /// Redirige a la pantalla de verificación de integridad si el sistema está pausado
-        /// y el usuario logueado no es administrador.
-        /// </summary>
-        private void VerificarPausaIntegridad()
+        private static bool HaySesion()
         {
             try
             {
                 var sesion = Singleton.Instancia;
-                if (sesion == null || !sesion.IsLogged())
-                    return;
-
-                var bllDV = new BLLDigitoVerificador();
-                if (!bllDV.ExisteErrorIntegridad())
-                    return;
-
-                var bllRol = new BLLRol();
-                if (bllRol.UsuarioActualPuedeRepararIntegridad())
-                    return;
-
-                Redirigir("~/VerificacioDV/VerificacioDV.aspx");
+                return sesion != null && sesion.IsLogged();
             }
             catch
             {
-                // Si no se puede verificar, se asume pausa y se redirige.
-                Redirigir("~/VerificacioDV/VerificacioDV.aspx");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Durante una pausa de integridad, quien no puede repararla va a la pantalla de bloqueo.
+        /// </summary>
+        private static string DestinoConSesion()
+        {
+            try
+            {
+                if (new BLLDigitoVerificador().ExisteErrorIntegridad() && !new BLLRol().UsuarioActualPuedeRepararIntegridad())
+                    return "~/VerificacioDV/VerificacioDV.aspx";
+
+                return "~/DashBoard/WebForm1.aspx";
+            }
+            catch
+            {
+                return "~/VerificacioDV/VerificacioDV.aspx";
             }
         }
 
         private void Redirigir(string url)
         {
-            try
-            {
-                Response.Redirect(ResolveUrl(url), false);
-                Context.ApplicationInstance.CompleteRequest();
-            }
-            catch
-            {
-                // Ignorar errores de redirección.
-            }
-        }
-
-        protected void Button1_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/LogIn/LogIn.aspx");
-        }
-
-        protected void Button2_Click(object sender, EventArgs e)
-        {
-            string dniTexto = TextBox1.Text.Trim();
-            if (string.IsNullOrEmpty(dniTexto))
-            {
-                MostrarError("Por favor ingresa tu DNI");
-                return;
-            }
-
-            if (!int.TryParse(dniTexto, out int dni))
-            {
-                MostrarError("El DNI debe ser numérico");
-                return;
-            }
-
-            try
-            {
-                Alumno alumno = bllAlumno.ObtenerAlumno(dni);
-
-                if (alumno == null)
-                {
-                    // Alumno no existe: registrar intento fallido de check-in.
-                    bllEvento.RegistrarEvento(BLLEvento.EVENTO_CHECKIN, USUARIO_SISTEMA,
-                        $"Intento de check-in rechazado - DNI: {dni} (alumno no existe)", 2, "Alumnos");
-                    MostrarAdvertencia("No se encontró un alumno con ese DNI");
-                    return;
-                }
-
-                if (!alumno.Activo)
-                {
-                    bllEvento.RegistrarEvento(BLLEvento.EVENTO_CHECKIN, USUARIO_SISTEMA,
-                        $"Intento de check-in rechazado - Alumno DNI: {dni} (alumno dado de baja)", 2, "Alumnos");
-                    MostrarAdvertencia("El alumno está dado de baja. Consultá en recepción.");
-                    return;
-                }
-
-                EstadoAbono abono = bllPago.ObtenerEstadoAbono(dni, DateTime.Now);
-                if (abono == null || !abono.EstaAlDia)
-                {
-                    string vencimiento = abono?.FechaVencimiento?.ToString("dd/MM/yyyy");
-                    bllEvento.RegistrarEvento(BLLEvento.EVENTO_CHECKIN, USUARIO_SISTEMA,
-                        $"Intento de check-in rechazado - Alumno DNI: {dni}, {alumno.Apellido}, {alumno.Nombre} " +
-                        (vencimiento != null ? $"(abono vencido el {vencimiento})" : "(sin abono pago)"), 2, "Alumnos");
-
-                    // Alerta para recepción (se ve en el Dashboard). Si falla, el check-in igual queda rechazado.
-                    try
-                    {
-                        new BLLAlertaCheckin().Registrar(dni, abono?.FechaVencimiento);
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Trace.WriteLine($"[Check-in] No se pudo registrar la alerta: {ex.Message}");
-                    }
-
-                    MostrarAdvertencia(vencimiento != null
-                        ? $"Tu abono venció el {vencimiento}. Podés renovarlo en recepción o desde la app."
-                        : "No tenés un abono pago. Podés pagarlo en recepción o desde la app.");
-                    return;
-                }
-
-                // Check-in exitoso.
-                bllEvento.RegistrarCheckin(USUARIO_SISTEMA, dni);
-
-                string bienvenida = $"¡Bienvenido/a, {alumno.Nombre} {alumno.Apellido}!";
-                if (abono.Situacion == SituacionAbono.PorVencer)
-                {
-                    bienvenida += $" Tu abono vence el {abono.FechaVencimiento:dd/MM/yyyy}.";
-                }
-                MostrarExito(bienvenida);
-            }
-            catch (Exception ex)
-            {
-                MostrarError("Error al procesar el check-in: " + ex.Message);
-            }
-        }
-
-        private void MostrarError(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "error", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'error');", true);
-        }
-
-        private void MostrarExito(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "exito", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'success');", true);
-        }
-
-        private void MostrarAdvertencia(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "advertencia", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'warning');", true);
-        }
-
-        private void MostrarInfo(string mensaje)
-        {
-            ScriptManager.RegisterStartupScript(this, GetType(), "info", $"if(window.showToast) showToast('{System.Security.SecurityElement.Escape(mensaje)}', 'info');", true);
+            Response.Redirect(ResolveUrl(url), false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
 }

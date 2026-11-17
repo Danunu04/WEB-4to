@@ -147,6 +147,9 @@ namespace gymAppV2.Entrenadores
                 EsModificacion = false;
                 DniSeleccionado = null;
                 txtDNI.Enabled = true;
+                // Un entrenador nuevo siempre se crea activo y con su cuenta para entrar al sistema
+                campoEstado.Visible = false;
+                pnlCuenta.Visible = true;
                 pnlForm.Visible = true;
             }
             catch (Exception)
@@ -181,6 +184,8 @@ namespace gymAppV2.Entrenadores
                 txtTelefono.Text = entrenador.Telefono ?? "";
                 txtFechaNacimiento.Text = entrenador.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
                 chkActivo.Checked = entrenador.Activo;
+                campoEstado.Visible = true;
+                pnlCuenta.Visible = false;
 
                 lblFormTitle.Text = T("entrenadores_form_modificar");
                 pnlForm.Visible = true;
@@ -315,8 +320,10 @@ namespace gymAppV2.Entrenadores
                         return;
                     }
 
-                    string usuarioName = $"entrenador_{dni}";
-                    string contrasena = bllUsuario.GenerarContrasenaSegura();
+                    string usuarioName = string.IsNullOrWhiteSpace(txtUsuario.Text) ? $"entrenador_{dni}" : txtUsuario.Text.Trim();
+                    bool contrasenaGenerada = string.IsNullOrEmpty(txtContrasena.Text);
+                    string contrasena = contrasenaGenerada ? bllUsuario.GenerarContrasenaSegura() : txtContrasena.Text;
+                    string email = string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim();
 
                     bllUsuario.CrearUsuario(
                         usuarioName,
@@ -325,20 +332,14 @@ namespace gymAppV2.Entrenadores
                         txtNombre.Text.Trim(),
                         txtApellido.Text.Trim(),
                         telefono,
-                        null, // email
+                        email,
                         fechaNacimiento,
                         new Entrenador { DNI = dni }, // datosEntrenador
                         null  // dniAlumno
                     );
 
-                    var entrenador = bllEntrenador.ObtenerEntrenador(dni);
-                    if (entrenador != null)
-                    {
-                        entrenador.Activo = chkActivo.Checked;
-                        bllEntrenador.ActualizarEntrenador(entrenador);
-                    }
-
                     MostrarExito("Entrenador creado correctamente.");
+                    MostrarCredenciales(usuarioName, contrasenaGenerada ? contrasena : null);
                 }
 
                 pnlForm.Visible = false;
@@ -346,7 +347,7 @@ namespace gymAppV2.Entrenadores
             }
             catch (Exception ex)
             {
-                MostrarError(MensajeDePermisos(ex) ?? "Ocurrió un error inesperado. Intente nuevamente.");
+                MostrarError(MensajeDeValidacion(ex) ?? "Ocurrió un error inesperado. Intente nuevamente.");
             }
         }
 
@@ -388,6 +389,32 @@ namespace gymAppV2.Entrenadores
             txtTelefono.Text = "";
             txtFechaNacimiento.Text = "";
             chkActivo.Checked = true;
+            txtUsuario.Text = "";
+            txtEmail.Text = "";
+            txtContrasena.Text = "";
+        }
+
+        /// <summary>
+        /// Muestra el usuario del entrenador y, si la contraseña se generó automáticamente, la
+        /// contraseña (es la única vez que se ve).
+        /// </summary>
+        private void MostrarCredenciales(string usuario, string contrasenaGenerada)
+        {
+            litCredencialesTitulo.Text = Server.HtmlEncode(Texto("entrenadores_cred_titulo", "Entrenador creado"));
+            litCredencialesAviso.Text = Server.HtmlEncode(contrasenaGenerada != null
+                ? Texto("usuarios_cred_aviso", "Pasale estos datos a la persona. La contraseña no se vuelve a mostrar y la va a tener que cambiar en el primer inicio de sesión.")
+                : Texto("usuarios_cred_aviso_propia", "La persona entra con la contraseña que escribiste y la va a tener que cambiar en el primer inicio de sesión."));
+            litCredencialesDatos.Text = Server.HtmlEncode(Texto("usuarios_cred_usuario", "Usuario") + ": " + usuario)
+                + (contrasenaGenerada != null
+                    ? "<br/>" + Server.HtmlEncode(Texto("usuarios_cred_contrasena", "Contraseña") + ": " + contrasenaGenerada)
+                    : string.Empty);
+            pnlCredenciales.Visible = true;
+        }
+
+        protected void btnCerrarCredenciales_Click(object sender, EventArgs e)
+        {
+            pnlCredenciales.Visible = false;
+            litCredencialesDatos.Text = string.Empty;
         }
 
         // ==================== MÉTODOS PARA EL GRIDVIEW ====================

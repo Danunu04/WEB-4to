@@ -59,6 +59,8 @@
     <Compile Include="MPPPesoCorporal.cs" />
     <Compile Include="MPPAvisoPrecio.cs" />
     <Compile Include="MPPAlertaCheckin.cs" />
+    <Compile Include="MPPTransferencia.cs" />
+    <Compile Include="MPPConfiguracion.cs" />
     <Compile Include="MPPRutinaEjercicio.cs" />
     <Compile Include="MPPUsuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

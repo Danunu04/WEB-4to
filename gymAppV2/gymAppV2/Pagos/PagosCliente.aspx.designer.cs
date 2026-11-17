@@ -50,6 +50,8 @@ namespace gymAppV2.Pagos
         protected global::System.Web.UI.WebControls.Literal litTarjetaCvv;
         protected global::System.Web.UI.WebControls.TextBox txtTarjetaCvv;
         protected global::System.Web.UI.WebControls.Panel pnlTransferencia;
+        protected global::System.Web.UI.WebControls.Literal litTransferenciaAliasTitulo;
+        protected global::System.Web.UI.WebControls.Literal litTransferenciaAlias;
         protected global::System.Web.UI.WebControls.Literal litTransferenciaDatos;
         protected global::System.Web.UI.WebControls.Literal litAvisoDemo;
         protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarPagoCliente;
@@ -58,6 +60,23 @@ namespace gymAppV2.Pagos
 
         // Vista administración
         protected global::System.Web.UI.WebControls.Panel pnlAdmin;
+        protected global::System.Web.UI.WebControls.Panel pnlTransferencias;
+        protected global::System.Web.UI.WebControls.Literal litTransferenciasTitulo;
+        protected global::System.Web.UI.WebControls.Literal litTransferenciasAyuda;
+        protected global::System.Web.UI.WebControls.GridView gvTransferencias;
+        protected global::System.Web.UI.WebControls.Panel pnlAlias;
+        protected global::System.Web.UI.WebControls.Literal litAliasTitulo;
+        protected global::System.Web.UI.WebControls.TextBox txtAlias;
+        protected global::System.Web.UI.WebControls.LinkButton btnGuardarAlias;
+        protected global::System.Web.UI.WebControls.Literal litBtnGuardarAlias;
+        protected global::System.Web.UI.WebControls.Literal litAliasAyuda;
+        protected global::System.Web.UI.WebControls.Panel pnlRechazarTransferencia;
+        protected global::System.Web.UI.WebControls.Literal litRechazarTitulo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCerrarRechazo;
+        protected global::System.Web.UI.WebControls.Literal litRechazarMensaje;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnCancelarRechazo;
+        protected global::System.Web.UI.HtmlControls.HtmlButton btnConfirmarRechazo;
+        protected global::System.Web.UI.WebControls.Literal litBtnConfirmarRechazo;
         protected global::System.Web.UI.WebControls.Literal litEstadosTitulo;
         protected global::System.Web.UI.WebControls.Panel pnlBuscador;
         protected global::System.Web.UI.WebControls.TextBox txtBuscar;

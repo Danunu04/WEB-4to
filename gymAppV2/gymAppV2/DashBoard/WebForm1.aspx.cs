@@ -90,8 +90,6 @@ namespace gymAppV2.DashBoard
                 CargarIndicadores(bllDashboard.ObtenerResumen(ahora));
             }
 
-            CargarAlertasCheckin();
-
             pnlAbonoCliente.Visible = EsCliente;
             if (EsCliente)
             {
@@ -108,84 +106,6 @@ namespace gymAppV2.DashBoard
                 CargarSemana(new List<ActividadHorario>(), ahora);
                 MostrarError(T("msg_error_generico"));
             }
-        }
-
-        // ==================== ALERTAS DE CHECK-IN ====================
-
-        /// <summary>Texto del botón de cada alerta (se evalúa al enlazar el Repeater).</summary>
-        protected string TextoBotonVista
-        {
-            get { return Texto("dash_alertas_vista", "Marcar como vista"); }
-        }
-
-        /// <summary>
-        /// Check-in rechazados por abono vencido o sin pagar que nadie marcó como vistos
-        /// (CUN007, paso 5.3). Solo para administración y recepción; si no hay, no se muestra.
-        /// </summary>
-        private void CargarAlertasCheckin()
-        {
-            pnlAlertasCheckin.Visible = false;
-            if (!VeIndicadores)
-                return;
-
-            try
-            {
-                List<AlertaCheckin> alertas = new BLLAlertaCheckin().ListarPendientes();
-                pnlAlertasCheckin.Visible = alertas.Count > 0;
-                if (alertas.Count == 0)
-                    return;
-
-                litAlertasTitulo.Text = Texto("dash_alertas_titulo", "Check-in rechazados por el abono ({0})", alertas.Count);
-                litAlertasTodas.Text = Texto("dash_alertas_todas", "Marcar todas como vistas");
-
-                rptAlertas.DataSource = alertas.Select(a => new
-                {
-                    a.CodAlerta,
-                    Fecha = a.Fecha.ToString("dd/MM/yyyy HH:mm"),
-                    Alumno = string.IsNullOrEmpty(a.Apellido) ? "—" : $"{a.Apellido}, {a.Nombre}",
-                    a.Dni,
-                    Situacion = a.Situacion == AlertaCheckin.SITUACION_VENCIDO && a.FechaVencimiento.HasValue
-                        ? Texto("dash_alertas_vencido", "Abono vencido el {0}", a.FechaVencimiento.Value.ToString("dd/MM/yyyy"))
-                        : Texto("dash_alertas_sin_abono", "Sin abono pago")
-                }).ToList();
-                rptAlertas.DataBind();
-            }
-            catch
-            {
-                // Si la tabla todavía no existe (falta el script), el panel no se muestra
-                pnlAlertasCheckin.Visible = false;
-            }
-        }
-
-        protected void rptAlertas_ItemCommand(object source, System.Web.UI.WebControls.RepeaterCommandEventArgs e)
-        {
-            if (e.CommandName != "Vista")
-                return;
-
-            try
-            {
-                new BLLAlertaCheckin().MarcarVista(Convert.ToInt32(e.CommandArgument), Singleton.Instancia.Usuario?.USUARIO_Usuario);
-            }
-            catch (Exception)
-            {
-                MostrarError(T("msg_error_generico"));
-            }
-
-            CargarAlertasCheckin();
-        }
-
-        protected void btnAlertasTodas_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                new BLLAlertaCheckin().MarcarTodasVistas(Singleton.Instancia.Usuario?.USUARIO_Usuario);
-            }
-            catch (Exception)
-            {
-                MostrarError(T("msg_error_generico"));
-            }
-
-            CargarAlertasCheckin();
         }
 
         private void CargarIndicadores(ResumenDashboard resumen)

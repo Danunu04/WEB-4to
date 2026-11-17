@@ -101,6 +101,24 @@ namespace gymAppV2
         }
 
         /// <summary>
+        /// Como MensajeDePermisos, pero también muestra las validaciones de la BLL que se lanzan
+        /// como Exception común (ej. "El nombre de usuario ya existe"): se reconocen porque son el
+        /// error original de la cadena. Si el original es de otro tipo (base de datos, etc.), null.
+        /// </summary>
+        protected string MensajeDeValidacion(Exception ex)
+        {
+            string mensaje = MensajeDePermisos(ex);
+            if (mensaje != null || ex == null)
+                return mensaje;
+
+            Exception original = ex;
+            while (original.InnerException != null)
+                original = original.InnerException;
+
+            return original.GetType() == typeof(Exception) ? original.Message : null;
+        }
+
+        /// <summary>
         /// Si el error (o alguno de sus InnerException) es una regla de permisos o de negocio
         /// (ReglaNegocioException) que no se cumple, devuelve el mensaje traducido; si no, null.
         /// </summary>

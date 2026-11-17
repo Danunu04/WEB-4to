@@ -1,7 +1,7 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Entrenadores.aspx.cs" Inherits="gymAppV2.Entrenadores.Entrenadores" MasterPageFile="~/DashBoard.Master" EnableEventValidation="false" Title="Entrenadores" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <link href="<%= ResolveUrl("~/Entrenadores/Entrenadores.css?v=3") %>" rel="stylesheet" type="text/css" />
+    <link href="<%= ResolveUrl("~/Entrenadores/Entrenadores.css?v=4") %>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </asp:Content>
 
@@ -154,11 +154,32 @@
                             <label>Fecha de Nacimiento *</label>
                             <asp:TextBox ID="txtFechaNacimiento" runat="server" TextMode="Date"></asp:TextBox>
                         </div>
-                        <div class="form-field">
+                        <div class="form-field" id="campoEstado" runat="server">
                             <label>Estado</label>
                             <asp:CheckBox ID="chkActivo" runat="server" />
                         </div>
                     </div>
+
+                    <!-- Cuenta para entrar al sistema: solo en el alta -->
+                    <asp:Panel ID="pnlCuenta" runat="server">
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Nombre de usuario</label>
+                                <asp:TextBox ID="txtUsuario" runat="server" MaxLength="50" placeholder="Si lo dejás vacío: entrenador_DNI"></asp:TextBox>
+                            </div>
+                            <div class="form-field">
+                                <label>Email</label>
+                                <asp:TextBox ID="txtEmail" runat="server" MaxLength="100" TextMode="Email" placeholder="usuario@email.com"></asp:TextBox>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field full">
+                                <label>Contraseña (opcional)</label>
+                                <asp:TextBox ID="txtContrasena" runat="server" MaxLength="128" placeholder="Si la dejás vacía, se genera una segura"></asp:TextBox>
+                                <small class="field-hint">Mínimo 6 caracteres, una mayúscula y un carácter especial. La tiene que cambiar en el primer inicio de sesión.</small>
+                            </div>
+                        </div>
+                    </asp:Panel>
 
                 </div>
                 <div class="modal-footer">
@@ -199,6 +220,25 @@
                 <button id="btnConfirmarEliminar" runat="server" class="btn-action btn-eliminar" onserverclick="btnConfirmarEliminar_Click">
                     <asp:Literal ID="litBtnConfirmarEliminar" runat="server" Text="Eliminar" />
                 </button>
+            </div>
+        </div>
+    </asp:Panel>
+
+    <!-- Credenciales de la cuenta recién creada: se muestran una única vez -->
+    <asp:Panel ID="pnlCredenciales" runat="server" Visible="false" CssClass="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key"></i> <asp:Literal ID="litCredencialesTitulo" runat="server" Text="Entrenador creado" /></h3>
+                <button id="btnCerrarCredenciales" runat="server" class="btn-close" onserverclick="btnCerrarCredenciales_Click">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><asp:Literal ID="litCredencialesAviso" runat="server" /></p>
+                <p class="credenciales-datos"><asp:Literal ID="litCredencialesDatos" runat="server" /></p>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCerrarCredenciales2" runat="server" class="btn-action btn-guardar" onserverclick="btnCerrarCredenciales_Click">OK</button>
             </div>
         </div>
     </asp:Panel>
